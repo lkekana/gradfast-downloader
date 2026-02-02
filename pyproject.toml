@@ -1,0 +1,12 @@
+[project]
+name = "gradfast-dl"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "progressbar2>=4.5.0",
+    "random-user-agent>=1.0.1",
+    "requests>=2.32.5",
+    "retrying>=1.4.2",
+]
