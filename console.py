@@ -20,6 +20,7 @@ UNDERLINE = "\u001b[4m"
 ITALIC = "\u001b[3m"
 STRIKETHROUGH = "\u001b[9m"
 
+
 def _format_console_part(val) -> str:
     if isinstance(val, BaseException):
         return "".join(
@@ -49,20 +50,56 @@ def warn(*args, sep: str = " ", end: str = "\n", flush: bool = True) -> None:
 def error(*args, sep: str = " ", end: str = "\n", flush: bool = True) -> None:
     print(_format_console_message(args, sep=sep), file=sys.stderr, end=end, flush=flush)
 
-def _print_color(color: str, *args, sep: str = " ", end: str = "\n", file=sys.stdout, flush: bool = True) -> None:
+
+def _print_color(
+    color: str,
+    *args,
+    sep: str = " ",
+    end: str = "\n",
+    file=sys.stdout,
+    flush: bool = True,
+) -> None:
     msg = _format_console_message(args, sep=sep)
     print(f"{color}{msg}{RESET}", end=end, file=file, flush=flush)
 
+
 # Color printers (Java-style API)
-def print_black(*args, **kwargs) -> None: _print_color(BLACK, *args, **kwargs)
-def print_red(*args, **kwargs) -> None: _print_color(RED, *args, **kwargs)
-def print_green(*args, **kwargs) -> None: _print_color(GREEN, *args, **kwargs)
-def print_yellow(*args, **kwargs) -> None: _print_color(YELLOW, *args, **kwargs)
-def print_purple(*args, **kwargs) -> None: _print_color(PURPLE, *args, **kwargs)
-def print_pink_purple(*args, **kwargs) -> None: _print_color(PINK_PURPLE, *args, **kwargs)
-def print_cyan(*args, **kwargs) -> None: _print_color(CYAN, *args, **kwargs)
-def print_white(*args, **kwargs) -> None: _print_color(WHITE, *args, **kwargs)
-def print_pink(*args, **kwargs) -> None: _print_color(PINK, *args, **kwargs)
+def print_black(*args, **kwargs) -> None:
+    _print_color(BLACK, *args, **kwargs)
+
+
+def print_red(*args, **kwargs) -> None:
+    _print_color(RED, *args, **kwargs)
+
+
+def print_green(*args, **kwargs) -> None:
+    _print_color(GREEN, *args, **kwargs)
+
+
+def print_yellow(*args, **kwargs) -> None:
+    _print_color(YELLOW, *args, **kwargs)
+
+
+def print_purple(*args, **kwargs) -> None:
+    _print_color(PURPLE, *args, **kwargs)
+
+
+def print_pink_purple(*args, **kwargs) -> None:
+    _print_color(PINK_PURPLE, *args, **kwargs)
+
+
+def print_cyan(*args, **kwargs) -> None:
+    _print_color(CYAN, *args, **kwargs)
+
+
+def print_white(*args, **kwargs) -> None:
+    _print_color(WHITE, *args, **kwargs)
+
+
+def print_pink(*args, **kwargs) -> None:
+    _print_color(PINK, *args, **kwargs)
+
+
 # print_black("This is black text")
 # print_red("This is red text")
 # print_green("This is green text")
@@ -73,28 +110,46 @@ def print_pink(*args, **kwargs) -> None: _print_color(PINK, *args, **kwargs)
 # print_white("This is white text")
 # print_pink("This is pink text")
 
-def print_error(*args, sep: str = " ", end: str = "\n", file=sys.stderr, flush: bool = True) -> None:
+
+def print_error(
+    *args, sep: str = " ", end: str = "\n", file=sys.stderr, flush: bool = True
+) -> None:
     msg = _format_console_message(args, sep=sep)
     print(f"{RED}ERROR: {msg}{RESET}", end=end, file=file, flush=flush)
 
-def print_rainbow(message, end: str = "\n", file=sys.stdout, flush: bool = True) -> None:
+
+def print_rainbow(
+    message, end: str = "\n", file=sys.stdout, flush: bool = True
+) -> None:
     colors = [RED, YELLOW, GREEN, PURPLE, PINK_PURPLE, CYAN, PINK]
     s = str(message)
     parts = [f"{colors[i % len(colors)]}{ch}" for i, ch in enumerate(s)]
     print("".join(parts) + RESET, end=end, file=file, flush=flush)
 
-def print_bold(*args, sep: str = " ", end: str = "\n", file=sys.stdout, flush: bool = True) -> None:
+
+def print_bold(
+    *args, sep: str = " ", end: str = "\n", file=sys.stdout, flush: bool = True
+) -> None:
     msg = _format_console_message(args, sep=sep)
     print(f"{BOLD}{msg}{RESET}", end=end, file=file, flush=flush)
 
-def print_underlined(*args, sep: str = " ", end: str = "\n", file=sys.stdout, flush: bool = True) -> None:
+
+def print_underlined(
+    *args, sep: str = " ", end: str = "\n", file=sys.stdout, flush: bool = True
+) -> None:
     msg = _format_console_message(args, sep=sep)
     print(f"{UNDERLINE}{msg}{RESET}", end=end, file=file, flush=flush)
 
-def print_italic(*args, sep: str = " ", end: str = "\n", file=sys.stdout, flush: bool = True) -> None:
+
+def print_italic(
+    *args, sep: str = " ", end: str = "\n", file=sys.stdout, flush: bool = True
+) -> None:
     msg = _format_console_message(args, sep=sep)
     print(f"{ITALIC}{msg}{RESET}", end=end, file=file, flush=flush)
 
-def print_strikethrough(*args, sep: str = " ", end: str = "\n", file=sys.stdout, flush: bool = True) -> None:
+
+def print_strikethrough(
+    *args, sep: str = " ", end: str = "\n", file=sys.stdout, flush: bool = True
+) -> None:
     msg = _format_console_message(args, sep=sep)
     print(f"{STRIKETHROUGH}{msg}{RESET}", end=end, file=file, flush=flush)

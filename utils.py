@@ -1,10 +1,8 @@
 import random
 import time
-from typing import List
 from random_user_agent.user_agent import UserAgent
 from random_user_agent.params import SoftwareName, OperatingSystem
 
-from models import Module
 
 DEBUG_PRINTING_ENABLED = False
 
@@ -25,10 +23,12 @@ operating_systems = [
     OperatingSystem.ANDROID.value,
 ]
 
+
 def debug_print(*args, **kwargs):
     """Print debug information if debug printing is enabled."""
     if DEBUG_PRINTING_ENABLED:
         print(*args, **kwargs)
+
 
 def sleep_random(min_seconds: float, max_seconds: float):
     """Sleep for a random duration between the given bounds.
@@ -39,6 +39,7 @@ def sleep_random(min_seconds: float, max_seconds: float):
     """
     sleep_time = random.uniform(min_seconds, max_seconds)
     time.sleep(sleep_time)
+
 
 def get_random_user_agent() -> str:
     """Generate and return a random, realistic User-Agent string.
@@ -53,6 +54,7 @@ def get_random_user_agent() -> str:
         software_names=software_names, operating_systems=operating_systems, limit=100
     )
     return user_agent_rotator.get_random_user_agent()
+
 
 def remove_whitespace(s: str) -> str:
     """Remove all whitespace characters from the given string.

@@ -222,6 +222,7 @@ def get_module_past_papers(s: requests.Session, module_code: str) -> List[PastPa
     past_papers: List[PastPaper] = parse_past_papers(rq.json())
     return past_papers
 
+
 def download_file(
     s: requests.Session,
     url: str,
