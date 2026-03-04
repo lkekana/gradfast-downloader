@@ -1,0 +1,415 @@
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+	Download,
+	FileText,
+	ArrowLeft,
+	Calendar,
+	BookOpen,
+	GraduationCap,
+	Clock,
+	Languages,
+	Link2,
+} from "lucide-react";
+import {
+	ModuleWithPapers,
+	facultyAbbreviation,
+	periodAbbreviation,
+} from "@/data";
+import { useNavigate } from "react-router";
+
+interface ModuleDetailProps {
+	module: ModuleWithPapers;
+	onBack?: () => void;
+}
+
+export function ModuleDetail({ module, onBack }: ModuleDetailProps) {
+	const nav = useNavigate();
+
+	const moduleId = `${module.prefix}${module.code}`;
+	const hasPapers =
+		module.pastPapers &&
+		Object.values(module.pastPapers).some((count) => count > 0);
+
+	const handleDownloadAll = () => {
+		console.log(`Downloading all papers for ${moduleId}`);
+	};
+
+	const handleBack = () => {
+		if (onBack) {
+			onBack();
+		} else {
+			nav(-1); // Go back to the previous page
+		}
+	};
+
+	return (
+		<div className="min-h-screen bg-background">
+			{/* Header */}
+			<header className="border-b bg-card px-4 py-3 sticky top-0 z-10">
+				{/* <nav className="text-xs text-muted-foreground mb-2">
+  <a href="/home" className="hover:underline">Modules</a>
+  <span className="mx-1">/</span>
+  <span className="font-medium text-foreground">{moduleId}</span>
+</nav> */}
+				<div className="flex items-center gap-3 max-w-6xl mx-auto">
+					<Button
+						variant="ghost"
+						size="icon"
+						onClick={handleBack}
+						className="shrink-0"
+					>
+						<ArrowLeft className="w-4 h-4" />
+					</Button>
+					<div className="flex-1 min-w-0">
+						<div className="flex items-center gap-2 flex-wrap">
+							<h1 className="text-lg font-semibold font-mono">{moduleId}</h1>
+							{module.faculty && (
+								<Badge variant="outline" className="text-xs">
+									{facultyAbbreviation(module.faculty)}
+								</Badge>
+							)}
+							{module.period && (
+								<Badge variant="secondary" className="text-xs">
+									{periodAbbreviation(module.period)}
+								</Badge>
+							)}
+						</div>
+						<p className="text-sm text-muted-foreground truncate">
+							{module.name}
+						</p>
+					</div>
+					{hasPapers && (
+						<Button size="sm" onClick={handleDownloadAll} className="gap-1">
+							<Download className="w-4 h-4" />
+							Download All
+						</Button>
+					)}
+				</div>
+			</header>
+
+			{/* Content */}
+			<main className="max-w-6xl mx-auto p-4 space-y-6">
+				{/* Quick Stats */}
+				<div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+					<Card>
+						<CardContent className="p-4 flex items-center gap-3">
+							<BookOpen className="w-5 h-5 text-muted-foreground" />
+							<div>
+								<p className="text-xs text-muted-foreground">Credits</p>
+								<p className="font-semibold">{module.credits ?? "—"}</p>
+							</div>
+						</CardContent>
+					</Card>
+					<Card>
+						<CardContent className="p-4 flex items-center gap-3">
+							<GraduationCap className="w-5 h-5 text-muted-foreground" />
+							<div>
+								<p className="text-xs text-muted-foreground">NQF Level</p>
+								<p className="font-semibold">{module.nqfLevel ?? "—"}</p>
+							</div>
+						</CardContent>
+					</Card>
+					<Card>
+						<CardContent className="p-4 flex items-center gap-3">
+							<Calendar className="w-5 h-5 text-muted-foreground" />
+							<div>
+								<p className="text-xs text-muted-foreground">Period</p>
+								<p className="font-semibold">
+									{periodAbbreviation(module.period) ?? "—"}
+								</p>
+							</div>
+						</CardContent>
+					</Card>
+					<Card>
+						<CardContent className="p-4 flex items-center gap-3">
+							<Clock className="w-5 h-5 text-muted-foreground" />
+							<div>
+								<p className="text-xs text-muted-foreground">Contact Time</p>
+								<p className="font-semibold text-sm">
+									{module.contactTime ?? "—"}
+								</p>
+							</div>
+						</CardContent>
+					</Card>
+				</div>
+
+				{/* Main Content Tabs */}
+				<Tabs defaultValue="overview" className="space-y-4">
+					<TabsList className="grid w-full grid-cols-3">
+						<TabsTrigger value="overview">Overview</TabsTrigger>
+						<TabsTrigger value="papers">Past Papers</TabsTrigger>
+						<TabsTrigger value="details">Details</TabsTrigger>
+					</TabsList>
+
+					{/* Overview Tab */}
+					<TabsContent value="overview" className="space-y-4">
+						<Card>
+							<CardHeader>
+								<CardTitle className="text-lg">Module Description</CardTitle>
+								<CardDescription>Content and learning outcomes</CardDescription>
+							</CardHeader>
+							<CardContent className="prose prose-sm dark:prose-invert max-w-none">
+								{module.content ? (
+									<div className="whitespace-pre-wrap text-sm leading-relaxed">
+										{module.content}
+									</div>
+								) : (
+									<p className="text-muted-foreground text-sm italic">
+										No description available for this module.
+									</p>
+								)}
+							</CardContent>
+						</Card>
+
+						{module.prerequisites && (
+							<Card>
+								<CardHeader>
+									<CardTitle className="text-lg flex items-center gap-2">
+										<Link2 className="w-4 h-4" />
+										Prerequisites
+									</CardTitle>
+								</CardHeader>
+								<CardContent>
+									<p className="text-sm text-muted-foreground">
+										{module.prerequisites}
+									</p>
+								</CardContent>
+							</Card>
+						)}
+					</TabsContent>
+
+					{/* Past Papers Tab */}
+					<TabsContent value="papers" className="space-y-4">
+						<Card>
+							<CardHeader>
+								<div className="flex items-center justify-between">
+									<div>
+										<CardTitle className="text-lg">
+											Available Past Papers
+										</CardTitle>
+										<CardDescription>
+											{hasPapers
+												? "Download or view past assessment materials"
+												: "No past papers available yet"}
+										</CardDescription>
+									</div>
+									{hasPapers && (
+										<Button
+											variant="outline"
+											size="sm"
+											onClick={handleDownloadAll}
+										>
+											<Download className="w-4 h-4 mr-1" />
+											Download All
+										</Button>
+									)}
+								</div>
+							</CardHeader>
+							<CardContent>
+								{hasPapers ? (
+									<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+										{module.pastPapers?.exams! > 0 && (
+											<PaperCategory
+												title="Examinations"
+												icon="📝"
+												count={module.pastPapers.exams}
+												moduleId={moduleId}
+												type="exam"
+											/>
+										)}
+										{module.pastPapers?.semesterTests! > 0 && (
+											<PaperCategory
+												title="Semester Tests"
+												icon="🧪"
+												count={module.pastPapers.semesterTests}
+												moduleId={moduleId}
+												type="semester"
+											/>
+										)}
+										{module.pastPapers?.classTests! > 0 && (
+											<PaperCategory
+												title="Class Tests"
+												icon="✏️"
+												count={module.pastPapers.classTests}
+												moduleId={moduleId}
+												type="class"
+											/>
+										)}
+										{module.pastPapers?.practicals! > 0 && (
+											<PaperCategory
+												title="Practicals"
+												icon="🔬"
+												count={module.pastPapers.practicals}
+												moduleId={moduleId}
+												type="practical"
+											/>
+										)}
+										{module.pastPapers?.tutorials! > 0 && (
+											<PaperCategory
+												title="Tutorials"
+												icon="📚"
+												count={module.pastPapers.tutorials}
+												moduleId={moduleId}
+												type="tutorial"
+											/>
+										)}
+									</div>
+								) : (
+									<div className="text-center py-8 text-muted-foreground">
+										<FileText className="w-12 h-12 mx-auto mb-3 opacity-30" />
+										<p>
+											No past papers have been uploaded for this module yet.
+										</p>
+										<p className="text-xs mt-1">
+											Check back later or contact your faculty.
+										</p>
+									</div>
+								)}
+							</CardContent>
+						</Card>
+					</TabsContent>
+
+					{/* Details Tab */}
+					<TabsContent value="details" className="space-y-4">
+						<Card>
+							<CardHeader>
+								<CardTitle className="text-lg">Module Information</CardTitle>
+								<CardDescription>
+									Administrative and academic details
+								</CardDescription>
+							</CardHeader>
+							<CardContent className="space-y-4">
+								<DetailRow label="Full Code" value={moduleId} />
+								<DetailRow label="Name" value={module.name} />
+								{module.faculty && (
+									<DetailRow label="Faculty" value={module.faculty} />
+								)}
+								{module.qualification && (
+									<DetailRow
+										label="Qualification"
+										value={module.qualification}
+									/>
+								)}
+								<DetailRow
+									label="Credits"
+									value={module.credits?.toString() ?? "—"}
+								/>
+								<DetailRow
+									label="NQF Level"
+									value={module.nqfLevel?.toString() ?? "—"}
+								/>
+								{module.language && (
+									<DetailRow
+										label="Language"
+										value={module.language}
+										icon={<Languages className="w-4 h-4" />}
+									/>
+								)}
+								{module.contactTime && (
+									<DetailRow
+										label="Contact Time"
+										value={module.contactTime}
+										icon={<Clock className="w-4 h-4" />}
+									/>
+								)}
+								{module.period && (
+									<DetailRow
+										label="Academic Period"
+										value={periodAbbreviation(module.period)}
+										icon={<Calendar className="w-4 h-4" />}
+									/>
+								)}
+								{module.mostRecentYear && (
+									<DetailRow
+										label="Last Updated"
+										value={module.mostRecentYear.toString()}
+									/>
+								)}
+							</CardContent>
+						</Card>
+					</TabsContent>
+				</Tabs>
+			</main>
+		</div>
+	);
+}
+
+// Sub-components for cleaner code
+function PaperCategory({
+	title,
+	icon,
+	count,
+	moduleId,
+	type,
+}: {
+	title: string;
+	icon: string;
+	count: number;
+	moduleId: string;
+	type: string;
+}) {
+	return (
+		<div className="border rounded-lg p-4 hover:bg-muted/30 transition-colors">
+			<div className="flex items-center justify-between mb-3">
+				<div className="flex items-center gap-2">
+					<span className="text-lg">{icon}</span>
+					<h4 className="font-medium text-sm">{title}</h4>
+				</div>
+				<Badge variant="secondary" className="text-xs">
+					{count}
+				</Badge>
+			</div>
+			<div className="space-y-2">
+				{Array.from({ length: Math.min(count, 3) }).map((_, i) => (
+					<Button
+						key={i}
+						variant="ghost"
+						size="sm"
+						className="w-full justify-start text-xs h-8"
+						onClick={() => console.log(`View ${type} ${i + 1} for ${moduleId}`)}
+					>
+						<FileText className="w-3 h-3 mr-2 opacity-50" />
+						{moduleId}_{type.toUpperCase()}_{2024 - i}_MEMO.pdf
+					</Button>
+				))}
+				{count > 3 && (
+					<Button variant="link" size="sm" className="h-6 px-0 text-xs">
+						View all {count} {title.toLowerCase()} →
+					</Button>
+				)}
+			</div>
+		</div>
+	);
+}
+
+function DetailRow({
+	label,
+	value,
+	icon,
+}: {
+	label: string;
+	value: string;
+	icon?: React.ReactNode;
+}) {
+	return (
+		<div className="flex items-start justify-between py-2 border-b last:border-0">
+			<div className="flex items-center gap-2 text-sm text-muted-foreground">
+				{icon}
+				<span>{label}</span>
+			</div>
+			<span className="text-sm font-medium text-right max-w-[60%] break-words">
+				{value}
+			</span>
+		</div>
+	);
+}
