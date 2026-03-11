@@ -1,28 +1,46 @@
-import { useState, useEffect, useMemo } from "react";
+import {
+	ArrowLeft,
+	BookOpen,
+	Check,
+	Database,
+	FileText,
+	FolderOpen,
+	HardDrive,
+	Layers,
+	Monitor,
+	Moon,
+	RefreshCcw,
+	RefreshCw,
+	Save,
+	Settings2,
+	Sun,
+	Wifi,
+	WifiOff,
+} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router";
+import { Combobox, ComboboxItem } from "@/components/combobox";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
 	Card,
+	CardContent,
+	CardDescription,
 	CardHeader,
 	CardTitle,
-	CardDescription,
-	CardContent,
-	CardFooter,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Slider } from "@/components/ui/slider";
 import {
 	Select,
 	SelectContent,
 	SelectItem,
 	SelectTrigger,
 	SelectValue,
-	SelectGroup,
-	SelectLabel,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
 	Tooltip,
@@ -30,40 +48,10 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-	AlertCircle,
-	Save,
-	FolderOpen,
-	Settings2,
-	Wifi,
-	WifiOff,
-	RefreshCw,
-	Download,
-	FileText,
-	Info,
-	Check,
-	X,
-	Moon,
-	Sun,
-	Monitor,
-	Layers,
-	GraduationCap,
-	Building2,
-	School,
-	Filter,
-	CalendarRange,
-	BookOpen,
-	Languages,
-	Clock,
-	Database,
-	HardDrive,
-	RefreshCcw,
-	ArrowLeft,
-} from "lucide-react";
-import useConnection from "@/hooks/useConnection";
 import { useToast } from "@/hooks/use-toast";
-import { Combobox, ComboboxItem } from "@/components/combobox";
-import { useNavigate } from "react-router";
+import useConnection from "@/hooks/useConnection";
+import { useTheme } from "@/hooks/useTheme";
+import { downloadPath } from "@/lib/api";
 
 const programmes = [
 	{
@@ -199,9 +187,7 @@ export default function SettingsPage() {
 		reconnectError,
 		attemptReconnect,
 	} = useConnection();
-
-	// ========== THEME & UI ==========
-	const [theme, setTheme] = useState<"light" | "dark" | "system">("system");
+	const { themeSetting, setThemeSetting } = useTheme();
 
 	// ========== PROGRAMME SELECTION ==========
 	const [programmeSelectionMode, setProgrammeSelectionMode] = useState<
@@ -220,9 +206,8 @@ export default function SettingsPage() {
 	const [year, setYear] = useState<string>("");
 
 	// ========== DOWNLOAD PREFERENCES ==========
-	const [destinationFolder, setDestinationFolder] = useState<string>(
-		"/downloads/past-papers/",
-	);
+	const [destinationFolder, setDestinationFolder] =
+		useState<string>(downloadPath);
 	const [moduleSubfolders, setModuleSubfolders] = useState<boolean>(true);
 	const [namingPattern, setNamingPattern] = useState<string>("code-year-type");
 	const [parallelDownloads, setParallelDownloads] = useState<number>(3);
@@ -321,7 +306,7 @@ export default function SettingsPage() {
 			try {
 				const parsed = JSON.parse(saved);
 				// Theme
-				setTheme(parsed.theme || "system");
+				setThemeSetting(parsed.theme || "system");
 				// Programme selection
 				setProgrammeSelectionMode(parsed.programmeSelectionMode || "search");
 				setSelectedProgrammeId(parsed.programme || "");
@@ -330,9 +315,7 @@ export default function SettingsPage() {
 				setSelectedDepartment(parsed.department || "");
 				setYear(parsed.year || "");
 				// Download preferences
-				setDestinationFolder(
-					parsed.destinationFolder || "/downloads/past-papers/",
-				);
+				setDestinationFolder(parsed.destinationFolder || downloadPath);
 				setModuleSubfolders(parsed.moduleSubfolders ?? true);
 				setNamingPattern(parsed.namingPattern || "code-year-type");
 				setParallelDownloads(parsed.parallelDownloads || 3);
@@ -379,38 +362,7 @@ export default function SettingsPage() {
 				console.error("Failed to load settings:", e);
 			}
 		}
-		// Apply theme on load
-		applyTheme(theme);
 	}, []);
-
-	// Apply theme to document
-	const applyTheme = (themeValue: "light" | "dark" | "system") => {
-		const root = window.document.documentElement;
-		root.classList.remove("light", "dark");
-
-		if (themeValue === "system") {
-			const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
-				.matches
-				? "dark"
-				: "light";
-			root.classList.add(systemTheme);
-		} else {
-			root.classList.add(themeValue);
-		}
-	};
-
-	useEffect(() => {
-		applyTheme(theme);
-	}, [theme]);
-
-	// Listen for system theme changes
-	useEffect(() => {
-		if (theme !== "system") return;
-		const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-		const handleChange = () => applyTheme("system");
-		mediaQuery.addEventListener("change", handleChange);
-		return () => mediaQuery.removeEventListener("change", handleChange);
-	}, [theme]);
 
 	const handleSave = async () => {
 		setIsSaving(true);
@@ -418,7 +370,7 @@ export default function SettingsPage() {
 
 		const settings = {
 			// Theme & UI
-			theme,
+			themeSetting,
 			// Programme selection
 			programmeSelectionMode,
 			programme: selectedProgrammeId,
@@ -466,7 +418,7 @@ export default function SettingsPage() {
 	};
 
 	const handleReset = () => {
-		setTheme("system");
+		setThemeSetting("system");
 		setProgrammeSelectionMode("search");
 		setSelectedProgrammeId("");
 		setAcademicLevel("undergrad");
@@ -522,7 +474,7 @@ export default function SettingsPage() {
 		setIncludePaperTypes((prev) => ({ ...prev, [type]: !prev[type] }));
 	};
 
-	const selectedPattern = namingPatterns.find((p) => p.id === namingPattern);
+	// const selectedPattern = namingPatterns.find((p) => p.id === namingPattern);
 
 	const nav = useNavigate();
 
@@ -543,16 +495,15 @@ export default function SettingsPage() {
 					
 				</div> */}
 				<div className="flex items-center justify-between gap-3 max-w-6xl mx-auto">
-                    
 					<div className="flex items-center gap-4">
-                    <Button
-						variant="ghost"
-						size="icon"
-						onClick={handleBack}
-						className="shrink-0"
-					>
-						<ArrowLeft className="w-4 h-4" />
-					</Button>
+						<Button
+							variant="ghost"
+							size="icon"
+							onClick={handleBack}
+							className="shrink-0"
+						>
+							<ArrowLeft className="w-4 h-4" />
+						</Button>
 						<h1 className="text-2xl font-bold flex items-center gap-2">
 							<Settings2 className="w-6 h-6" />
 							Settings
@@ -587,6 +538,7 @@ export default function SettingsPage() {
 							<Tooltip>
 								<TooltipTrigger asChild>
 									<button
+										type="button"
 										onClick={
 											isConnected || isReconnecting
 												? undefined
@@ -669,25 +621,27 @@ export default function SettingsPage() {
 									<Label>Theme</Label>
 									<div className="flex gap-2">
 										<Button
-											variant={theme === "light" ? "default" : "outline"}
+											variant={themeSetting === "light" ? "default" : "outline"}
 											size="sm"
-											onClick={() => setTheme("light")}
+											onClick={() => setThemeSetting("light")}
 											className="gap-2"
 										>
 											<Sun className="w-4 h-4" /> Light
 										</Button>
 										<Button
-											variant={theme === "dark" ? "default" : "outline"}
+											variant={themeSetting === "dark" ? "default" : "outline"}
 											size="sm"
-											onClick={() => setTheme("dark")}
+											onClick={() => setThemeSetting("dark")}
 											className="gap-2"
 										>
 											<Moon className="w-4 h-4" /> Dark
 										</Button>
 										<Button
-											variant={theme === "system" ? "default" : "outline"}
+											variant={
+												themeSetting === "system" ? "default" : "outline"
+											}
 											size="sm"
-											onClick={() => setTheme("system")}
+											onClick={() => setThemeSetting("system")}
 											className="gap-2"
 										>
 											<Monitor className="w-4 h-4" /> System

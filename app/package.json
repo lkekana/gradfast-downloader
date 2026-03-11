@@ -26,6 +26,7 @@
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-toast": "^1.2.15",
     "@radix-ui/react-tooltip": "^1.2.8",
+    "@types/voca": "^1.4.6",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -35,7 +36,9 @@
     "react-dom": "^18.3.1",
     "react-router": "^7.13.1",
     "tailwind-merge": "^3.5.0",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "usehooks-ts": "^3.1.1",
+    "voca": "^1.4.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",

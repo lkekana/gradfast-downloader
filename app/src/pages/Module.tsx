@@ -1,3 +1,16 @@
+import {
+	ArrowLeft,
+	BookOpen,
+	Calendar,
+	Clock,
+	Download,
+	FileText,
+	GraduationCap,
+	Languages,
+	Link2,
+} from "lucide-react";
+import { useMemo } from "react";
+import { useNavigate } from "react-router";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -7,38 +20,28 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-	Download,
-	FileText,
-	ArrowLeft,
-	Calendar,
-	BookOpen,
-	GraduationCap,
-	Clock,
-	Languages,
-	Link2,
-} from "lucide-react";
-import {
-	ModuleWithPapers,
-	facultyAbbreviation,
-	periodAbbreviation,
-} from "@/data";
-import { useNavigate } from "react-router";
+import { getPastPaperCounts } from "@/lib/api";
+import { facultyAbbreviation, periodAbbreviation } from "@/lib/data";
+import type { Module, ModuleInfo, PastPaper } from "@/lib/types";
 
-interface ModuleDetailProps {
-	module: ModuleWithPapers;
+interface ModulePageProps {
+	module: Module;
+	moduleInfo: ModuleInfo;
+	pastPapers: PastPaper[];
 	onBack?: () => void;
 }
 
-export function ModuleDetail({ module, onBack }: ModuleDetailProps) {
+export default function ModulePage({
+	module,
+	moduleInfo,
+	pastPapers,
+	onBack,
+}: ModulePageProps) {
 	const nav = useNavigate();
 
-	const moduleId = `${module.prefix}${module.code}`;
-	const hasPapers =
-		module.pastPapers &&
-		Object.values(module.pastPapers).some((count) => count > 0);
+	const moduleId = `${module.code.prefix}${module.code.number}`;
+	const hasPapers = pastPapers.length > 0;
 
 	const handleDownloadAll = () => {
 		console.log(`Downloading all papers for ${moduleId}`);
@@ -51,6 +54,11 @@ export function ModuleDetail({ module, onBack }: ModuleDetailProps) {
 			nav(-1); // Go back to the previous page
 		}
 	};
+
+	const pastPaperCounts = useMemo(
+		() => getPastPaperCounts(pastPapers),
+		[pastPapers],
+	);
 
 	return (
 		<div className="min-h-screen bg-background">
@@ -80,7 +88,7 @@ export function ModuleDetail({ module, onBack }: ModuleDetailProps) {
 							)}
 							{module.period && (
 								<Badge variant="secondary" className="text-xs">
-									{periodAbbreviation(module.period)}
+									{module.period}
 								</Badge>
 							)}
 						</div>
@@ -106,7 +114,7 @@ export function ModuleDetail({ module, onBack }: ModuleDetailProps) {
 							<BookOpen className="w-5 h-5 text-muted-foreground" />
 							<div>
 								<p className="text-xs text-muted-foreground">Credits</p>
-								<p className="font-semibold">{module.credits ?? "—"}</p>
+								<p className="font-semibold">{moduleInfo.credits ?? "—"}</p>
 							</div>
 						</CardContent>
 					</Card>
@@ -115,7 +123,7 @@ export function ModuleDetail({ module, onBack }: ModuleDetailProps) {
 							<GraduationCap className="w-5 h-5 text-muted-foreground" />
 							<div>
 								<p className="text-xs text-muted-foreground">NQF Level</p>
-								<p className="font-semibold">{module.nqfLevel ?? "—"}</p>
+								<p className="font-semibold">{moduleInfo.nqfLevel ?? "—"}</p>
 							</div>
 						</CardContent>
 					</Card>
@@ -124,9 +132,7 @@ export function ModuleDetail({ module, onBack }: ModuleDetailProps) {
 							<Calendar className="w-5 h-5 text-muted-foreground" />
 							<div>
 								<p className="text-xs text-muted-foreground">Period</p>
-								<p className="font-semibold">
-									{periodAbbreviation(module.period) ?? "—"}
-								</p>
+								<p className="font-semibold">{module.period}</p>
 							</div>
 						</CardContent>
 					</Card>
@@ -136,7 +142,7 @@ export function ModuleDetail({ module, onBack }: ModuleDetailProps) {
 							<div>
 								<p className="text-xs text-muted-foreground">Contact Time</p>
 								<p className="font-semibold text-sm">
-									{module.contactTime ?? "—"}
+									{moduleInfo.contactTime ?? "—"}
 								</p>
 							</div>
 						</CardContent>
@@ -159,9 +165,9 @@ export function ModuleDetail({ module, onBack }: ModuleDetailProps) {
 								<CardDescription>Content and learning outcomes</CardDescription>
 							</CardHeader>
 							<CardContent className="prose prose-sm dark:prose-invert max-w-none">
-								{module.content ? (
+								{moduleInfo.content ? (
 									<div className="whitespace-pre-wrap text-sm leading-relaxed">
-										{module.content}
+										{moduleInfo.content}
 									</div>
 								) : (
 									<p className="text-muted-foreground text-sm italic">
@@ -171,21 +177,30 @@ export function ModuleDetail({ module, onBack }: ModuleDetailProps) {
 							</CardContent>
 						</Card>
 
-						{module.prerequisites && (
-							<Card>
-								<CardHeader>
-									<CardTitle className="text-lg flex items-center gap-2">
-										<Link2 className="w-4 h-4" />
-										Prerequisites
-									</CardTitle>
-								</CardHeader>
-								<CardContent>
+						<Card>
+							<CardHeader>
+								<CardTitle className="text-lg flex items-center gap-2">
+									<Link2 className="w-4 h-4" />
+									Prerequisites
+								</CardTitle>
+							</CardHeader>
+							<CardContent>
+								{/* <p className="text-sm text-muted-foreground">
+										{moduleInfo.prerequisites}
+									</p> */}
+								{Array.isArray(moduleInfo.prerequisites) ? (
+									<ul className="list-disc list-inside text-sm">
+										{moduleInfo.prerequisites.map((prereq, index) => (
+											<li key={prereq}>{prereq}</li>
+										))}
+									</ul>
+								) : (
 									<p className="text-sm text-muted-foreground">
-										{module.prerequisites}
+										{moduleInfo.prerequisites}
 									</p>
-								</CardContent>
-							</Card>
-						)}
+								)}
+							</CardContent>
+						</Card>
 					</TabsContent>
 
 					{/* Past Papers Tab */}
@@ -218,47 +233,47 @@ export function ModuleDetail({ module, onBack }: ModuleDetailProps) {
 							<CardContent>
 								{hasPapers ? (
 									<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-										{module.pastPapers?.exams! > 0 && (
+										{pastPaperCounts.exams > 0 && (
 											<PaperCategory
 												title="Examinations"
 												icon="📝"
-												count={module.pastPapers.exams}
+												count={pastPaperCounts.exams}
 												moduleId={moduleId}
 												type="exam"
 											/>
 										)}
-										{module.pastPapers?.semesterTests! > 0 && (
+										{pastPaperCounts.semesterTests > 0 && (
 											<PaperCategory
 												title="Semester Tests"
 												icon="🧪"
-												count={module.pastPapers.semesterTests}
+												count={pastPaperCounts.semesterTests}
 												moduleId={moduleId}
 												type="semester"
 											/>
 										)}
-										{module.pastPapers?.classTests! > 0 && (
+										{pastPaperCounts.classTests > 0 && (
 											<PaperCategory
 												title="Class Tests"
 												icon="✏️"
-												count={module.pastPapers.classTests}
+												count={pastPaperCounts.classTests}
 												moduleId={moduleId}
 												type="class"
 											/>
 										)}
-										{module.pastPapers?.practicals! > 0 && (
+										{pastPaperCounts.practicals > 0 && (
 											<PaperCategory
 												title="Practicals"
 												icon="🔬"
-												count={module.pastPapers.practicals}
+												count={pastPaperCounts.practicals}
 												moduleId={moduleId}
 												type="practical"
 											/>
 										)}
-										{module.pastPapers?.tutorials! > 0 && (
+										{pastPaperCounts.tutorials > 0 && (
 											<PaperCategory
 												title="Tutorials"
 												icon="📚"
-												count={module.pastPapers.tutorials}
+												count={pastPaperCounts.tutorials}
 												moduleId={moduleId}
 												type="tutorial"
 											/>
@@ -294,31 +309,31 @@ export function ModuleDetail({ module, onBack }: ModuleDetailProps) {
 								{module.faculty && (
 									<DetailRow label="Faculty" value={module.faculty} />
 								)}
-								{module.qualification && (
+								{moduleInfo.qualification && (
 									<DetailRow
 										label="Qualification"
-										value={module.qualification}
+										value={moduleInfo.qualification}
 									/>
 								)}
 								<DetailRow
 									label="Credits"
-									value={module.credits?.toString() ?? "—"}
+									value={moduleInfo.credits.toString() ?? "—"}
 								/>
 								<DetailRow
 									label="NQF Level"
-									value={module.nqfLevel?.toString() ?? "—"}
+									value={moduleInfo.nqfLevel.toString() ?? "—"}
 								/>
-								{module.language && (
+								{moduleInfo.language && (
 									<DetailRow
 										label="Language"
-										value={module.language}
+										value={moduleInfo.language}
 										icon={<Languages className="w-4 h-4" />}
 									/>
 								)}
-								{module.contactTime && (
+								{moduleInfo.contactTime && (
 									<DetailRow
 										label="Contact Time"
-										value={module.contactTime}
+										value={moduleInfo.contactTime}
 										icon={<Clock className="w-4 h-4" />}
 									/>
 								)}
@@ -327,12 +342,6 @@ export function ModuleDetail({ module, onBack }: ModuleDetailProps) {
 										label="Academic Period"
 										value={periodAbbreviation(module.period)}
 										icon={<Calendar className="w-4 h-4" />}
-									/>
-								)}
-								{module.mostRecentYear && (
-									<DetailRow
-										label="Last Updated"
-										value={module.mostRecentYear.toString()}
 									/>
 								)}
 							</CardContent>

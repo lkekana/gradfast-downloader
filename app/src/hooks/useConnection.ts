@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 const useConnection = () => {
@@ -33,7 +33,6 @@ const useConnection = () => {
 				variant: "default",
 			});
 			setReconnectError(null);
-
 		} catch (error) {
 			setReconnectError("Failed to connect. Check your network settings.");
 			toast({ title: "❌ Connection failed", variant: "destructive" });
@@ -81,6 +80,12 @@ const useConnection = () => {
 	// setIsOnline(navigator.onLine);
 	// }, []);
 
+	console.log("Connection status:", {
+		isOnline,
+		isConnected,
+		isReconnecting,
+		reconnectError,
+	});
 	return {
 		isOnline,
 		isConnected,
