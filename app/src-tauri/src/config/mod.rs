@@ -1,7 +1,8 @@
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::path::{Path, PathBuf};
-use strum::{EnumIter, EnumString, Display};
+use std::path::PathBuf;
+use strum::{Display, EnumIter, EnumString};
 
 const CONFIG_FILE_NAME: &str = "config.json";
 
@@ -39,12 +40,14 @@ pub struct DownloadConfig {
     pub performance: PerformanceConfig,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, EnumString, Display, EnumIter, Serialize, Deserialize)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, EnumString, Display, EnumIter, Serialize, Deserialize,
+)]
 #[strum(serialize_all = "kebab_case")] // "code-year-type", etc.
 pub enum FileNamePattern {
-    CodeYearType, // "{code}_{year}_{type}.pdf" eg. "COS301_2024_exam
-    NameYearType, // "{name}_{year}_{type}.pdf" eg. "Software Engineering_2024_exam.pdf"
-    CodeNameYear, // "{code}_{name}_{year}.pdf" eg. "COS301_Software Engineering_2024.pdf"
+    CodeYearType,    // "{code}_{year}_{type}.pdf" eg. "COS301_2024_exam
+    NameYearType,    // "{name}_{year}_{type}.pdf" eg. "Software Engineering_2024_exam.pdf"
+    CodeNameYear,    // "{code}_{name}_{year}.pdf" eg. "COS301_Software Engineering_2024.pdf"
     FacultyCodeYear, // "{faculty}/{code}/{year}_{type}.pdf" eg. "EBIT/COS301/2024_exam.pdf"
 }
 
@@ -115,22 +118,33 @@ impl ConfigManager {
     /// Returns the path to the configuration file.
     ///
     /// The configuration is stored in the application's data directory.
-    pub fn get_config_file_path() -> PathBuf {
+    pub fn get_config_file_path() -> Result<PathBuf> {
         // Try to get the app data directory first
-        let base_dir = dirs::data_local_dir()
-            .or_else(|| dirs::home_dir())
-            .expect("Failed to determine home directory");
+        let base_dir = match dirs::data_local_dir() {
+            Some(dir) => dir,
+            None => return Err(anyhow::anyhow!("Failed to determine home directory")),
+        };
 
         let app_dir = base_dir.join("gradfast-downloader");
-        fs::create_dir_all(&app_dir).expect("Failed to create app data directory");
+        if let Err(e) = fs::create_dir_all(&app_dir) {
+            log::error!(
+                "Failed to create app data directory at {:?}: {:?}",
+                app_dir,
+                e
+            );
+            return Err(e.into());
+        }
 
-        // print the path for debugging
-        // println!("Config file path: {:?}", app_dir.join(CONFIG_FILE_NAME));
-        app_dir.join(CONFIG_FILE_NAME)
+        Ok(app_dir.join(CONFIG_FILE_NAME))
     }
 
-    pub fn default_config() -> Config {
-        Config {
+    pub fn default_config() -> Result<Config> {
+        let home = match crate::utils::get_home_dir() {
+            Some(dir) => dir,
+            None => return Err(anyhow::anyhow!("Failed to determine home directory")),
+        };
+
+        Ok(Config {
             general: GeneralConfig {
                 theme: "system".to_string(),
                 auto_selection: AutoSelectionConfig {
@@ -146,9 +160,10 @@ impl ConfigManager {
                 storage_and_organisation: StorageAndOrganisationConfig {
                     // destination_folder: format!("{}/Downloads/PastPapers", crate::utils::get_home_dir()),
                     destination_folder: {
-                        let home = crate::utils::get_home_dir()
-                            .unwrap_or_else(|| std::path::PathBuf::from("."));
-                        home.join("Downloads").join("PastPapers").to_string_lossy().to_string()
+                        home.join("Downloads")
+                            .join("PastPapers")
+                            .to_string_lossy()
+                            .to_string()
                     },
                     organise_by_module: true,
                     file_name_pattern: FileNamePattern::CodeYearType,
@@ -183,42 +198,82 @@ impl ConfigManager {
                     include_module_info: false,
                 },
             },
-        }
+        })
     }
 
-    pub fn load_config() -> Config {
-        let config_path = Self::get_config_file_path();
-        println!("Loading config from: {:?}", config_path);
-        if Path::new(&config_path).exists() {
-            let config_data = match fs::read_to_string(&config_path) {
-                Ok(d) => d,
-                Err(e) => {
-                    eprintln!("Failed to read config file: {e}. Using default config.");
-                    return Self::default_config();
-                }
-            };
-            match serde_json::from_str::<Config>(&config_data) {
-                Ok(config) => return config,
-                Err(e) => {
-                    eprintln!("Failed to parse config file: {e}. Using default config.");
-                    return Self::default_config();
-                }
-            }
-        }
-        let default = Self::default_config();
-        Self::save_config(&default);
-        return default
-    }
-
-    pub fn save_config(config: &Config) -> bool {
-        let config_path = Self::get_config_file_path();
-        let config_data = match serde_json::to_string_pretty(config) {
-            Ok(d) => d,
+    pub fn load_config() -> Result<Config> {
+        let config_path = match Self::get_config_file_path() {
+            Ok(path) => path,
             Err(e) => {
-                eprintln!("Failed to serialize config: {e}");
-                return false;
+                log::error!("Failed to get config file path: {:?}", e);
+                return Err(e);
             }
         };
-        fs::write(config_path, config_data).is_ok()
+        println!("Loading config from: {:?}", config_path);
+
+        if !config_path.exists() {
+            log::info!("No config file found, creating a default one.");
+            let default = match Self::default_config() {
+                Ok(config) => config,
+                Err(e) => {
+                    log::error!("Failed to create default config: {:?}", e);
+                    return Err(e);
+                }
+            };
+            return match Self::save_config(&default) {
+                Ok(_) => {
+                    log::info!("Default config file created successfully.");
+                    Ok(default)
+                }
+                Err(e) => {
+                    log::error!("Failed to create default config file: {:?}", e);
+                    Err(e)
+                }
+            };
+        }
+
+        let config_data = match fs::read_to_string(&config_path) {
+            Ok(data) => data,
+            Err(e) => {
+                log::error!("Failed to read config file at {:?}: {:?}", config_path, e);
+                return Err(e.into());
+            }
+        };
+
+        return match serde_json::from_str(&config_data) {
+            Ok(config) => Ok(config),
+            Err(e) => {
+                log::error!("Failed to parse config file at {:?}: {:?}", config_path, e);
+                Err(e.into())
+            }
+        };
+    }
+
+    pub fn save_config(config: &Config) -> Result<()> {
+        let config_path = match Self::get_config_file_path() {
+            Ok(path) => path,
+            Err(e) => {
+                log::error!("Failed to get config file path: {:?}", e);
+                return Err(e);
+            }
+        };
+        let config_data = match serde_json::to_string_pretty(config) {
+            Ok(data) => data,
+            Err(e) => {
+                log::error!("Failed to serialize config to JSON: {:?}", e);
+                return Err(e.into());
+            }
+        };
+
+        return match fs::write(config_path, config_data) {
+            Ok(_) => {
+                log::info!("Config saved successfully.");
+                Ok(())
+            }
+            Err(e) => {
+                log::error!("Failed to write config file: {:?}", e);
+                Err(e.into())
+            }
+        };
     }
 }

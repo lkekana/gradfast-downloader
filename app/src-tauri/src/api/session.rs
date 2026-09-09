@@ -4,12 +4,15 @@
 //! that handles cookie persistence, user agent rotation, and
 //! consistent request headers.
 
-use crate::{cookies::{load_cookies, save_cookies}, user_agents::UserAgentGenerator};
+use crate::config::Config;
+use crate::{
+    cookies::{load_cookies, save_cookies},
+    user_agents::UserAgentGenerator,
+};
 use anyhow::{Context, Result};
 use reqwest::{Client, Response};
 use reqwest_cookie_store::CookieStoreMutex;
 use std::sync::Arc;
-use crate::config::Config;
 
 /// Base URLs for the Gradfast service.
 pub const GRADFAST_WEB_URL: &str = "https://www.gradfast.com";
@@ -36,10 +39,7 @@ fn default_api_headers(user_agent: &str) -> reqwest::header::HeaderMap {
     headers.insert("Sec-Fetch-Dest", "empty".parse().unwrap());
     headers.insert("Sec-Fetch-Mode", "cors".parse().unwrap());
     headers.insert("Sec-Fetch-Site", "same-site".parse().unwrap());
-    headers.insert(
-        reqwest::header::USER_AGENT,
-        user_agent.parse().unwrap(),
-    );
+    headers.insert(reqwest::header::USER_AGENT, user_agent.parse().unwrap());
 
     headers
 }
@@ -71,10 +71,7 @@ fn default_page_headers(user_agent: &str) -> reqwest::header::HeaderMap {
         reqwest::header::UPGRADE_INSECURE_REQUESTS,
         "1".parse().unwrap(),
     );
-    headers.insert(
-        reqwest::header::USER_AGENT,
-        user_agent.parse().unwrap(),
-    );
+    headers.insert(reqwest::header::USER_AGENT, user_agent.parse().unwrap());
 
     headers
 }
@@ -91,7 +88,13 @@ pub struct GradfastSession {
 impl GradfastSession {
     /// Creates a new Gradfast session with a random user agent.
     pub fn new(config: &Config) -> Result<Self> {
-        let generator = UserAgentGenerator::new();
+        let generator = match UserAgentGenerator::new() {
+            Ok(g) => g,
+            Err(e) => {
+                log::error!("Failed to create UserAgentGenerator: {e}");
+                return Err(e);
+            }
+        };
         let user_agent = generator.get_random_agent().to_string();
         log::debug!("Using User-Agent: {}", user_agent);
 
@@ -107,14 +110,20 @@ impl GradfastSession {
             }
         };
 
-        let client = Client::builder()
+        let client = match Client::builder()
             .user_agent(&user_agent)
             .gzip(true)
             .brotli(true)
             .deflate(true)
             .cookie_provider(cookie_store.clone())
             .build()
-            .context("Failed to create HTTP client")?;
+        {
+            Ok(c) => c,
+            Err(e) => {
+                log::error!("Failed to create HTTP client: {e}");
+                return Err(e.into());
+            }
+        };
 
         Ok(Self {
             client,
@@ -129,17 +138,36 @@ impl GradfastSession {
         let url = format!("{}/{}", GRADFAST_API_URL, endpoint.trim_start_matches('/'));
         let headers = default_api_headers(&self.user_agent);
 
-        let resp = self.client
-            .get(&url)
-            .headers(headers)
-            .send()
-            .await
-            .context(format!("API request failed: {}", url))?;
+        let resp = match self.client.get(&url).headers(headers).send().await {
+            Ok(r) => r,
+            Err(e) => {
+                log::error!("API request failed: {}: {e}", url);
+                return Err(anyhow::anyhow!("API request failed: {}: {e}", url));
+            }
+        };
 
-        self.save_cookies()
-            .context("Failed to save cookies after API request")?;
+        if let Err(e) = self.save_cookies() {
+            log::error!("Failed to save cookies after API request: {e}");
+            return Err(anyhow::anyhow!(
+                "Failed to save cookies after API request: {e}"
+            ));
+        }
 
-        Ok(resp)
+        return match resp.error_for_status_ref() {
+            Ok(_) => Ok(resp),
+            Err(e) => {
+                log::error!(
+                    "API request returned error status (status={}, URL={}): {e}",
+                    resp.status(),
+                    url
+                );
+                Err(anyhow::anyhow!(
+                    "API request returned error status (status={}, URL={}): {e}",
+                    resp.status(),
+                    url
+                ))
+            }
+        };
     }
 
     /// Makes a page GET request (for HTML content).
@@ -151,17 +179,36 @@ impl GradfastSession {
         };
         let headers = default_page_headers(&self.user_agent);
 
-        let resp = self.client
-            .get(&url)
-            .headers(headers)
-            .send()
-            .await
-            .context(format!("Page request failed: {}", url))?;
-        
-        self.save_cookies()
-            .context("Failed to save cookies after page request")?;
-        
-        Ok(resp)
+        let resp = match self.client.get(&url).headers(headers).send().await {
+            Ok(r) => r,
+            Err(e) => {
+                log::error!("Page request failed: {}: {e}", url);
+                return Err(anyhow::anyhow!("Page request failed: {}: {e}", url));
+            }
+        };
+
+        if let Err(e) = self.save_cookies() {
+            log::error!("Failed to save cookies after page request: {e}");
+            return Err(anyhow::anyhow!(
+                "Failed to save cookies after page request: {e}"
+            ));
+        }
+
+        return match resp.error_for_status_ref() {
+            Ok(_) => Ok(resp),
+            Err(e) => {
+                log::error!(
+                    "Page request returned error status (status={}, URL={}): {e}",
+                    resp.status(),
+                    url
+                );
+                Err(anyhow::anyhow!(
+                    "Page request returned error status (status={}, URL={}): {e}",
+                    resp.status(),
+                    url
+                ))
+            }
+        };
     }
 
     /// Downloads a file from the specified URL.
@@ -223,12 +270,17 @@ impl Default for AuthState {
 }
 
 /// Checks if the session has received CloudFront cookies.
-pub fn has_cloudfront_cookie(cookie_store: &CookieStoreMutex) -> bool {
-    let store = cookie_store.lock().unwrap();
-    let has_cookie = store
+pub fn has_cloudfront_cookie(cookie_store: &CookieStoreMutex) -> Result<bool> {
+    let store = match cookie_store.lock() {
+        Ok(s) => s,
+        Err(e) => {
+            log::error!("Failed to lock cookie store: {e}");
+            return Err(anyhow::anyhow!("Failed to lock cookie store: {e}"));
+        }
+    };
+    return Ok(store
         .iter_any()
-        .any(|c| c.name().starts_with("CloudFront-"));
-    has_cookie
+        .any(|c| c.name().starts_with("CloudFront-")));
 }
 
 #[cfg(test)]
@@ -238,16 +290,15 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_create_session() {
-        let config = ConfigManager::default_config();
-        let session = GradfastSession::new(&config);
-        assert!(session.is_ok());
-    }
-
-    #[test]
     fn test_user_agent() {
-        let config = ConfigManager::default_config();
-        let session = GradfastSession::new(&config).unwrap();
+        let config = match ConfigManager::default_config() {
+            Ok(c) => c,
+            Err(e) => panic!("Failed to load default config: {e}"),
+        };
+        let session = match GradfastSession::new(&config) {
+            Ok(s) => s,
+            Err(e) => panic!("Failed to create session: {e}"),
+        };
         let ua = session.user_agent();
         assert!(ua.starts_with("Mozilla/5.0"));
     }

@@ -16,14 +16,13 @@ pub mod api;
 pub mod config;
 pub mod cookies;
 pub mod models;
-pub mod utils;
 pub mod user_agents;
+pub mod utils;
 
 // Re-export commonly used types for convenience
 pub use api::{
-    authenticate, download_file, download_file_with_retry, get_all_categories,
-    get_all_modules, get_module_info, get_module_past_papers,
-    GradfastSession,
+    authenticate, download_file, download_file_with_retry, get_all_categories, get_all_modules,
+    get_module_info, get_module_past_papers, GradfastSession,
 };
 pub use cookies::{clear_cookies, has_saved_cookies, load_cookies, save_cookies};
 pub use models::{Module, ModuleCategory, ModuleInfo, PastPaper};
@@ -35,13 +34,11 @@ pub fn run() {
         .plugin(tauri_plugin_log::Builder::default().build())
         .setup(|app| {
             if cfg!(debug_assertions) {
-                app.handle()
-                    .plugin(
-                        tauri_plugin_log::Builder::default()
-                            .level(log::LevelFilter::Info)
-                            .build(),
-                    )
-                    ?;
+                app.handle().plugin(
+                    tauri_plugin_log::Builder::default()
+                        .level(log::LevelFilter::Info)
+                        .build(),
+                )?;
             }
             Ok(())
         })

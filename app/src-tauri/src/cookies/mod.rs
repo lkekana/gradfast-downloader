@@ -3,11 +3,13 @@
 //! Handles loading and saving cookies to a file for session persistence
 //! across application restarts.
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use cookie_store::CookieStore;
 use std::fs;
 use std::io::Write;
 use std::path::PathBuf;
+
+use crate::utils;
 
 /// Default filename for the cookies file.
 const COOKIES_FILE_NAME: &str = "cookies.json";
@@ -19,16 +21,19 @@ const COOKIES_FILE_NAME: &str = "cookies.json";
 ///
 /// The cookies are stored in the application's data directory.
 pub fn get_cookies_file_path() -> Result<PathBuf> {
-    // Try to get the app data directory first
-    let base_dir = dirs::data_local_dir()
-        .or_else(|| dirs::home_dir())
-        .context("Failed to determine home directory")?;
+    let base_dir = match dirs::data_local_dir() {
+        Some(dir) => dir,
+        None => return Err(anyhow::anyhow!("Failed to determine home directory")),
+    };
 
     let app_dir = base_dir.join("gradfast-downloader");
-    fs::create_dir_all(&app_dir).context("Failed to create app data directory")?;
+    if let Err(e) = utils::ensure_dir_exists(&app_dir) {
+        log::error!("Failed to create app data directory at {:?}: {e}", app_dir);
+        return Err(e.into());
+    }
 
     // print the path for debugging
-    println!("Cookies file path: {:?}", app_dir.join(COOKIES_FILE_NAME));
+    // println!("Cookies file path: {:?}", app_dir.join(COOKIES_FILE_NAME));
     Ok(app_dir.join(COOKIES_FILE_NAME))
 }
 
@@ -49,58 +54,103 @@ pub fn load_cookies() -> Option<CookieStore> {
         return None;
     }
 
-    let cookie_store = {
-    if let Ok(file) = std::fs::File::open(path)
-        .map(std::io::BufReader::new) {
-        cookie_store::serde::json::load(file).unwrap()
+    return match std::fs::File::open(path).map(std::io::BufReader::new) {
+        Ok(file) => {
+            let store = cookie_store::serde::json::load(file).unwrap();
+            log::info!("Cookies loaded successfully from file");
+            Some(store)
         }
-        else {
-        reqwest_cookie_store::CookieStore::new(None)
+        Err(e) => {
+            log::error!("Failed to open cookies file: {e}");
+            None
         }
     };
-    let cookie_store = reqwest_cookie_store::CookieStoreMutex::new(cookie_store);
-    return Some(cookie_store.into_inner().unwrap());
 }
 
 /// Saves cookies to the cookies file.
 ///
 /// Creates the directory structure if it doesn't exist.
 pub fn save_cookies(cookie_store: &CookieStore) -> Result<()> {
-    let path = get_cookies_file_path()?;
-    
+    let path = match get_cookies_file_path() {
+        Ok(p) => p,
+        Err(e) => {
+            log::error!("Failed to get cookies file path: {e}");
+            return Err(e);
+        }
+    };
+
     //print cookies
     log::debug!("\n\nSaving cookies:");
     cookie_store.iter_any().for_each(|c| {
-      log::debug!("Saving cookie: {}={}", c.name(), c.value());
+        log::debug!("Saving cookie: {}={}", c.name(), c.value());
     });
 
-    let mut writer = std::fs::File::create(&path)
-      .map(std::io::BufWriter::new)
-      .unwrap();
-    
-    cookie_store::serde::json::save_incl_expired_and_nonpersistent(&cookie_store, &mut writer).unwrap();
-    writer.flush()
-        .context("Failed to flush cookies to disk")?; // ← Critical!
-    Ok(())
+    let mut writer = match std::fs::File::create(&path).map(std::io::BufWriter::new) {
+        Ok(w) => w,
+        Err(e) => {
+            log::error!("Failed to create cookies file at {:?}: {e}", path);
+            return Err(e.into());
+        }
+    };
+
+    cookie_store::serde::json::save_incl_expired_and_nonpersistent(&cookie_store, &mut writer)
+        .unwrap();
+    return match writer.flush() {
+        Ok(_) => {
+            log::info!("Cookies saved successfully to {:?}", path);
+            Ok(())
+        }
+        Err(e) => {
+            log::error!("Failed to flush cookies to file at {:?}: {e}", path);
+            Err(e.into())
+        }
+    };
 }
 
 /// Clears all saved cookies by removing the cookies file.
 pub fn clear_cookies() -> Result<()> {
-    let path = get_cookies_file_path()?;
+    let path = match get_cookies_file_path() {
+        Ok(p) => p,
+        Err(e) => {
+            log::error!("Failed to get cookies file path: {e}");
+            return Err(e);
+        }
+    };
 
-    if path.exists() {
-        fs::remove_file(&path).context("Failed to remove cookies file")?;
-        log::info!("Cookies cleared");
+    if !path.exists() {
+        log::info!("No cookies file found to clear at {:?}", path);
+        return Ok(());
     }
 
-    Ok(())
+    return match fs::remove_file(&path) {
+        Ok(_) => {
+            log::info!("Cookies cleared");
+            Ok(())
+        }
+        Err(e) => {
+            log::error!("Failed to remove cookies file at {:?}: {e}", path);
+            Err(e.into())
+        }
+    };
 }
 
 /// Checks if the cookies file exists.
-pub fn has_saved_cookies() -> bool {
-    get_cookies_file_path()
-        .map(|p| p.exists())
-        .unwrap_or(false)
+pub fn has_saved_cookies() -> Result<bool> {
+    return match get_cookies_file_path() {
+        Ok(p) => {
+            log::debug!(
+                "Checking for cookies file at {:?}: exists={}",
+                p,
+                p.exists()
+            );
+            return Ok(p.exists());
+        }
+        Err(e) => {
+            log::error!("Failed to get cookies file path: {e}");
+            // Ok(false);
+            Err(e)
+        }
+    };
 }
 
 #[cfg(test)]

@@ -3,6 +3,9 @@
 //! Provides helper functions for user agent rotation, random delays,
 //! and string manipulation.
 use anyhow::Result;
+// use flate2::read::GzDecoder;
+// use std::fs::File;
+// use std::io::{copy, BufReader};
 
 /// Sleeps for a random duration between the given bounds.
 ///
@@ -36,14 +39,21 @@ pub fn remove_whitespace(s: &str) -> String {
 
 pub fn ensure_dir_exists(path: &std::path::Path) -> Result<()> {
     if !path.exists() {
-        std::fs::create_dir_all(path)?;
+        match std::fs::create_dir_all(path) {
+            Ok(_) => {
+                log::debug!("Created directory at {:?}", path);
+            }
+            Err(e) => {
+                log::error!("Failed to create directory at {:?}: {e}", path);
+                return Err(e.into());
+            }
+        }
     }
     Ok(())
 }
 
 pub fn get_app_data_dir() -> Option<std::path::PathBuf> {
-    let base_dir = dirs::data_local_dir()
-        .expect("Failed to determine home directory");
+    let base_dir = dirs::data_local_dir().expect("Failed to determine home directory");
 
     let app_dir = base_dir.join("gradfast-downloader");
     match ensure_dir_exists(&app_dir) {
@@ -58,6 +68,42 @@ pub fn get_app_data_dir() -> Option<std::path::PathBuf> {
 pub fn get_home_dir() -> Option<std::path::PathBuf> {
     return dirs::home_dir();
 }
+
+/*
+pub fn decompress_gz_file(gz_path: &std::path::Path, output_path: &std::path::Path) -> Result<()> {
+    let gz_file = match File::open(gz_path) {
+        Ok(file) => file,
+        Err(e) => {
+            log::error!("Failed to open gz file at {:?}: {e}", gz_path);
+            return Err(e.into());
+        }
+    };
+    let mut gz_decoder = GzDecoder::new(BufReader::new(gz_file));
+    let mut output_file = match File::create(output_path) {
+        Ok(file) => file,
+        Err(e) => {
+            log::error!("Failed to create output file at {:?}: {e}", output_path);
+            return Err(e.into());
+        }
+    };
+    match copy(&mut gz_decoder, &mut output_file);
+    Ok(())
+}
+
+pub fn download_user_agents_json() -> Result<()> {
+    let url = "https://github.com/lkekana/gradfast-downloader/raw/refs/heads/main/app/src-tauri/user-agents.json";
+    let response = match reqwest::blocking::get(url).error_for_status();
+    let content = match response.text();
+
+    let app_data_dir = match get_app_data_dir() {
+        Some(dir) => dir,
+        None => return Err(anyhow::anyhow!("Failed to get app data directory")),
+    };
+    let output_path = app_data_dir.join("user-agents.json");
+    match std::fs::write(output_path, content);
+    Ok(())
+}
+*/
 
 #[cfg(test)]
 mod tests {

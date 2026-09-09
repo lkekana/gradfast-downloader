@@ -1,37 +1,58 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use anyhow::{Context, Result};
+use anyhow::Result;
+use app_lib::api::{authenticate, download_entire_module, GradfastSession};
 use app_lib::config::ConfigManager;
-use app_lib::api::{GradfastSession, authenticate, download_entire_module};
-use app_lib::user_agents::UserAgentGenerator;
 
 async fn test1() -> Result<()> {
-    let config = ConfigManager::load_config();
+    let config = match ConfigManager::load_config() {
+        Ok(c) => c,
+        Err(e) => {
+            eprintln!("Failed to load config: {e:#}");
+            return Err(e);
+        }
+    };
 
-    let session = GradfastSession::new(&config)
-        .context("Failed to create session").unwrap();
+    let session = match GradfastSession::new(&config) {
+        Ok(s) => s,
+        Err(e) => {
+            eprintln!("Failed to create session: {e:#}");
+            return Err(e);
+        }
+    };
 
-    authenticate(&session).await
-        .context("Authentication failed").unwrap();
+    match authenticate(&session).await {
+        Ok(_) => {
+            println!("Authenticated successfully");
+        }
+        Err(e) => {
+            eprintln!("Failed to authenticate: {e:#}");
+            return Err(e);
+        }
+    };
 
-    download_entire_module(&session, "WTW114").await?;
-
-    Ok(())
+    return match download_entire_module(&session, "WTW115").await {
+        Ok(_) => {
+            println!("Module downloaded successfully");
+            Ok(())
+        }
+        Err(e) => {
+            eprintln!("Failed to download module: {e:#}");
+            Err(e)
+        }
+    };
 }
 
 fn main() {
-  // app_lib::run();
+    // app_lib::run();
 
-  // hello world
-  println!("Hello, world!");
-  let generator = UserAgentGenerator::new();
-  println!("Test: random user agent: {}", generator.get_random_agent());
-  if let Err(e) = tokio::runtime::Runtime::new()
+    // hello world
+    println!("Hello, world!");
+    if let Err(e) = tokio::runtime::Runtime::new()
         .expect("failed to create Tokio runtime")
         .block_on(test1())
     {
         eprintln!("test1 failed: {e:#}");
     }
-
 }

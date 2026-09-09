@@ -1,22 +1,32 @@
-use anyhow::{Result};
+use anyhow::Result;
+use serde::Deserialize;
 use std::fs::File;
 use std::io::BufReader;
-use std::path::{Path};
-use serde::Deserialize;
-use std::env;
+use std::path::Path;
+use std::{env, usize};
 
 fn make_cumulative_weight_index_pairs(agents: &Vec<UserAgent>) -> Vec<(f32, usize)> {
     let total_weight: f32 = agents.iter().map(|agent| agent.weight).sum();
     let mut sum = 0.0;
-    return agents.iter().enumerate().map(|(index, agent)| {
-        sum += agent.weight / total_weight;
-        // println!("Agent: {}, Weight: {}, Cumulative Sum: {}", agent.user_agent, agent.weight, sum);
-        (sum, index)
-    }).collect();
+    return agents
+        .iter()
+        .enumerate()
+        .map(|(index, agent)| {
+            sum += agent.weight / total_weight;
+            // println!("Agent: {}, Weight: {}, Cumulative Sum: {}", agent.user_agent, agent.weight, sum);
+            (sum, index)
+        })
+        .collect();
 }
 
 fn load_user_agents_json() -> Result<Vec<UserAgent>> {
-    let cwd = env::current_dir()?;
+    let cwd = match env::current_dir() {
+        Ok(dir) => dir,
+        Err(e) => {
+            log::error!("Failed to get current working directory: {:?}", e);
+            return Err(e.into());
+        }
+    };
     println!("Current working dir: {:?}", cwd);
 
     let path = Path::new("./user-agents.json");
@@ -26,9 +36,16 @@ fn load_user_agents_json() -> Result<Vec<UserAgent>> {
 
     let file = File::open(path).expect("Failed to open user-agents.json");
     let reader = BufReader::new(file);
-    let data: Vec<UserAgent> = serde_json::from_reader(reader)?;
+    let data: Vec<UserAgent> = match serde_json::from_reader(reader) {
+        Ok(data) => data,
+        Err(e) => {
+            log::error!("Failed to parse user-agents.json: {:?}", e);
+            return Err(e.into());
+        }
+    };
     if data.is_empty() {
-        panic!("No user agents found in user-agents.json");
+        // panic!("No user agents found in user-agents.json");
+        return Err(anyhow::anyhow!("No user agents found in user-agents.json"));
     }
     Ok(data)
 }
@@ -64,27 +81,43 @@ pub struct UserAgentGenerator {
 }
 
 impl UserAgentGenerator {
-    pub fn new() -> Self {
+    pub fn new() -> Result<Self> {
         let agents = match load_user_agents_json() {
             Ok(agents) => agents,
             Err(e) => {
-                panic!("Failed to load user agents: {:?}", e);
+                log::error!("Failed to load user agents: {:?}", e);
+                return Err(e);
             }
         };
 
         let weight_index_pairs = make_cumulative_weight_index_pairs(&agents);
 
-        Self {
+        Ok(Self {
             agents,
             weight_index_pairs,
-        }
+        })
     }
 
     pub fn get_random_agent(&self) -> &str {
-        let random_value: f32 = rand::random();
-        let index = self.weight_index_pairs.iter()
-            .position(|(cumulative_weight, _)| *cumulative_weight >= random_value)
-            .expect("Failed to find a user agent based on weights");
+        let mut index = usize::MAX;
+        while index == usize::MAX {
+            let random_value: f32 = rand::random();
+            let tmp = match self
+                .weight_index_pairs
+                .iter()
+                .position(|(cumulative_weight, _)| *cumulative_weight >= random_value)
+            {
+                Some(i) => i,
+                None => {
+                    log::error!(
+                        "Failed to find a user agent based on weights for random value: {}",
+                        random_value
+                    );
+                    continue;
+                }
+            };
+            index = tmp;
+        }
         let agent_index = self.weight_index_pairs[index].1;
         return self.agents[agent_index].user_agent.as_str();
     }

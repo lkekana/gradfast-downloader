@@ -84,6 +84,7 @@ dependencies = [
  "cookie_store 0.21.1",
  "dirs 5.0.1",
  "fake_user_agent",
+ "flate2",
  "log",
  "nescookie",
  "rand 0.8.5",
