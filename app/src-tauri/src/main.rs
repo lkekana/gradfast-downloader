@@ -45,14 +45,14 @@ async fn test1() -> Result<()> {
 }
 
 fn main() {
-    // app_lib::run();
-
     // hello world
     println!("Hello, world!");
-    if let Err(e) = tokio::runtime::Runtime::new()
-        .expect("failed to create Tokio runtime")
-        .block_on(test1())
-    {
-        eprintln!("test1 failed: {e:#}");
-    }
+    // if let Err(e) = tokio::runtime::Runtime::new()
+    //     .expect("failed to create Tokio runtime")
+    //     .block_on(test1())
+    // {
+    //     eprintln!("test1 failed: {e:#}");
+    // }
+
+    app_lib::run();
 }

@@ -30,18 +30,44 @@ pub use utils::{remove_whitespace, sleep_random, sleep_random_sync};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // tauri::Builder::default()
+    //     .plugin(tauri_plugin_log::Builder::default().build())
+    //     .setup(|app| {
+    //         if cfg!(debug_assertions) {
+    //             app.handle().plugin(
+    //                 tauri_plugin_log::Builder::default()
+    //                     .level(log::LevelFilter::Info)
+    //                     .build(),
+    //             )?;
+    //         }
+    //         Ok(())
+    //     })
+    //     .run(tauri::generate_context!())
+    //     .expect("error while running tauri application");
+
+    let log_plugin = if cfg!(debug_assertions) {
+        tauri_plugin_log::Builder::default()
+            .level(log::LevelFilter::Debug)
+            .build()
+    } else {
+        tauri_plugin_log::Builder::default()
+            .level(log::LevelFilter::Info)
+            .build()
+    };
+
     tauri::Builder::default()
-        .plugin(tauri_plugin_log::Builder::default().build())
-        .setup(|app| {
-            if cfg!(debug_assertions) {
-                app.handle().plugin(
-                    tauri_plugin_log::Builder::default()
-                        .level(log::LevelFilter::Info)
-                        .build(),
-                )?;
-            }
-            Ok(())
-        })
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+    // .plugin(tauri_plugin_log::Builder::default().build())
+    .plugin(log_plugin)
+    .setup(|app| {
+        // if cfg!(debug_assertions) {
+        //     app.handle().plugin(
+        //         tauri_plugin_log::Builder::default()
+        //             .level(log::LevelFilter::Info)
+        //             .build(),
+        //     )?;
+        // }
+        Ok(())
+    })
+    .run(tauri::generate_context!())
+    .expect("error while running tauri application");
 }
