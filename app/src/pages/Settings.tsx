@@ -4,7 +4,7 @@ import {
 	Check,
 	Database,
 	FileText,
-	FolderOpen,
+	// FolderOpen,
 	HardDrive,
 	Layers,
 	Monitor,
@@ -17,9 +17,9 @@ import {
 	Wifi,
 	WifiOff,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
-import { Combobox, ComboboxItem } from "@/components/combobox";
+import { Combobox, ComboboxItem } from "@/components/Combobox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,7 +29,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+// import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
 	Select,
@@ -49,9 +49,10 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
-import useConnection from "@/hooks/useConnection";
 import { useTheme } from "@/hooks/useTheme";
-import { downloadPath } from "@/lib/api";
+import { useSettingsStore } from "@/stores/useSettingsStore";
+import { useConnectionStore } from "@/stores/connectionStore";
+import { useModules } from "@/stores/apiStore";
 
 const programmes = [
 	{
@@ -180,94 +181,66 @@ const moduleRoles = [
 
 export default function SettingsPage() {
 	const { toast } = useToast();
-	const {
-		isOnline,
-		isConnected,
-		isReconnecting,
-		reconnectError,
-		attemptReconnect,
-	} = useConnection();
+	const modulesHook = useModules();
+		const isOnline = useConnectionStore((s) => s.isOnline);
+		const isConnected = useConnectionStore((s) => s.isConnected);
+		const isReconnecting = useConnectionStore((s) => s.isReconnecting);
+		const attemptReconnect = useConnectionStore((s) => s.attemptReconnect);
+		const reconnectError = useConnectionStore((s) => s.reconnectError);
+	
 	const { themeSetting, setThemeSetting } = useTheme();
-
-	// ========== PROGRAMME SELECTION ==========
-	const [programmeSelectionMode, setProgrammeSelectionMode] = useState<
-		"search" | "hierarchical"
-	>("search");
 	const [programmeSearchQuery, setProgrammeSearchQuery] = useState("");
-	const [selectedProgrammeId, setSelectedProgrammeId] = useState<string>("");
-
-	// Hierarchical selection state
-	const [academicLevel, setAcademicLevel] = useState<"undergrad" | "postgrad">(
-		"undergrad",
-	);
-	const [selectedFaculty, setSelectedFaculty] = useState<string>("");
-	const [selectedDepartment, setSelectedDepartment] = useState<string>("");
-
-	const [year, setYear] = useState<string>("");
-
-	// ========== DOWNLOAD PREFERENCES ==========
-	const [destinationFolder, setDestinationFolder] =
-		useState<string>(downloadPath);
-	const [moduleSubfolders, setModuleSubfolders] = useState<boolean>(true);
-	const [namingPattern, setNamingPattern] = useState<string>("code-year-type");
-	const [parallelDownloads, setParallelDownloads] = useState<number>(3);
-	const [retryAttempts, setRetryAttempts] = useState<number>(3);
-
-	// ========== CONTENT FILTERS ==========
-	const [includeModuleRoles, setIncludeModuleRoles] = useState<{
-		[key: string]: boolean;
-	}>({
-		fundamental: true,
-		core: true,
-		elective: false,
-	});
-	const [nqfLevelRange, setNqfLevelRange] = useState<[number, number]>([5, 10]);
-	const [creditsRange, setCreditsRange] = useState<[number, number]>([0, 60]);
-	const [preferredLanguages, setPreferredLanguages] = useState<string[]>([
-		"English",
-	]);
-	const [preferredPeriods, setPreferredPeriods] = useState<string[]>([
-		"Semester 1",
-		"Semester 2",
-		"Year",
-	]);
-
-	// ========== PAPER TYPE PREFERENCES ==========
-	const [includePaperTypes, setIncludePaperTypes] = useState<{
-		[key: string]: boolean;
-	}>({
-		exams: true,
-		semesterTests: true,
-		classTests: true,
-		practicals: true,
-		tutorials: true,
-	});
-	const [yearRange, setYearRange] = useState<[number, number]>([
-		2020,
-		new Date().getFullYear(),
-	]);
-	const [preferMostRecent, setPreferMostRecent] = useState<boolean>(true);
-
-	// ========== METADATA & SYNC ==========
-	const [includeMetadata, setIncludeMetadata] = useState<boolean>(true);
-	const [includeModuleContent, setIncludeModuleContent] =
-		useState<boolean>(true);
-	const [includePrerequisites, setIncludePrerequisites] =
-		useState<boolean>(true);
-	const [includeCurriculumStructure, setIncludeCurriculumStructure] =
-		useState<boolean>(false);
-	const [autoSyncProgrammeData, setAutoSyncProgrammeData] =
-		useState<boolean>(true);
-	const [cacheDurationHours, setCacheDurationHours] = useState<number>(24);
-
-	// ========== AUTO-SELECTION & UPDATES ==========
-	const [autoSelectModules, setAutoSelectModules] = useState<boolean>(true);
-	const [checkForUpdates, setCheckForUpdates] = useState<boolean>(true);
-
-	// ========== UI STATE ==========
 	const [isSaving, setIsSaving] = useState<boolean>(false);
 	const [showSaveSuccess, setShowSaveSuccess] = useState<boolean>(false);
 	const [activeTab, setActiveTab] = useState<string>("general");
+
+	const programmeSelectionMode = useSettingsStore(
+		(state) => state.programmeSelectionMode,
+	);
+	const programmeID = useSettingsStore((state) => state.programmeID);
+	const academicLevel = useSettingsStore((state) => state.academicLevel);
+	const faculty = useSettingsStore((state) => state.faculty);
+	const department = useSettingsStore((state) => state.department);
+	const year = useSettingsStore((state) => state.year);
+	// const destinationFolder = useSettingsStore((state) => state.destinationFolder);
+	const moduleSubfolders = useSettingsStore((state) => state.moduleSubfolders);
+	const namingPattern = useSettingsStore((state) => state.namingPattern);
+	const parallelDownloads = useSettingsStore(
+		(state) => state.parallelDownloads,
+	);
+	const retryAttempts = useSettingsStore((state) => state.retryAttempts);
+	const includeModuleRoles = useSettingsStore(
+		(state) => state.includeModuleRoles,
+	);
+	// const nqfLevelRange = useSettingsStore((state) => state.nqfLevelRange);
+	// const creditsRange = useSettingsStore((state) => state.creditsRange);
+	// const preferredLanguages = useSettingsStore((state) => state.preferredLanguages);
+	// const preferredPeriods = useSettingsStore((state) => state.preferredPeriods);
+	const includePaperTypes = useSettingsStore(
+		(state) => state.includePaperTypes,
+	);
+	const yearRange = useSettingsStore((state) => state.yearRange);
+	// const preferMostRecent = useSettingsStore((state) => state.preferMostRecent);
+	const includeMetadata = useSettingsStore((state) => state.includeMetadata);
+	const includeModuleContent = useSettingsStore(
+		(state) => state.includeModuleContent,
+	);
+	const includePrerequisites = useSettingsStore(
+		(state) => state.includePrerequisites,
+	);
+	const includeCurriculumStructure = useSettingsStore(
+		(state) => state.includeCurriculumStructure,
+	);
+	const autoSyncProgrammeData = useSettingsStore(
+		(state) => state.autoSyncProgrammeData,
+	);
+	const cacheDurationHours = useSettingsStore(
+		(state) => state.cacheDurationHours,
+	);
+	const autoSelectModules = useSettingsStore(
+		(state) => state.autoSelectModules,
+	);
+	const checkForUpdates = useSettingsStore((state) => state.checkForUpdates);
 
 	// Filtered programmes for combobox
 	const filteredProgrammes = useMemo(() => {
@@ -283,131 +256,27 @@ export default function SettingsPage() {
 
 	// Filtered departments based on faculty selection
 	const availableDepartments = useMemo(() => {
-		return selectedFaculty
-			? departments[selectedFaculty as keyof typeof departments] || []
+		return faculty
+			? departments[faculty as keyof typeof departments] || []
 			: [];
-	}, [selectedFaculty]);
+	}, [faculty]);
 
 	// Filtered programmes based on hierarchical selection
 	const hierarchicalProgrammes = useMemo(() => {
 		return programmes.filter((p) => {
 			if (p.level !== academicLevel) return false;
-			if (selectedFaculty && p.faculty !== selectedFaculty) return false;
-			if (selectedDepartment && p.department !== selectedDepartment)
-				return false;
+			if (faculty && p.faculty !== faculty) return false;
+			if (department && p.department !== department) return false;
 			return true;
 		});
-	}, [academicLevel, selectedFaculty, selectedDepartment]);
-
-	// Load saved settings on mount
-	useEffect(() => {
-		const saved = localStorage.getItem("pastpapers-settings");
-		if (saved) {
-			try {
-				const parsed = JSON.parse(saved);
-				// Theme
-				setThemeSetting(parsed.theme || "system");
-				// Programme selection
-				setProgrammeSelectionMode(parsed.programmeSelectionMode || "search");
-				setSelectedProgrammeId(parsed.programme || "");
-				setAcademicLevel(parsed.academicLevel || "undergrad");
-				setSelectedFaculty(parsed.faculty || "");
-				setSelectedDepartment(parsed.department || "");
-				setYear(parsed.year || "");
-				// Download preferences
-				setDestinationFolder(parsed.destinationFolder || downloadPath);
-				setModuleSubfolders(parsed.moduleSubfolders ?? true);
-				setNamingPattern(parsed.namingPattern || "code-year-type");
-				setParallelDownloads(parsed.parallelDownloads || 3);
-				setRetryAttempts(parsed.retryAttempts || 3);
-				// Content filters
-				setIncludeModuleRoles(
-					parsed.includeModuleRoles || {
-						fundamental: true,
-						core: true,
-						elective: false,
-					},
-				);
-				setNqfLevelRange(parsed.nqfLevelRange || [5, 10]);
-				setCreditsRange(parsed.creditsRange || [0, 60]);
-				setPreferredLanguages(parsed.preferredLanguages || ["English"]);
-				setPreferredPeriods(
-					parsed.preferredPeriods || ["Semester 1", "Semester 2", "Year"],
-				);
-				// Paper preferences
-				setIncludePaperTypes(
-					parsed.includePaperTypes || {
-						exams: true,
-						semesterTests: true,
-						classTests: true,
-						practicals: true,
-						tutorials: true,
-					},
-				);
-				setYearRange(parsed.yearRange || [2020, new Date().getFullYear()]);
-				setPreferMostRecent(parsed.preferMostRecent ?? true);
-				// Metadata & sync
-				setIncludeMetadata(parsed.includeMetadata ?? true);
-				setIncludeModuleContent(parsed.includeModuleContent ?? true);
-				setIncludePrerequisites(parsed.includePrerequisites ?? true);
-				setIncludeCurriculumStructure(
-					parsed.includeCurriculumStructure ?? false,
-				);
-				setAutoSyncProgrammeData(parsed.autoSyncProgrammeData ?? true);
-				setCacheDurationHours(parsed.cacheDurationHours || 24);
-				// Auto-selection
-				setAutoSelectModules(parsed.autoSelectModules ?? true);
-				setCheckForUpdates(parsed.checkForUpdates ?? true);
-			} catch (e) {
-				console.error("Failed to load settings:", e);
-			}
-		}
-	}, []);
+	}, [academicLevel, faculty, department]);
 
 	const handleSave = async () => {
 		setIsSaving(true);
+
+		// Simulate network delay for UX
 		await new Promise((resolve) => setTimeout(resolve, 800));
 
-		const settings = {
-			// Theme & UI
-			themeSetting,
-			// Programme selection
-			programmeSelectionMode,
-			programme: selectedProgrammeId,
-			academicLevel,
-			faculty: selectedFaculty,
-			department: selectedDepartment,
-			year,
-			// Download preferences
-			destinationFolder,
-			moduleSubfolders,
-			namingPattern,
-			parallelDownloads,
-			retryAttempts,
-			// Content filters
-			includeModuleRoles,
-			nqfLevelRange,
-			creditsRange,
-			preferredLanguages,
-			preferredPeriods,
-			// Paper preferences
-			includePaperTypes,
-			yearRange,
-			preferMostRecent,
-			// Metadata & sync
-			includeMetadata,
-			includeModuleContent,
-			includePrerequisites,
-			includeCurriculumStructure,
-			autoSyncProgrammeData,
-			cacheDurationHours,
-			// Auto-selection
-			autoSelectModules,
-			checkForUpdates,
-			lastSaved: new Date().toISOString(),
-		};
-
-		localStorage.setItem("pastpapers-settings", JSON.stringify(settings));
 		setIsSaving(false);
 		setShowSaveSuccess(true);
 		toast({
@@ -418,40 +287,7 @@ export default function SettingsPage() {
 	};
 
 	const handleReset = () => {
-		setThemeSetting("system");
-		setProgrammeSelectionMode("search");
-		setSelectedProgrammeId("");
-		setAcademicLevel("undergrad");
-		setSelectedFaculty("");
-		setSelectedDepartment("");
-		setYear("");
-		setDestinationFolder("/downloads/past-papers/");
-		setModuleSubfolders(true);
-		setNamingPattern("code-year-type");
-		setParallelDownloads(3);
-		setRetryAttempts(3);
-		setIncludeModuleRoles({ fundamental: true, core: true, elective: false });
-		setNqfLevelRange([5, 10]);
-		setCreditsRange([0, 60]);
-		setPreferredLanguages(["English"]);
-		setPreferredPeriods(["Semester 1", "Semester 2", "Year"]);
-		setIncludePaperTypes({
-			exams: true,
-			semesterTests: true,
-			classTests: true,
-			practicals: true,
-			tutorials: true,
-		});
-		setYearRange([2020, new Date().getFullYear()]);
-		setPreferMostRecent(true);
-		setIncludeMetadata(true);
-		setIncludeModuleContent(true);
-		setIncludePrerequisites(true);
-		setIncludeCurriculumStructure(false);
-		setAutoSyncProgrammeData(true);
-		setCacheDurationHours(24);
-		setAutoSelectModules(true);
-		setCheckForUpdates(true);
+		useSettingsStore.getState().resetSettings(); // Resets to defaults and clears localStorage
 		toast({
 			title: "Settings reset",
 			description: "All settings have been reset to defaults.",
@@ -459,19 +295,29 @@ export default function SettingsPage() {
 		});
 	};
 
-	const handleBrowseFolder = () => {
-		toast({
-			title: "Folder picker",
-			description: "Native folder picker would open here.",
+	// const handleBrowseFolder = () => {
+	// 	toast({
+	// 		title: "Folder picker",
+	// 		description: "Native folder picker would open here.",
+	// 	});
+	// };
+
+	const toggleModuleRole = (role: string) => {
+		useSettingsStore.getState().updateSettings({
+			includeModuleRoles: {
+				...includeModuleRoles,
+				[role]: !includeModuleRoles[role],
+			},
 		});
 	};
 
-	const toggleModuleRole = (role: string) => {
-		setIncludeModuleRoles((prev) => ({ ...prev, [role]: !prev[role] }));
-	};
-
 	const togglePaperType = (type: string) => {
-		setIncludePaperTypes((prev) => ({ ...prev, [type]: !prev[type] }));
+		useSettingsStore.getState().updateSettings({
+			includePaperTypes: {
+				...includePaperTypes,
+				[type]: !includePaperTypes[type],
+			},
+		});
 	};
 
 	// const selectedPattern = namingPatterns.find((p) => p.id === namingPattern);
@@ -540,9 +386,8 @@ export default function SettingsPage() {
 									<button
 										type="button"
 										onClick={
-											isConnected || isReconnecting
-												? undefined
-												: attemptReconnect
+											// isConnected || isReconnecting
+											() => isConnected ? undefined : attemptReconnect(modulesHook)
 										}
 										disabled={isReconnecting}
 										className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-colors ${
@@ -600,13 +445,13 @@ export default function SettingsPage() {
 					onValueChange={setActiveTab}
 					className="space-y-4"
 				>
-					<TabsList className="grid w-full grid-cols-4 lg:grid-cols-6">
+					<TabsList className="grid w-full grid-cols-3">
 						<TabsTrigger value="general">General</TabsTrigger>
-						<TabsTrigger value="programme">Programme</TabsTrigger>
+						{/* <TabsTrigger value="programme" disabled>Programme</TabsTrigger> */}
 						<TabsTrigger value="download">Download</TabsTrigger>
-						<TabsTrigger value="filters">Filters</TabsTrigger>
+						{/* <TabsTrigger value="filters">Filters</TabsTrigger> */}
 						<TabsTrigger value="papers">Papers</TabsTrigger>
-						<TabsTrigger value="advanced">Advanced</TabsTrigger>
+						{/* <TabsTrigger value="advanced">Advanced</TabsTrigger> */}
 					</TabsList>
 
 					{/* General Tab */}
@@ -655,9 +500,9 @@ export default function SettingsPage() {
 							</CardContent>
 						</Card>
 
-						<Card>
+						<Card className="opacity-50 pointer-events-none cursor-not-allowed select-none">
 							<CardHeader>
-								<CardTitle>Auto-Selection</CardTitle>
+								<CardTitle>Auto-Selection (Coming Soon)</CardTitle>
 								<CardDescription>
 									Automatically select modules for you
 								</CardDescription>
@@ -673,7 +518,11 @@ export default function SettingsPage() {
 									</div>
 									<Switch
 										checked={autoSelectModules}
-										onCheckedChange={setAutoSelectModules}
+										onCheckedChange={(checked) =>
+											useSettingsStore.getState().updateSettings({
+												autoSelectModules: checked,
+											})
+										}
 									/>
 								</div>
 								<Separator />
@@ -686,7 +535,11 @@ export default function SettingsPage() {
 									</div>
 									<Switch
 										checked={checkForUpdates}
-										onCheckedChange={setCheckForUpdates}
+										onCheckedChange={(checked) =>
+											useSettingsStore.getState().updateSettings({
+												checkForUpdates: checked,
+											})
+										}
 									/>
 								</div>
 							</CardContent>
@@ -711,7 +564,11 @@ export default function SettingsPage() {
 												: "outline"
 										}
 										size="sm"
-										onClick={() => setProgrammeSelectionMode("search")}
+										onClick={() =>
+											useSettingsStore
+												.getState()
+												.updateSettings({ programmeSelectionMode: "search" })
+										}
 										className="gap-2"
 									>
 										<FileText className="w-4 h-4" /> Search
@@ -723,7 +580,13 @@ export default function SettingsPage() {
 												: "outline"
 										}
 										size="sm"
-										onClick={() => setProgrammeSelectionMode("hierarchical")}
+										onClick={() =>
+											useSettingsStore
+												.getState()
+												.updateSettings({
+													programmeSelectionMode: "hierarchical",
+												})
+										}
 										className="gap-2"
 									>
 										<Layers className="w-4 h-4" /> Browse
@@ -744,8 +607,12 @@ export default function SettingsPage() {
 									<div className="space-y-2">
 										<Label>Programme</Label>
 										<Combobox
-											value={selectedProgrammeId}
-											onValueChange={setSelectedProgrammeId}
+											value={programmeID}
+											onValueChange={(v) =>
+												useSettingsStore
+													.getState()
+													.updateSettings({ programmeID: v })
+											}
 											searchValue={programmeSearchQuery}
 											onSearchChange={setProgrammeSearchQuery}
 											placeholder="Search programmes..."
@@ -787,10 +654,17 @@ export default function SettingsPage() {
 											<Label>Academic Level</Label>
 											<Select
 												value={academicLevel}
+												// onValueChange={(v) => {
+												// 	setAcademicLevel(v as "undergrad" | "postgrad");
+												// 	setfaculty("");
+												// 	setdepartment("");
+												// }}
 												onValueChange={(v) => {
-													setAcademicLevel(v as "undergrad" | "postgrad");
-													setSelectedFaculty("");
-													setSelectedDepartment("");
+													useSettingsStore.getState().updateSettings({
+														academicLevel: v as "undergrad" | "postgrad",
+														faculty: "",
+														department: "",
+													});
 												}}
 											>
 												<SelectTrigger>
@@ -807,10 +681,16 @@ export default function SettingsPage() {
 										<div className="space-y-2">
 											<Label>Faculty</Label>
 											<Select
-												value={selectedFaculty}
+												value={faculty}
+												// onValueChange={(v) => {
+												// 	setfaculty(v);
+												// 	setdepartment("");
+												// }}
 												onValueChange={(v) => {
-													setSelectedFaculty(v);
-													setSelectedDepartment("");
+													useSettingsStore.getState().updateSettings({
+														faculty: v,
+														department: "",
+													});
 												}}
 											>
 												<SelectTrigger>
@@ -828,9 +708,13 @@ export default function SettingsPage() {
 										<div className="space-y-2">
 											<Label>Department</Label>
 											<Select
-												value={selectedDepartment}
-												onValueChange={setSelectedDepartment}
-												disabled={!selectedFaculty}
+												value={department}
+												onValueChange={(v) =>
+													useSettingsStore.getState().updateSettings({
+														department: v,
+													})
+												}
+												disabled={!faculty}
 											>
 												<SelectTrigger>
 													<SelectValue placeholder="Select department" />
@@ -849,8 +733,8 @@ export default function SettingsPage() {
 										<div className="space-y-2">
 											<Label>Available Programmes</Label>
 											<Select
-												value={selectedProgrammeId}
-												onValueChange={setSelectedProgrammeId}
+											// value={selectedProgrammeId}
+											// onValueChange={setSelectedProgrammeId}
 											>
 												<SelectTrigger>
 													<SelectValue placeholder="Select your programme" />
@@ -882,7 +766,12 @@ export default function SettingsPage() {
 							<CardContent>
 								<div className="space-y-2">
 									<Label>Year</Label>
-									<Select value={year} onValueChange={setYear}>
+									<Select
+										value={year}
+										onValueChange={(v) =>
+											useSettingsStore.getState().updateSettings({ year: v })
+										}
+									>
 										<SelectTrigger>
 											<SelectValue placeholder="Select your year" />
 										</SelectTrigger>
@@ -911,7 +800,7 @@ export default function SettingsPage() {
 								<CardDescription>Where and how files are saved</CardDescription>
 							</CardHeader>
 							<CardContent className="space-y-4">
-								<div className="space-y-2">
+								{/* <div className="space-y-2">
 									<Label htmlFor="folder">Destination Folder</Label>
 									<div className="flex gap-2">
 										<Input
@@ -938,7 +827,7 @@ export default function SettingsPage() {
 									</div>
 								</div>
 
-								<Separator />
+								<Separator /> */}
 
 								<div className="flex items-center justify-between">
 									<div className="space-y-0.5">
@@ -953,7 +842,12 @@ export default function SettingsPage() {
 									</div>
 									<Switch
 										checked={moduleSubfolders}
-										onCheckedChange={setModuleSubfolders}
+										// onCheckedChange={setModuleSubfolders}
+										onCheckedChange={(checked) =>
+											useSettingsStore.getState().updateSettings({
+												moduleSubfolders: checked,
+											})
+										}
 									/>
 								</div>
 
@@ -961,7 +855,11 @@ export default function SettingsPage() {
 									<Label>File Naming Pattern</Label>
 									<Select
 										value={namingPattern}
-										onValueChange={setNamingPattern}
+										onValueChange={(v) =>
+											useSettingsStore.getState().updateSettings({
+												namingPattern: v,
+											})
+										}
 									>
 										<SelectTrigger className="h-auto">
 											<SelectValue placeholder="Select naming pattern" />
@@ -1002,15 +900,19 @@ export default function SettingsPage() {
 									</div>
 									<Slider
 										value={[parallelDownloads]}
-										onValueChange={([val]) => setParallelDownloads(val)}
+										onValueChange={([val]) =>
+											useSettingsStore.getState().updateSettings({
+												parallelDownloads: val,
+											})
+										}
 										min={1}
-										max={10}
+										max={5}
 										step={1}
 										className="py-2"
 									/>
 									<div className="flex justify-between text-xs text-muted-foreground">
 										<span>1 (reliable)</span>
-										<span>10 (fast)</span>
+										<span>5 (fast)</span>
 									</div>
 									<p className="text-xs text-muted-foreground">
 										Higher values speed up bulk downloads but may trigger server
@@ -1029,7 +931,11 @@ export default function SettingsPage() {
 									</div>
 									<Slider
 										value={[retryAttempts]}
-										onValueChange={([val]) => setRetryAttempts(val)}
+										onValueChange={([val]) =>
+											useSettingsStore.getState().updateSettings({
+												retryAttempts: val,
+											})
+										}
 										min={0}
 										max={5}
 										step={1}
@@ -1131,7 +1037,11 @@ export default function SettingsPage() {
 								</div>
 								<Slider
 									value={yearRange}
-									onValueChange={(val) => setYearRange(val as [number, number])}
+									onValueChange={(val) =>
+										useSettingsStore.getState().updateSettings({
+											yearRange: val as [number, number],
+										})
+									}
 									min={2010}
 									max={new Date().getFullYear()}
 									step={1}
@@ -1169,7 +1079,11 @@ export default function SettingsPage() {
 										</div>
 										<Switch
 											checked={includeMetadata}
-											onCheckedChange={setIncludeMetadata}
+											onCheckedChange={(checked) =>
+												useSettingsStore.getState().updateSettings({
+													includeMetadata: checked,
+												})
+											}
 										/>
 									</div>
 
@@ -1185,7 +1099,11 @@ export default function SettingsPage() {
 										</div>
 										<Switch
 											checked={includeModuleContent}
-											onCheckedChange={setIncludeModuleContent}
+											onCheckedChange={(checked) =>
+												useSettingsStore.getState().updateSettings({
+													includeModuleContent: checked,
+												})
+											}
 										/>
 									</div>
 
@@ -1201,7 +1119,11 @@ export default function SettingsPage() {
 										</div>
 										<Switch
 											checked={includePrerequisites}
-											onCheckedChange={setIncludePrerequisites}
+											onCheckedChange={(checked) =>
+												useSettingsStore.getState().updateSettings({
+													includePrerequisites: checked,
+												})
+											}
 										/>
 									</div>
 
@@ -1217,7 +1139,11 @@ export default function SettingsPage() {
 										</div>
 										<Switch
 											checked={includeCurriculumStructure}
-											onCheckedChange={setIncludeCurriculumStructure}
+											onCheckedChange={(checked) =>
+												useSettingsStore.getState().updateSettings({
+													includeCurriculumStructure: checked,
+												})
+											}
 										/>
 									</div>
 								</div>
@@ -1245,7 +1171,11 @@ export default function SettingsPage() {
 									</div>
 									<Switch
 										checked={autoSyncProgrammeData}
-										onCheckedChange={setAutoSyncProgrammeData}
+										onCheckedChange={(checked) =>
+											useSettingsStore.getState().updateSettings({
+												autoSyncProgrammeData: checked,
+											})
+										}
 									/>
 								</div>
 
@@ -1256,7 +1186,11 @@ export default function SettingsPage() {
 									</div>
 									<Slider
 										value={[cacheDurationHours]}
-										onValueChange={([val]) => setCacheDurationHours(val)}
+										onValueChange={([val]) =>
+											useSettingsStore.getState().updateSettings({
+												cacheDurationHours: val,
+											})
+										}
 										min={1}
 										max={168}
 										step={1}
@@ -1339,14 +1273,20 @@ export default function SettingsPage() {
 				</div>
 
 				{/* Footer */}
-				<p className="text-center text-xs text-muted-foreground pb-4">
-					Programme data syncs when connected to server • Last saved:{" "}
+				{/* <p className="text-center text-xs text-muted-foreground pb-4"> */}
+				{/* Programme data syncs when connected to server • Last saved:{" "}
 					{localStorage.getItem("pastpapers-settings")
 						? JSON.parse(
 								localStorage.getItem("pastpapers-settings")!,
 							)?.lastSaved?.slice(0, 16)
-						: "Never"}
-				</p>
+						: "Never"} */}
+				{/* Settings Last saved:{" "}
+					{localStorage.getItem("pastpapers-settings")
+						? JSON.parse(
+								localStorage.getItem("pastpapers-settings")!,
+							)?.lastSaved?.slice(0, 16)
+						: "Never"} */}
+				{/* </p> */}
 			</div>
 		</TooltipProvider>
 	);
