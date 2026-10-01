@@ -4,3 +4,13 @@ interface ViteTypeOptions {
 	// to disallow unknown keys.
 	strictImportMetaEnv: unknown;
 }
+
+interface ImportMetaEnv {
+	readonly VITE_API_PROXY: string;
+	readonly VITE_CDN_PROXY: string;
+    readonly VITE_AUTH_PROXY: string;
+}
+
+interface ImportMeta {
+	readonly env: ImportMetaEnv;
+}
