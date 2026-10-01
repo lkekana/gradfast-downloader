@@ -1,5 +1,5 @@
-import { moduleInfos, pastPapers } from "@/lib/data";
-import { ModuleInfo, PastPaper } from "./types";
+import { cachedModuleInfo } from "@/lib/data";
+import type { ModuleInfo, PastPaper } from "./types";
 
 export const getDownloadPath = async (): Promise<string> => {
 	// Simulate an API call to get the download path
@@ -12,29 +12,16 @@ export const getDownloadPath = async (): Promise<string> => {
 
 export const downloadPath: string = "/downloads/past-papers/";
 
-export const getModulePastPapers = async (moduleCode: {
+export const getModuleInfo = (moduleCode: {
 	prefix: string;
 	number: number;
-}): Promise<PastPaper[]> => {
-	// Simulate an API call to fetch past papers for a module
-	return new Promise((resolve) => {
-		setTimeout(() => {
-			resolve(pastPapers);
-		}, 1500);
-	});
-};
-
-export const getModuleInfo = async (moduleCode: {
-	prefix: string;
-	number: number;
-}): Promise<ModuleInfo> => {
-	// Simulate an API call to fetch module information
-	return new Promise((resolve) => {
-		setTimeout(() => {
-			const randomIndex = Math.floor(Math.random() * moduleInfos.length);
-			resolve(moduleInfos[randomIndex]);
-		}, 1200);
-	});
+}): ModuleInfo | undefined => {
+	const module = cachedModuleInfo.find(
+			(m) =>
+				m.code.prefix.toLowerCase() === moduleCode.prefix.toLowerCase() &&
+				m.code.number === moduleCode.number,
+		);
+		return module;
 };
 
 export const getPastPaperCounts = (
@@ -45,14 +32,15 @@ export const getPastPaperCounts = (
 	classTests: number;
 	practicals: number;
 	tutorials: number;
+	other: number;
 } => {
-	// Simulate an API call to count past papers by category
 	return {
-		exams: pastPapers.filter((p) => p.category === "Exams").length,
-		semesterTests: pastPapers.filter((p) => p.category === "Semester Tests")
+		exams: pastPapers.filter((p) => p.category === "Exams" || p.category === "Exam" || p.category === "Exam Opportunities").length,
+		semesterTests: pastPapers.filter((p) => p.category === "Semester Tests" || p.category === "Semester Test")
 			.length,
 		classTests: pastPapers.filter((p) => p.category === "Class Tests").length,
-		practicals: Math.floor(Math.random() * 10),
-		tutorials: Math.floor(Math.random() * 10),
+		practicals: pastPapers.filter((p) => p.category === "Practical Tests").length,
+		tutorials: pastPapers.filter((p) => p.category === "Tutorials" || p.category === "Tutorial Tests").length,
+		other: pastPapers.filter((p) => !["Exams", "Exam", "Semester Tests", "Exam Opportunities", "Semester Test", "Class Tests", "Tutorials", "Tutorial Tests", "Practical Tests"].includes(p.category)).length,
 	};
 };

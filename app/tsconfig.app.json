@@ -26,8 +26,10 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
 
+    /* JSON Catalog support */
+    "resolveJsonModule": true,
   },
   "include": ["src"]
 }

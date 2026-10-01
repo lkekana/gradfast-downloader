@@ -1,9 +1,25 @@
+export type PaperCategory =
+  | "Exams"
+  | "Exam"
+  | "Semester Tests"
+  | "Semester Test"
+  | "Class Tests"
+  | "Tutorials"
+  | "Tutorial Tests"
+  | "Clicker Tests"
+  | "Assignments"
+  | "Practical Tests"
+  | "Exam Opportunities"
+  | "Sample Questions";
+
+export type MemoStatus = "yes" | "no" | "partial";
+
 export interface PastPaper {
-	category: "Exams" | "Semester Tests" | "Class Tests";
-	version: string; // API returns as string, e.g., "1"
+	category: PaperCategory;
+	version: string; // API returns as string, e.g., "1", "2", "A", "B"
 	description: string;
-	year: string; // API returns as string, e.g., "2005"
-	memo: "yes" | "no";
+	year: string; // API returns as string, e.g., "2005", "0", "00"
+	memo: MemoStatus;
 	url: string;
 }
 
@@ -31,6 +47,7 @@ export interface ModuleInfo {
 	credits: number;
 	associatedProgrammes: {
 		programmeName: string;
+		programmeCode: string;
 		curriculumName: string;
 	}[];
 	qualification: "UPOnline" | "Postgraduate" | "Undergraduate";
@@ -42,3 +59,9 @@ export interface ModuleInfo {
 	language: string;
 	period: string;
 }
+
+export type GradfastModules = {
+	prefix: string;
+	code: number;
+	name: string;
+}[];

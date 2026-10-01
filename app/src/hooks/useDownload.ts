@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useToast } from "./use-toast";
-import useConnection from "./useConnection";
+import {useConnection} from "../contexts/connection";
 
-const useDownload = () => {
+const useDownload = (
+	selectedIds: Set<string>,
+	clearSelection: () => void,
+) => {
 	const {
 		isOnline,
 		isConnected,
