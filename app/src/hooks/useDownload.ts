@@ -1,18 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useToast } from "./use-toast";
-import {useConnection} from "../contexts/connection";
+import { useConnectionStore } from "@/stores/connectionStore";
 
 const useDownload = (
 	selectedIds: Set<string>,
 	clearSelection: () => void,
 ) => {
-	const {
-		isOnline,
-		isConnected,
-		isReconnecting,
-		reconnectError,
-		attemptReconnect,
-	} = useConnection();
+		const isOnline = useConnectionStore((s) => s.isOnline);
+		const isConnected = useConnectionStore((s) => s.isConnected);
+		const isReconnecting = useConnectionStore((s) => s.isReconnecting);
+		const attemptReconnect = useConnectionStore((s) => s.attemptReconnect);
+		const reconnectError = useConnectionStore((s) => s.reconnectError);
+	
 	const { toast } = useToast();
 
 	// Unified download state management
