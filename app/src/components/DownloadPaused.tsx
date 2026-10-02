@@ -2,24 +2,20 @@ import { Ban, CircleStop, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { DownloadContainer } from "./DownloadContainer";
+import useDownload from "@/stores/downloadStore";
+import { useModuleSelection } from "@/stores/selectionStore";
 
 interface DownloadPausedProps {
-	downloadProgress: number;
-	selectedCount: number;
 	downloadPath: string;
-	onResume: () => void;
-	onCancel: () => void;
 	className?: string;
 }
 
 export default function DownloadPaused({
-	downloadProgress,
-	selectedCount,
 	downloadPath,
-	onResume,
-	onCancel,
 	className,
 }: DownloadPausedProps) {
+	const { selectedCount } = useModuleSelection();
+	const {currentModule, currentModuleIndex, downloadProgress, handleRetry, handleCancel} = useDownload();
 	const progressValue = Math.min(100, Math.round(downloadProgress));
 
 	return (
@@ -39,13 +35,13 @@ export default function DownloadPaused({
 					<Button
 						variant="outline"
 						size="sm"
-						onClick={onResume}
+						onClick={handleRetry}
 						className="gap-1"
 					>
 						<Play className="w-3 h-3" />
 						Resume
 					</Button>
-					<Button variant="ghost" size="sm" onClick={onCancel}>
+					<Button variant="ghost" size="sm" onClick={handleCancel}>
 						<CircleStop className="w-3 h-3" />
 						Cancel
 					</Button>

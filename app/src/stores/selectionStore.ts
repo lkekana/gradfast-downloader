@@ -1,14 +1,11 @@
 import { create } from "zustand";
-import { useEffect } from "react";
 import type { Module } from "@/lib/types";
 import { cachedModules as modules } from "@/lib/data";
+import { useDownloadStore } from "./downloadStore";
 
 interface SelectionState {
-	selectedIds: Set<string>;
-	isDisabled: boolean;
-
-	setDisabled: (val: boolean) => void;
-	toggleModule: (id: string) => void;
+	selectedModules: Set<Module>;
+	toggleModule: (module: Module) => void;
 	selectAllVisible: (visibleModules: Module[]) => void;
 	clearSelection: () => void;
 	selectByPrefix: (prefix: string, modules: Module[]) => void;
@@ -17,89 +14,87 @@ interface SelectionState {
 }
 
 export const useSelectionStore = create<SelectionState>((set, get) => ({
-	selectedIds: new Set<string>(),
-	isDisabled: false,
-
-	setDisabled: (val) => set({ isDisabled: val }),
-
-	toggleModule: (id) =>
+	selectedModules: new Set<Module>(),
+	toggleModule: (module) =>
 		set((state) => {
-			if (state.isDisabled) return {};
-			const next = new Set(state.selectedIds);
-			next.has(id) ? next.delete(id) : next.add(id);
-			return { selectedIds: next };
+			const isDownloadActive = useDownloadStore.getState().status === "downloading";
+			if (isDownloadActive) return {};
+			const next = new Set(state.selectedModules);
+			next.has(module) ? next.delete(module) : next.add(module);
+			return { selectedModules: next };
 		}),
 
 	selectAllVisible: (visibleModules) =>
-		set((state) => {
-			if (state.isDisabled) return {};
+		set(() => {
+			const isDownloadActive = useDownloadStore.getState().status === "downloading";
+			if (isDownloadActive) return {};
 			return {
-				selectedIds: new Set(
-					visibleModules.map((m) => `${m.code.prefix}${m.code.number}`),
-				),
+                selectedModules: new Set(visibleModules),
 			};
 		}),
 
-	clearSelection: () => set({ selectedIds: new Set() }),
+	clearSelection: () => set({ selectedModules: new Set() }),
 
 	selectByPrefix: (prefix) =>
-		set((state) => {
-			if (state.isDisabled) return {};
+		set(() => {
+			const isDownloadActive = useDownloadStore.getState().status === "downloading";
+			if (isDownloadActive) return {};
 			return {
-				selectedIds: new Set(
+				selectedModules: new Set(
 					modules
-						.filter((m) => m.code.prefix === prefix)
-						.map((m) => `${m.code.prefix}${m.code.number}`),
+						.filter((m) => m.code.prefix === prefix),
 				),
 			};
 		}),
 
 	selectByFaculty: (faculty) =>
-		set((state) => {
-			if (state.isDisabled) return {};
+		set(() => {
+			const isDownloadActive = useDownloadStore.getState().status === "downloading";
+			if (isDownloadActive) return {};
 			return {
-				selectedIds: new Set(
+				selectedModules: new Set(
 					modules
 						.filter((m) => m.faculty === faculty)
-						.map((m) => `${m.code.prefix}${m.code.number}`),
+						,
 				),
 			};
 		}),
 
 	selectByPeriod: (period) =>
-		set((state) => {
-			if (state.isDisabled) return {};
+		set(() => {
+			const isDownloadActive = useDownloadStore.getState().status === "downloading";
+			if (isDownloadActive) return {};
 			return {
-				selectedIds: new Set(
+				selectedModules: new Set(
 					modules
 						.filter((m) => m.period === period)
-						.map((m) => `${m.code.prefix}${m.code.number}`),
+				,
 				),
 			};
 		}),
 }));
 
-export function useModuleSelection(isDisabled: boolean = false) {
-	const store = useSelectionStore();
-
-	// Sync the isDisabled prop to the global store
-	useEffect(() => {
-		if (isDisabled !== store.isDisabled) {
-			store.setDisabled(isDisabled);
-		}
-	}, [isDisabled, store.isDisabled, store.setDisabled]);
+export function useModuleSelection() {
+	const selectedModules = useSelectionStore((state) => state.selectedModules);
+	const toggleModule = useSelectionStore((state) => state.toggleModule);
+	const selectAllVisible = useSelectionStore(
+		(state) => state.selectAllVisible,
+	);
+	const clearSelection = useSelectionStore((state) => state.clearSelection);
+	const selectByPrefix = useSelectionStore((state) => state.selectByPrefix);
+	const selectByFaculty = useSelectionStore((state) => state.selectByFaculty);
+	const selectByPeriod = useSelectionStore((state) => state.selectByPeriod);
 
 	return {
-		selectedIds: store.selectedIds,
-		isSelected: (id: string) => store.selectedIds.has(id),
-		toggleModule: store.toggleModule,
-		selectAllVisible: store.selectAllVisible,
-		clearSelection: store.clearSelection,
-		selectByPrefix: (prefix: string) => store.selectByPrefix(prefix, modules),
+		selectedModules: selectedModules,
+		isSelected: (module: Module) => selectedModules.has(module),
+		toggleModule: toggleModule,
+		selectAllVisible: selectAllVisible,
+		clearSelection: clearSelection,
+		selectByPrefix: (prefix: string) => selectByPrefix(prefix, modules),
 		selectByFaculty: (faculty: string) =>
-			store.selectByFaculty(faculty, modules),
-		selectByPeriod: (period: string) => store.selectByPeriod(period, modules),
-		selectionCount: store.selectedIds.size,
-		isDisabled: store.isDisabled,
+			selectByFaculty(faculty, modules),
+		selectByPeriod: (period: string) => selectByPeriod(period, modules),
+		selectedCount: selectedModules.size,
 	};
 }

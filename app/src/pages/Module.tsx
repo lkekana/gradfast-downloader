@@ -9,7 +9,7 @@ import {
 	Languages,
 	Link2,
 } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getPastPaperCounts } from "@/lib/api";
 import { facultyAbbreviation, periodAbbreviation } from "@/lib/data";
 import type { Module, ModuleInfo, PastPaper } from "@/lib/types";
+  import { useApiStore } from "../stores/apiStore";
 
 interface ModulePageProps {
 	module: Module;

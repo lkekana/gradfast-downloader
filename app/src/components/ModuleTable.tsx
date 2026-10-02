@@ -19,35 +19,29 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { getPastPaperCounts } from "@/lib/api";
-import { facultyAbbreviation, pastPapers } from "@/lib/data";
-import { Module } from "@/lib/types";
+import { facultyAbbreviation, cachedPastPapers } from "@/lib/data";
+import type { Module } from "@/lib/types";
+import useDownload from "@/stores/downloadStore";
+import { useModuleSelection } from "@/stores/selectionStore";
 
 interface ModulesTableProps {
 	filteredModules: Module[];
-	selectedIds: Set<string>;
-	toggleModule: (id: string) => void;
-	selectAllVisible: () => void;
-	clearSelection: () => void;
-	isDownloading: boolean;
 	onClearFilters?: () => void;
 }
 
 export default function ModulesTable({
 	filteredModules,
-	selectedIds,
-	toggleModule,
-	selectAllVisible,
-	clearSelection,
-	isDownloading,
 	onClearFilters,
 }: ModulesTableProps) {
+	const { isDownloadActive } = useDownload();
+	const {selectedModules, selectAllVisible, clearSelection, toggleModule} = useModuleSelection();
 	const allSelected =
 		filteredModules.length > 0 &&
-		filteredModules.every((m) => selectedIds.has(`${m.code.prefix}${m.code}`));
+		selectedModules.size === filteredModules.length;
 
 	const handleSelectAllChange = (checked: boolean) => {
 		if (checked) {
-			selectAllVisible();
+			selectAllVisible(filteredModules);
 		} else {
 			clearSelection();
 		}
@@ -62,7 +56,7 @@ export default function ModulesTable({
 							<Checkbox
 								checked={allSelected}
 								onCheckedChange={handleSelectAllChange}
-								disabled={isDownloading}
+								disabled={isDownloadActive}
 							/>
 						</TableHead>
 						<TableHead>Module</TableHead>
@@ -75,9 +69,10 @@ export default function ModulesTable({
 				<TableBody>
 					{filteredModules.map((mod) => {
 						const id = `${mod.code.prefix}${mod.code.number}`;
-						const isSelected = selectedIds.has(id);
+						const isSelected = selectedModules.has(mod);
 
 						// TODO: Remember this will require async state management (needs caching & loading skeletons)
+						const pastPapers = cachedPastPapers[id] || [];
 						const pastPaperCounts = getPastPaperCounts(pastPapers);
 
 						return (
@@ -87,14 +82,15 @@ export default function ModulesTable({
 									isSelected
 										? "bg-primary/5 hover:bg-primary/10"
 										: "hover:bg-muted/50"
-								} ${isDownloading ? "opacity-50 cursor-not-allowed" : ""}`}
-								onClick={() => toggleModule(id)}
+								} ${isDownloadActive ? "opacity-50 cursor-not-allowed" : ""}`}
+								onClick={() => toggleModule(mod)}
 							>
 								<TableCell onClick={(e) => e.stopPropagation()}>
 									<Checkbox
 										checked={isSelected}
-										onCheckedChange={() => toggleModule(id)}
-										disabled={isDownloading}
+										onCheckedChange={() => toggleModule(mod)}
+										disabled={isDownloadActive}
+										className={checkboxClass}
 									/>
 								</TableCell>
 								<TableCell className="font-mono font-medium">

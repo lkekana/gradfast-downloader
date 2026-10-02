@@ -50,8 +50,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import { useSettingsStore } from "@/stores/useSettingsStore";
-import { useConnectionStore } from "@/stores/connectionStore";
-import { useModules } from "@/stores/apiStore";
+import { useConnection } from "@/stores/connectionStore";
 import { useTheme } from "@/stores/themeStore";
 
 const programmes = [
@@ -181,12 +180,7 @@ const moduleRoles = [
 
 export default function SettingsPage() {
 	const { toast } = useToast();
-	const modulesHook = useModules();
-		const isOnline = useConnectionStore((s) => s.isOnline);
-		const isConnected = useConnectionStore((s) => s.isConnected);
-		const isReconnecting = useConnectionStore((s) => s.isReconnecting);
-		const attemptReconnect = useConnectionStore((s) => s.attemptReconnect);
-		const reconnectError = useConnectionStore((s) => s.reconnectError);
+	const {isOnline, isConnected, isReconnecting, attemptReconnect, reconnectError} = useConnection();
 	
 	const { themeSetting, setThemeSetting } = useTheme();
 	const [programmeSearchQuery, setProgrammeSearchQuery] = useState("");
@@ -387,7 +381,7 @@ export default function SettingsPage() {
 										type="button"
 										onClick={
 											// isConnected || isReconnecting
-											() => isConnected ? undefined : attemptReconnect(modulesHook)
+											() => isConnected ? undefined : attemptReconnect()
 										}
 										disabled={isReconnecting}
 										className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-colors ${

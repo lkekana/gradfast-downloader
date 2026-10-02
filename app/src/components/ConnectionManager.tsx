@@ -1,15 +1,10 @@
 import { useEffect } from "react";
-import { useConnectionStore } from "@/stores/connectionStore";
+import { useConnection } from "@/stores/connectionStore";
 import { useModules } from "@/stores/apiStore";
 
 export function ConnectionManager() {
     const { error: apiError } = useModules();
-    const isConnected = useConnectionStore((s) => s.isConnected);
-    const setIsConnected = useConnectionStore((s) => s.setIsConnected);
-    const setReconnectError = useConnectionStore((s) => s.setReconnectError);
-    const isOnline = useConnectionStore((s) => s.isOnline);
-    const isReconnecting = useConnectionStore((s) => s.isReconnecting);
-    const attemptReconnect = useConnectionStore((s) => s.attemptReconnect);
+    const { isConnected, setIsConnected, setReconnectError, isOnline, isReconnecting, attemptReconnect } = useConnection();
 
     // Sync React Query apiError to Zustand store
     useEffect(() => {

@@ -80,9 +80,17 @@ export const useFilterStore = create<FilterState>((set) => ({
 		}),
 }));
 
-// THIN WRAPPER: Preserves your exact original API
 export function useModuleFilters(modules: Module[]) {
-	const store = useFilterStore();
+	const searchQuery = useFilterStore((state) => state.searchQuery);
+	const setSearchQuery = useFilterStore((state) => state.setSearchQuery);
+	const prefixFilter = useFilterStore((state) => state.prefixFilter);
+	const setPrefixFilter = useFilterStore((state) => state.setPrefixFilter);
+	const facultyFilter = useFilterStore((state) => state.facultyFilter);
+	const setFacultyFilter = useFilterStore((state) => state.setFacultyFilter);
+	const periodFilter = useFilterStore((state) => state.periodFilter);
+	const setPeriodFilter = useFilterStore((state) => state.setPeriodFilter);
+	const clearAllFilters = useFilterStore((state) => state.clearAllFilters);
+	const removeFilterChip = useFilterStore((state) => state.removeFilterChip);
 
 	// Derived data
 	const uniquePrefixes = useMemo(
@@ -101,16 +109,16 @@ export function useModuleFilters(modules: Module[]) {
 				const matchesSearch =
 					`${mod.code.prefix}${mod.code} ${mod.name} ${mod.faculty || ""}`
 						.toLowerCase()
-						.includes(store.searchQuery.toLowerCase());
+						.includes(searchQuery.toLowerCase());
 				const matchesPrefix =
-					store.prefixFilter.length === 0 ||
-					store.prefixFilter.includes(mod.code.prefix);
+					prefixFilter.length === 0 ||
+					prefixFilter.includes(mod.code.prefix);
 				const matchesFaculty =
-					store.facultyFilter.length === 0 ||
-					(mod.faculty && store.facultyFilter.includes(mod.faculty));
+					facultyFilter.length === 0 ||
+					(mod.faculty && facultyFilter.includes(mod.faculty));
 				const matchesPeriod =
-					store.periodFilter.length === 0 ||
-					(mod.period && store.periodFilter.includes(mod.period));
+					periodFilter.length === 0 ||
+					(mod.period && periodFilter.includes(mod.period));
 				return (
 					matchesSearch && matchesPrefix && matchesFaculty && matchesPeriod
 				);
@@ -121,10 +129,10 @@ export function useModuleFilters(modules: Module[]) {
 				return a.code.prefix.localeCompare(b.code.prefix);
 			});
 	}, [
-		store.searchQuery,
-		store.prefixFilter,
-		store.facultyFilter,
-		store.periodFilter,
+		searchQuery,
+		prefixFilter,
+		facultyFilter,
+		periodFilter,
 		modules,
 	]);
 
@@ -136,7 +144,7 @@ export function useModuleFilters(modules: Module[]) {
 			value: string;
 		}[] = [];
 		// Period chips
-		store.periodFilter.forEach((period) => {
+		periodFilter.forEach((period) => {
 			chips.push({
 				id: `period-${period}`,
 				label: `Period: ${periodAbbreviation(period)}`,
@@ -146,7 +154,7 @@ export function useModuleFilters(modules: Module[]) {
 		});
 
 		// Faculty chips
-		store.facultyFilter.forEach((faculty) => {
+		facultyFilter.forEach((faculty) => {
 			chips.push({
 				id: `faculty-${faculty}`,
 				label: `Faculty: ${facultyAbbreviation(faculty)}`,
@@ -156,7 +164,7 @@ export function useModuleFilters(modules: Module[]) {
 		});
 
 		// Prefix chips
-		store.prefixFilter.forEach((prefix) => {
+		prefixFilter.forEach((prefix) => {
 			chips.push({
 				id: `prefix-${prefix}`,
 				label: `Prefix: ${prefix}*`,
@@ -166,20 +174,20 @@ export function useModuleFilters(modules: Module[]) {
 		});
 
 		return chips;
-	}, [store.prefixFilter, store.facultyFilter, store.periodFilter]);
+	}, [prefixFilter, facultyFilter, periodFilter]);
 
 	return {
-		searchQuery: store.searchQuery,
-		setSearchQuery: store.setSearchQuery,
-		prefixFilter: store.prefixFilter,
-		setPrefixFilter: store.setPrefixFilter,
-		facultyFilter: store.facultyFilter,
-		setFacultyFilter: store.setFacultyFilter,
-		periodFilter: store.periodFilter,
-		setPeriodFilter: store.setPeriodFilter,
+		searchQuery: searchQuery,
+		setSearchQuery: setSearchQuery,
+		prefixFilter: prefixFilter,
+		setPrefixFilter: setPrefixFilter,
+		facultyFilter: facultyFilter,
+		setFacultyFilter: setFacultyFilter,
+		periodFilter: periodFilter,
+		setPeriodFilter: setPeriodFilter,
 		filterChips,
-		clearAllFilters: store.clearAllFilters,
-		removeFilterChip: store.removeFilterChip,
+		clearAllFilters: clearAllFilters,
+		removeFilterChip: removeFilterChip,
 		filteredModules,
 		uniquePrefixes,
 		uniqueFaculties,

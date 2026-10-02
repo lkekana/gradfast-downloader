@@ -37,8 +37,9 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
-import useConnection from "@/hooks/useConnection";
 import { useToast } from "@/hooks/use-toast";
+import { useModules } from "@/stores/apiStore";
+import { useConnectionStore } from "@/stores/connectionStore";
 
 // Mock data - replace with your actual programme/year data
 const programmes = [
@@ -70,13 +71,8 @@ const namingPatterns = [
 
 export default function SettingsPageV0() {
 	const { toast } = useToast();
-	const {
-		isOnline,
-		isConnected,
-		isReconnecting,
-		reconnectError,
-		attemptReconnect,
-	} = useConnection();
+	const { isOnline, isConnected, isReconnecting, attemptReconnect, reconnectError } = useConnection();
+	
 
 	// Form state
 	const [programme, setProgramme] = useState<string>("");
@@ -224,9 +220,10 @@ export default function SettingsPageV0() {
 											<button
 												type="button"
 												onClick={
-													isConnected || isReconnecting
-														? undefined
-														: attemptReconnect
+													// isConnected || isReconnecting
+													// 	? undefined
+													// 	: attemptReconnect
+													() => isConnected ? undefined : attemptReconnect()
 												}
 												disabled={isReconnecting}
 												className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-colors ${

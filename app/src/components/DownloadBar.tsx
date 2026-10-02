@@ -7,26 +7,23 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { DownloadContainer } from "./DownloadContainer";
+import { useConnection } from "@/stores/connectionStore";
+import useDownload from "@/stores/downloadStore";
+import { useModuleSelection } from "@/stores/selectionStore";
 
 interface DownloadBarProps {
-	selectedCount: number;
 	activeFilterCount?: number;
-	canDownload: boolean;
-	isOnline: boolean;
-	isConnected: boolean;
-	onDownload: () => void;
 	className?: string;
 }
 
 export default function DownloadBar({
-	selectedCount,
 	activeFilterCount = 0,
-	canDownload,
-	isOnline,
-	isConnected,
-	onDownload,
 	className,
 }: DownloadBarProps) {
+	const { isOnline, isConnected } = useConnection();
+	const { selectedCount } = useModuleSelection();
+	const { handleDownload, canDownload } = useDownload();
+
 	return (
 		<DownloadContainer
 			className={`flex items-center justify-between ${className}`}
@@ -48,7 +45,7 @@ export default function DownloadBar({
 				<TooltipTrigger asChild>
 					<span className="w-full sm:w-auto">
 						<Button
-							onClick={onDownload}
+							onClick={handleDownload}
 							className="gap-2"
 							disabled={!canDownload}
 						>

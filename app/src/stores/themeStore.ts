@@ -72,14 +72,16 @@ if (typeof window !== "undefined") {
 	});
 }
 
-// THIN WRAPPER: Preserves your exact original API
 export const useTheme = () => {
-	const store = useThemeStore();
+	const themeSetting = useThemeStore((state) => state.themeSetting);
+	const setThemeSetting = useThemeStore((state) => state.setThemeSetting);
+	const actualTheme = useThemeStore((state) => state.actualTheme);
+
 	return {
-		themeSetting: store.themeSetting,
-		setThemeSetting: store.setThemeSetting,
-		actualTheme: store.actualTheme,
-		isDark: store.actualTheme === "dark",
-		isLight: store.actualTheme === "light",
+		themeSetting: themeSetting,
+		setThemeSetting: setThemeSetting,
+		actualTheme: actualTheme,
+		isDark: actualTheme === "dark",
+		isLight: actualTheme === "light",
 	};
 };

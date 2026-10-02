@@ -2,24 +2,20 @@ import { Pause, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { DownloadContainer } from "./DownloadContainer";
+import { useModuleSelection } from "@/stores/selectionStore";
+import useDownload from "@/stores/downloadStore";
 
 interface DownloadProgressBarProps {
-	downloadProgress: number;
-	selectedCount: number;
 	downloadPath: string;
-	onPause: () => void;
-	onCancel: () => void;
 	className?: string;
 }
 
 export default function DownloadProgressBar({
-	downloadProgress,
-	selectedCount,
 	downloadPath,
-	onPause,
-	onCancel,
 	className,
 }: DownloadProgressBarProps) {
+	const { selectedCount } = useModuleSelection();
+	const { currentModule, currentModuleIndex, downloadProgress, handleCancel, handlePause} = useDownload();
 	const remainingSeconds = Math.max(
 		1,
 		Math.round((100 - downloadProgress) / 20),
@@ -40,7 +36,7 @@ export default function DownloadProgressBar({
 					<Button
 						variant="ghost"
 						size="icon"
-						onClick={onPause}
+						onClick={handlePause}
 						title="Pause download"
 						className="h-8 w-8"
 					>
@@ -49,7 +45,7 @@ export default function DownloadProgressBar({
 					<Button
 						variant="ghost"
 						size="icon"
-						onClick={onCancel}
+						onClick={handleCancel}
 						title="Cancel download"
 						className="h-8 w-8"
 					>
