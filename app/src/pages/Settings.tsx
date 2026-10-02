@@ -49,10 +49,10 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
-import { useTheme } from "@/hooks/useTheme";
 import { useSettingsStore } from "@/stores/useSettingsStore";
 import { useConnectionStore } from "@/stores/connectionStore";
 import { useModules } from "@/stores/apiStore";
+import { useTheme } from "@/stores/themeStore";
 
 const programmes = [
 	{
