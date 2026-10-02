@@ -2,14 +2,17 @@ import {
 	ArrowLeft,
 	BookOpen,
 	Calendar,
+	Check,
+	CircleAlert,
 	Clock,
 	Download,
 	FileText,
 	GraduationCap,
 	Languages,
 	Link2,
+	LoaderCircle,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -51,6 +54,8 @@ import {
 	FieldTitle,
   } from "@/components/ui/field"
   import { useApiStore } from "../stores/apiStore";
+  import { Label } from "@/components/ui/label"
+  import { Switch } from "@/components/ui/switch"
 
 interface ModulePageProps {
 	module: Module;
@@ -411,8 +416,16 @@ function PaperCategory({
 	papers: PastPaper[];
 }) {
 	const [selectedPapers, setSelectedPapers] = useState<PastPaper[]>(papers);
+	const [paperAvailability, setPaperAvailability] = useState<Record<string, boolean>>({});
 	// const [zipEnabled, setZipEnabled] = useState<boolean>(false);
-	const handlePaperDownload = useApiStore((state) => state.handlePaperDownload);
+	// const handlePaperDownload = useApiStore((state) => state.handlePaperDownload);
+	const handlePapersDownload = useApiStore((state) => state.handlePapersDownload);
+	// const checkPapersAvailability = useApiStore((state) => state.checkPapersAvailability);
+	const checkPapersAvailabilityDynamic = useApiStore((state) => state.checkPapersAvailabilityDynamic);
+	const [checkEarly, setCheckEarly] = useState<boolean>(false);
+	const [checking, setChecking] = useState<boolean>(false);
+	const [downloading, setDownloading] = useState<boolean>(false);
+	const [progress, setProgress] = useState<number>(0);
 
 	const toggleSelectAll = () => {
 		if (selectedPapers.length === papers.length) {
@@ -430,11 +443,61 @@ function PaperCategory({
 		}
 	};
 
-	const downloadSelection = () => {
-		selectedPapers.forEach((paper) => {
-			handlePaperDownload(moduleId, paper);
+	const checkAvailability = useCallback(async () => {
+		setChecking(true);
+		const papersToCheck = selectedPapers.filter((paper) => paperAvailability[paper.url] === undefined);
+		if (papersToCheck.length === 0) {
+			setChecking(false);
+			return;
+		}
+
+		// const results = await checkPapersAvailability(papersToCheck);
+		// const availabilityMap: Record<string, boolean> = {};
+		// results.forEach(({ paper, available }) => {
+		// 	availabilityMap[paper.url] = available;
+		// });
+		// setPaperAvailability(availabilityMap);
+
+		await checkPapersAvailabilityDynamic(papersToCheck, (paper, isAvailable) => {
+			setPaperAvailability((prev) => ({
+				...prev,
+				[paper.url]: isAvailable,
+			}));
 		});
-	};
+		setChecking(false);
+	}, [selectedPapers, paperAvailability, checkPapersAvailabilityDynamic]);
+
+	const downloadSelection = useCallback(async () => {
+		setDownloading(true);
+		try {
+			const dirHandle = await window.showDirectoryPicker({
+				mode: 'readwrite',
+			});
+			// selectedPapers.forEach((paper) => {
+			// 	handlePaperDownload(moduleId, paper);
+			// });
+			await checkAvailability();
+			// await new Promise(resolve => setTimeout(resolve, 5000)) // Wait for 1 second to ensure availability check is complete
+			const finalList = selectedPapers.filter((paper) => paperAvailability[paper.url] !== false);
+			await handlePapersDownload(dirHandle, moduleId, finalList, (_paper: PastPaper) => {
+				setProgress((prev) => prev + 1);
+			});
+		} catch (error) {
+			console.error("Error during download:", error);
+		} finally {
+			setDownloading(false);
+		}
+	}, [selectedPapers, moduleId, handlePapersDownload, checkAvailability, paperAvailability]);
+
+	useEffect(() => {
+		if (checkEarly && !checking && selectedPapers.length > 0) {
+			checkAvailability();
+		}
+	}, [selectedPapers, checkEarly, checkAvailability, checking]);
+
+	useEffect(() => {
+		console.log("Paper availability updated:", paperAvailability);
+	}, [paperAvailability]);
 
 	return (
 		<div className="border rounded-lg p-4 hover:bg-muted/30 transition-colors">
@@ -482,6 +545,7 @@ function PaperCategory({
 	  <TableHead>Year</TableHead>
       <TableHead>Description</TableHead>
 	  <TableHead>Has Memo?</TableHead>
+	  <TableHead>Available?</TableHead>
       <TableHead><Checkbox checked={selectedPapers.length === papers.length} onCheckedChange={toggleSelectAll} /></TableHead>
     </TableRow>
   </TableHeader>
@@ -493,7 +557,22 @@ function PaperCategory({
 							<TableCell>{paper.description}</TableCell>
 							<TableCell>{paper.memo}</TableCell>
 							<TableCell>
-								<Checkbox checked={selectedPapers.includes(paper)} onCheckedChange={() => selectPaper(paper)} />
+								{paperAvailability[paper.url] === true ? (
+									<Check className="w-4 h-4 text-green-600" />
+								) : paperAvailability[paper.url] === false ? (
+									<CircleAlert className="w-4 h-4 text-red-600" />
+								) : checking ? (
+									<LoaderCircle className="w-4 h-4 animate-spin text-muted-foreground" />
+								) : (
+									<span className="text-xs text-muted-foreground">—</span>
+								)}
+							</TableCell>
+							<TableCell>
+								<Checkbox
+									disabled={paperAvailability[paper.url] === false}
+									checked={selectedPapers.includes(paper) && paperAvailability[paper.url] !== false}
+									onCheckedChange={() => selectPaper(paper)}
+								/>
 							</TableCell>
 						</TableRow>
 					);
@@ -513,15 +592,28 @@ function PaperCategory({
         </Field>
       </FieldLabel>
     </FieldGroup> */}
+<div className="flex items-center space-x-2 justify-end mt-4">
+      <Label htmlFor="check-availability" className="text-xs font-normal">Check Availability before Download</Label>
+      <Switch id="check-availability" checked={checkEarly} onCheckedChange={(checked) => setCheckEarly(checked === true)} />
+    </div>
 <Button
   variant="default"
-  disabled={selectedPapers.length === 0}
-  size="sm"
-  className="mt-4"
+  disabled={selectedPapers.length === 0 || downloading || (checkEarly && checking)}
 onClick={downloadSelection}
 >
+	{ downloading ? (
+		<>
+		<LoaderCircle className="w-4 h-4 animate-spin text-muted-foreground mr-1" />
+		{`Downloading ${selectedPapers.length} ${title.toLowerCase()}`}
+		</>
+	) :
+	  (
+	  <>
 	  <Download className="w-4 h-4 mr-1" />	
 {`Download selected ${title.toLowerCase()}`}
+</>
+)
+	}
 </Button>
 				</DialogContent>
 				</Dialog>

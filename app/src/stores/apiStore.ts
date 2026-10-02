@@ -23,7 +23,7 @@ interface ApiState {
 	handlePaperDownload: (moduleID: string, paper: PastPaper) => Promise<void>;
 	checkPapersAvailability: (papers: PastPaper[]) => Promise<{ paper: PastPaper; available: boolean }[]>;
 	checkPapersAvailabilityDynamic: (papers: PastPaper[], onResult: (paper: PastPaper, isAvailable: boolean) => void) => Promise<void>;
-	handlePapersDownload: (dirHandle: FileSystemDirectoryHandle, moduleID: string, papers: PastPaper[]) => Promise<void>;
+	handlePapersDownload: (dirHandle: FileSystemDirectoryHandle, moduleID: string, papers: PastPaper[], onPaperComplete?: (paper: PastPaper) => void) => Promise<void>;
 	// modulesQuery: DefinedUseQueryResult<Module[], Error>
 	// currentModuleCode: string | null;
 	// setCurrentModuleCode: React.Dispatch<React.SetStateAction<string | null>>;
@@ -169,7 +169,7 @@ export const useApiStore = create<ApiState>((set, get) => ({
 		await Promise.allSettled(downloadPromises);
 	},
 
-	handlePapersDownload: async (dirHandle, moduleID, papers) => {
+	handlePapersDownload: async (dirHandle, moduleID, papers, onPaperComplete) => {
 		const { parallelDownloads: parallelDownloadsCount } = useSettingsStore.getState();
 		const { proxyFetch } = get();
 
@@ -193,6 +193,9 @@ export const useApiStore = create<ApiState>((set, get) => ({
 			const writableStream = await fileHandle.createWritable();
 			await writableStream.write(blob);
 			await writableStream.close();
+			if (onPaperComplete) {
+				onPaperComplete(paper);
+			}
 		};
 
 		const limit = pLimit(parallelDownloadsCount || 3);
