@@ -24,6 +24,32 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getPastPaperCounts } from "@/lib/api";
 import { facultyAbbreviation, periodAbbreviation } from "@/lib/data";
 import type { Module, ModuleInfo, PastPaper } from "@/lib/types";
+import {
+	Dialog,
+	DialogContent,
+	// DialogDescription,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+  } from "@/components/ui/dialog"
+  import {
+	Table,
+	TableBody,
+	// TableCaption,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+  } from "@/components/ui/table"
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+	Field,
+	FieldContent,
+	FieldDescription,
+	FieldGroup,
+	FieldLabel,
+	FieldTitle,
+  } from "@/components/ui/field"
   import { useApiStore } from "../stores/apiStore";
 
 interface ModulePageProps {
@@ -219,7 +245,7 @@ export default function ModulePage({
 												: "No past papers available yet"}
 										</CardDescription>
 									</div>
-									{hasPapers && (
+									{/* {hasPapers && (
 										<Button
 											variant="outline"
 											size="sm"
@@ -228,7 +254,7 @@ export default function ModulePage({
 											<Download className="w-4 h-4 mr-1" />
 											Download All
 										</Button>
-									)}
+									)} */}
 								</div>
 							</CardHeader>
 							<CardContent>
@@ -241,6 +267,7 @@ export default function ModulePage({
 												count={pastPaperCounts.exams}
 												moduleId={moduleId}
 												type="exam"
+												papers={pastPapers.filter((p) => p.category === "Exams" || p.category === "Exam" || p.category === "Exam Opportunities")}
 											/>
 										)}
 										{pastPaperCounts.semesterTests > 0 && (
@@ -250,6 +277,7 @@ export default function ModulePage({
 												count={pastPaperCounts.semesterTests}
 												moduleId={moduleId}
 												type="semester"
+												papers={pastPapers.filter((p) => p.category === "Semester Tests" || p.category === "Semester Test")}
 											/>
 										)}
 										{pastPaperCounts.classTests > 0 && (
@@ -259,6 +287,7 @@ export default function ModulePage({
 												count={pastPaperCounts.classTests}
 												moduleId={moduleId}
 												type="class"
+												papers={pastPapers.filter((p) => p.category === "Class Tests")}
 											/>
 										)}
 										{pastPaperCounts.practicals > 0 && (
@@ -268,6 +297,7 @@ export default function ModulePage({
 												count={pastPaperCounts.practicals}
 												moduleId={moduleId}
 												type="practical"
+												papers={pastPapers.filter((p) => p.category === "Practical Tests")}
 											/>
 										)}
 										{pastPaperCounts.tutorials > 0 && (
@@ -277,6 +307,17 @@ export default function ModulePage({
 												count={pastPaperCounts.tutorials}
 												moduleId={moduleId}
 												type="tutorial"
+												papers={pastPapers.filter((p) => p.category === "Tutorials" || p.category === "Tutorial Tests")}
+											/>
+										)}
+										{pastPaperCounts.other > 0 && (
+											<PaperCategory
+												title="Other"
+												icon="📄"
+												count={pastPaperCounts.other}
+												moduleId={moduleId}
+												type="other"
+												papers={pastPapers.filter((p) => !["Exams", "Exam", "Semester Tests", "Exam Opportunities", "Semester Test", "Class Tests", "Tutorials", "Tutorial Tests", "Practical Tests"].includes(p.category))}
 											/>
 										)}
 									</div>
@@ -354,20 +395,47 @@ export default function ModulePage({
 	);
 }
 
-// Sub-components for cleaner code
 function PaperCategory({
 	title,
 	icon,
 	count,
 	moduleId,
 	type,
+	papers,
 }: {
 	title: string;
 	icon: string;
 	count: number;
 	moduleId: string;
 	type: string;
+	papers: PastPaper[];
 }) {
+	const [selectedPapers, setSelectedPapers] = useState<PastPaper[]>(papers);
+	// const [zipEnabled, setZipEnabled] = useState<boolean>(false);
+	const handlePaperDownload = useApiStore((state) => state.handlePaperDownload);
+
+	const toggleSelectAll = () => {
+		if (selectedPapers.length === papers.length) {
+			setSelectedPapers([]);
+		} else {
+			setSelectedPapers(papers);
+		}
+	};
+
+	const selectPaper = (paper: PastPaper) => {
+		if (selectedPapers.includes(paper)) {
+			setSelectedPapers(selectedPapers.filter((p) => p !== paper));
+		} else {
+			setSelectedPapers([...selectedPapers, paper]);
+		}
+	};
+
+	const downloadSelection = () => {
+		selectedPapers.forEach((paper) => {
+			handlePaperDownload(moduleId, paper);
+		});
+	};
+
 	return (
 		<div className="border rounded-lg p-4 hover:bg-muted/30 transition-colors">
 			<div className="flex items-center justify-between mb-3">
@@ -380,23 +448,83 @@ function PaperCategory({
 				</Badge>
 			</div>
 			<div className="space-y-2">
-				{Array.from({ length: Math.min(count, 3) }).map((_, i) => (
+				{papers.slice(0, 3).map((paper, i) => {
+				return (
 					<Button
-						key={i}
+						key={paper.url}
 						variant="ghost"
 						size="sm"
 						className="w-full justify-start text-xs h-8"
 						onClick={() => console.log(`View ${type} ${i + 1} for ${moduleId}`)}
 					>
 						<FileText className="w-3 h-3 mr-2 opacity-50" />
-						{moduleId}_{type.toUpperCase()}_{2024 - i}_MEMO.pdf
+						{paper.year} - {paper.description} {paper.memo === "yes" && "(Memo)"}
 					</Button>
-				))}
-				{count > 3 && (
-					<Button variant="link" size="sm" className="h-6 px-0 text-xs">
+				)
+				})}
+				
+				<Dialog>
+				<DialogTrigger><Button variant="link" size="sm" className="h-6 px-0 text-xs">
 						View all {count} {title.toLowerCase()} →
-					</Button>
-				)}
+					</Button></DialogTrigger>
+				<DialogContent>
+					<DialogHeader>
+					<DialogTitle>{`All ${title} for ${moduleId}`}</DialogTitle>
+					{/* <DialogDescription>
+						This action cannot be undone. This will permanently delete your account
+						and remove your data from our servers.
+					</DialogDescription> */}
+					</DialogHeader>
+					<Table>
+  {/* <TableCaption>A list of your recent invoices.</TableCaption> */}
+  <TableHeader>
+    <TableRow>
+	  <TableHead>Year</TableHead>
+      <TableHead>Description</TableHead>
+	  <TableHead>Has Memo?</TableHead>
+      <TableHead><Checkbox checked={selectedPapers.length === papers.length} onCheckedChange={toggleSelectAll} /></TableHead>
+    </TableRow>
+  </TableHeader>
+  <TableBody>
+	{papers.map((paper) => {
+					return (
+						<TableRow key={paper.url}>
+							<TableCell className="font-medium">{paper.year}</TableCell>
+							<TableCell>{paper.description}</TableCell>
+							<TableCell>{paper.memo}</TableCell>
+							<TableCell>
+								<Checkbox checked={selectedPapers.includes(paper)} onCheckedChange={() => selectPaper(paper)} />
+							</TableCell>
+						</TableRow>
+					);
+				})}
+  </TableBody>
+</Table>
+{/* <FieldGroup>
+<FieldLabel>
+        <Field orientation="horizontal">
+		  <Checkbox id="zip-checkbox" name="zip-checkbox" checked={zipEnabled} onCheckedChange={(checked) => setZipEnabled(checked === true)} />
+          <FieldContent>
+            <FieldTitle>Download as ZIP</FieldTitle>
+            <FieldDescription>
+			  Enable for single ZIP file download of all selected papers.
+            </FieldDescription>
+          </FieldContent>
+        </Field>
+      </FieldLabel>
+    </FieldGroup> */}
+<Button
+  variant="default"
+  disabled={selectedPapers.length === 0}
+  size="sm"
+  className="mt-4"
+onClick={downloadSelection}
+>
+	  <Download className="w-4 h-4 mr-1" />	
+{`Download selected ${title.toLowerCase()}`}
+</Button>
+				</DialogContent>
+				</Dialog>
 			</div>
 		</div>
 	);
