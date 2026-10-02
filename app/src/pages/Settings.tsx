@@ -49,7 +49,7 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
-import { useSettingsStore } from "@/stores/useSettingsStore";
+import { type ModuleRole, type NamingPattern, type PaperType, useSettingsStore } from "@/stores/useSettingsStore";
 import { useConnection } from "@/stores/connectionStore";
 import { useTheme } from "@/stores/themeStore";
 
@@ -133,7 +133,12 @@ const departments = {
 };
 
 const years = ["1", "2", "3", "4", "Honours", "Masters", "PhD"];
-const namingPatterns = [
+const namingPatterns: { id: NamingPattern; label: string; example: string }[] = [
+	{
+		id: "default",
+		label: "DEFAULT: {code}_{year}_{type}_{timestamp?}.pdf",
+		example: "COS101_Exam_2007_Sup+MEMO - 1423492357235.pdf",
+	},
 	{
 		id: "code-year-type",
 		label: "{code}_{year}_{type}.pdf",
@@ -156,15 +161,17 @@ const namingPatterns = [
 	},
 ];
 
-const paperTypes = [
+const paperTypes: { id: PaperType; label: string; icon: string }[] = [
 	{ id: "exams", label: "Examinations", icon: "📝" },
 	{ id: "semesterTests", label: "Semester Tests", icon: "🧪" },
 	{ id: "classTests", label: "Class Tests", icon: "✏️" },
 	{ id: "practicals", label: "Practicals", icon: "🔬" },
 	{ id: "tutorials", label: "Tutorials", icon: "📚" },
+	{ id: "other", label: "Other", icon: "📄" },
 ];
 
-const moduleRoles = [
+const moduleRoles: { id: ModuleRole; label: string; description: string }[]
+= [
 	{
 		id: "fundamental",
 		label: "Fundamental",
@@ -296,7 +303,7 @@ export default function SettingsPage() {
 	// 	});
 	// };
 
-	const toggleModuleRole = (role: string) => {
+	const toggleModuleRole = (role: ModuleRole) => {
 		useSettingsStore.getState().updateSettings({
 			includeModuleRoles: {
 				...includeModuleRoles,
@@ -305,7 +312,7 @@ export default function SettingsPage() {
 		});
 	};
 
-	const togglePaperType = (type: string) => {
+	const togglePaperType = (type: PaperType) => {
 		useSettingsStore.getState().updateSettings({
 			includePaperTypes: {
 				...includePaperTypes,
@@ -1036,13 +1043,13 @@ export default function SettingsPage() {
 											yearRange: val as [number, number],
 										})
 									}
-									min={2010}
+									min={2000}
 									max={new Date().getFullYear()}
 									step={1}
 									className="py-2"
 								/>
 								<div className="flex justify-between text-xs text-muted-foreground">
-									<span>2010</span>
+									<span>2000</span>
 									<span>{new Date().getFullYear()}</span>
 								</div>
 							</CardContent>
