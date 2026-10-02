@@ -50,11 +50,11 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
            	await apiFetch(`${import.meta.env.VITE_API_PROXY}/modules`);
 
 			set({ isConnected: true, reconnectError: null });
-			toast({
-				title: "✅ Connected to server",
-				description: "Ready to download your modules!",
-				variant: "default",
-			});
+			// toast({
+			// 	title: "✅ Connected to server",
+			// 	description: "Ready to download your modules!",
+			// 	variant: "default",
+			// });
 		} catch (error) {
 			console.error("Reconnect attempt failed:", error);
 			set({
