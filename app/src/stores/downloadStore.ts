@@ -1,16 +1,28 @@
 import { create } from "zustand";
-import { toast } from "@/hooks/use-toast"; // Imported directly as you noted!
+import { toast } from "@/hooks/use-toast";
 import { useConnection, useConnectionStore } from "@/stores/connectionStore";
 import { useSelectionStore } from "@/stores/selectionStore";
-import type { Module } from "@/lib/types";
+import type { Module, PastPaper } from "@/lib/types";
+import { cachedPastPapers } from "@/lib/data";
 
 type DownloadStateStatus = "idle" | "downloading" | "paused" | "error";
+type ModuleStatus = "pending" | "downloading" | "completed" | "failed";
+type PastPaperDownloadItem = {
+	paper: PastPaper;
+	available: boolean;
+	downloaded: boolean;
+};
+
+export interface ModuleProgressState {
+	module: Module;
+	status: ModuleStatus;
+	papers: PastPaperDownloadItem[]; // Track progress for each past paper
+	progress: number; // 0 to 100 for this specific module
+}
 
 interface DownloadState {
 	status: DownloadStateStatus;
-	progress: number;
-	currentModule: Module | null;
-	currentModuleIndex: number;
+	moduleProgress: ModuleProgressState[];
 
 	startSimulation: () => void;
 	handleDownload: () => void;
@@ -24,24 +36,23 @@ let downloadInterval: ReturnType<typeof setInterval> | null = null;
 
 export const useDownloadStore = create<DownloadState>((set, get) => ({
 	status: "idle",
-	progress: 0,
-	currentModule: null,
-	currentModuleIndex: 0,
+	moduleProgress: [],
 
 	// Realistic download simulation with pause/resume support
 	startSimulation: () => {
 		if (downloadInterval) clearInterval(downloadInterval);
 
-		const { progress } = get();
-		if (progress >= 100) return set({ progress: 100 });
-		if (progress > 0) set({ progress: progress });
+		const { moduleProgress } = get();
+		const allDone = moduleProgress.every(
+			(m) => m.status === "completed" || m.status === "failed"
+		);
+		if (allDone && moduleProgress.length > 0) return;
 
 		const modulesToDownload = useSelectionStore.getState().selectedModules;
 
 		// Base speed: ~5 seconds for full download at 100%
 		// Adjust increment based on number of selected modules for realism
-		// const baseIncrement = 2; // % per tick
-		const baseIncrement = 1; // % per tick
+		const baseIncrement = 5; // % per tick
 		const moduleCount = modulesToDownload.size || 1; // Avoid division by zero
 		const speedFactor = Math.max(0.5, Math.min(2, 3 / moduleCount)); // More modules = slower per-item
 
@@ -50,22 +61,27 @@ export const useDownloadStore = create<DownloadState>((set, get) => ({
 				// Only proceed if still in downloading state
 				if (state.status !== "downloading") {
 					if (downloadInterval) clearInterval(downloadInterval);
+					downloadInterval = null;
 					return {};
 				}
 
-				// Add variable increment for realism (network fluctuation simulation)
-				const fluctuation = 0.7 + Math.random() * 0.6; // 0.7x to 1.3x speed
-				const increment = baseIncrement * speedFactor * fluctuation;
-				const nextProgress = Math.min(100, state.progress + increment);
-				const index = Math.floor(nextProgress / 100 * modulesToDownload.size);
-
 				// Check for completion
-				if (nextProgress >= 100) {
+				const activeIndex = state.moduleProgress.findIndex(
+					(m) => m.status === "pending" || m.status === "downloading"
+				);
+
+				if (activeIndex === -1) {
 					if (downloadInterval) clearInterval(downloadInterval);
 					downloadInterval = null;
 
+					const failedCount = state.moduleProgress.filter(
+						(m) => m.status === "failed"
+					).length;
 					toast({
-						title: "🎉 Download(s) complete",
+						title:
+							failedCount > 0
+								? `🎉 Download complete (${failedCount} failed)`
+								: "🎉 Download complete",
 						// description: `Your selected modules have been downloaded to ${downloadPath}`,
 						variant: "default",
 					});
@@ -73,13 +89,85 @@ export const useDownloadStore = create<DownloadState>((set, get) => ({
 					// Small delay before resetting to show 100%
 					setTimeout(() => {
 						useSelectionStore.getState().clearSelection();
-						set({ status: "idle", progress: 0 });
+						set({ status: "idle", moduleProgress: [] });
 					}, 400);
 
-					return { progress: 100 };
+					return {};
 				}
-				// return { progress: nextProgress, currentModule: Array.from(modulesToDownload)[Math.floor(nextProgress / 100 * modulesToDownload.size)]};
-				return { progress: nextProgress, currentModuleIndex: index, currentModule: Array.from(modulesToDownload)[index] };
+
+				const current = state.moduleProgress[activeIndex];
+				const newModuleProgress = [...state.moduleProgress];
+
+				let currentPapers = current.papers;
+				// Initialize papers for this module if not already done
+				if (currentPapers.length === 0) {
+					const papers = cachedPastPapers[current.module.code.prefix + current.module.code.number] || [];
+					currentPapers = papers.map((paper) => ({
+						paper,
+						available: Math.random() < 0.9, // 90% chance the paper is available
+						downloaded: false,
+					}));
+				}
+
+				// Add variable increment for realism (network fluctuation simulation)
+				// const fluctuation = 0.7 + Math.random() * 0.6; // 0.7x to 1.3x speed
+				// const increment = baseIncrement * speedFactor * fluctuation;
+				// const nextProgress = Math.min(100, state.progress + increment);
+				// const index = Math.floor(nextProgress / 100 * modulesToDownload.size);
+
+				if (current.status === "pending") {
+					// Simulate a random failure 10% of the time when starting a module
+					if (Math.random() < 0.1) {
+						newModuleProgress[activeIndex] = {
+							...current,
+							status: "failed",
+							progress: 100,
+							papers: currentPapers.map((p) => ({ ...p, downloaded: false })),
+						};
+					} else {
+						newModuleProgress[activeIndex] = {
+							...current,
+							status: "downloading",
+							progress: 0,
+							papers: currentPapers,
+						};
+					}
+				} else {
+					const fluctuation = 0.7 + Math.random() * 0.6;
+					const increment = baseIncrement * speedFactor * fluctuation;
+					// const nextProgress = Math.min(100, current.progress + increment);
+					// const nextProgress = Math.min(100, (current.papers.filter(p => p.downloaded).length / current.papers.length) * 100 + increment);
+					const currentProgress = current.progress ?? 0;
+					const nextProgress = Math.min(100, currentProgress + increment);
+					// console.log(`Module ${current.module.code.prefix}${current.module.code.number}: nextProgress=${nextProgress}`);
+					const newStatus = nextProgress >= 100 ? "completed" : "downloading";
+					// newModuleProgress[activeIndex] = {
+					// 	...current,
+					// 	status: newStatus,
+					// 	progress: nextProgress,
+					// };
+					newModuleProgress[activeIndex] = {
+						...current,
+						status: newStatus,
+						progress: nextProgress,
+						papers: currentPapers.map((p, index) => {
+							if (p.downloaded || !p.available) return p; // Skip if already downloaded or unavailable
+							// Simulate download completion based on progress
+							const paperProgressThreshold = currentPapers.length > 0 
+                                ? ((index + 1) / currentPapers.length) * 100 
+                                : 100;
+							console.log(`Module ${current.module.code.prefix}${current.module.code.number} - Paper ${index + 1}: nextProgress=${nextProgress}, threshold=${paperProgressThreshold}`);
+							if (nextProgress >= paperProgressThreshold) {
+								return { ...p, downloaded: true };
+							}
+							return p;
+						}),
+					};
+				}
+
+				return { moduleProgress: newModuleProgress };
+				
+
 			});
 		}, 200); // Update every 200ms for smooth progress bar
 	},
@@ -101,7 +189,20 @@ export const useDownloadStore = create<DownloadState>((set, get) => ({
 		// 	return;
 		// }
 
-		set({ status: "downloading" });
+		if (status === "idle") {
+			const selectedModules = Array.from(
+				useSelectionStore.getState().selectedModules
+			);
+			const modulesToDownload = selectedModules.map((m) => ({
+				module: m,
+				status: "pending" as const,
+				progress: 0,
+				papers: [],
+			}));
+			set({ status: "downloading", moduleProgress: modulesToDownload });
+		} else {
+			set({ status: "downloading" });
+		}
 		startSimulation();
 	},
 
@@ -122,7 +223,15 @@ export const useDownloadStore = create<DownloadState>((set, get) => ({
 			clearInterval(downloadInterval);
 			downloadInterval = null;
 		}
-		set({ status: "idle", progress: 0 });
+		// Reset failed modules back to pending to retry them
+		const { moduleProgress } = get();
+		const resetProgress = moduleProgress.map((m) =>
+			m.status === "failed"
+				? { ...m, status: "pending" as const, progress: 0, papers: [] } // Reset papers so they re-evaluate availability
+				: m
+		);
+
+		set({ status: "idle", moduleProgress: resetProgress });
 		get().handleDownload();
 	},
 
@@ -131,7 +240,7 @@ export const useDownloadStore = create<DownloadState>((set, get) => ({
 			clearInterval(downloadInterval);
 			downloadInterval = null;
 		}
-		set({ status: "idle", progress: 0 });
+		set({ status: "idle", moduleProgress: [] });
 	},
 }));
 
@@ -139,17 +248,38 @@ export default function useDownload() {
 	const { isOnline, isConnected } = useConnection();
 	const selectedCount = useSelectionStore((s) => s.selectedModules.size);
 	const status = useDownloadStore((s) => s.status);
-	const progress = useDownloadStore((s) => s.progress);
+	const moduleProgress = useDownloadStore((s) => s.moduleProgress);
 	const handleDownload = useDownloadStore((s) => s.handleDownload);
 	const handlePause = useDownloadStore((s) => s.handlePause);
 	const handleRetry = useDownloadStore((s) => s.handleRetry);
 	const handleCancel = useDownloadStore((s) => s.handleCancel);
-	const currentModule = useDownloadStore((s) => s.currentModule);
-	const currentModuleIndex = useDownloadStore((s) => s.currentModuleIndex);
+
+	// Derived State
+	const totalModules = moduleProgress.length;
+	// const completedOrFailed = moduleProgress.filter(
+	// 	(m) => m.status === "completed" || m.status === "failed"
+	// ).length;
+	// const overallProgress =
+	// 	totalModules > 0 ? (completedOrFailed / totalModules) * 100 : 0;
+	console.log("moduleProgress", moduleProgress);
+	// const overallProgress = moduleProgress.reduce((acc, m) => acc + m.progress, 0) / (totalModules || 1);
+	const overallProgress = moduleProgress.length > 0 
+        ? (moduleProgress.reduce((acc, m) => acc + (m.progress || 0), 0) / totalModules) 
+        : 0;
+
+	const activeIndex = moduleProgress.findIndex(
+		(m) => m.status === "downloading" || m.status === "pending"
+	);
+	const currentModule =
+		activeIndex !== -1 ? moduleProgress[activeIndex].module : null;
+	const currentModuleIndex = activeIndex !== -1 ? activeIndex : 0;
+	const failedCount = moduleProgress.filter((m) => m.status === "failed").length;
 
 	return {
 		downloadState: status,
-		downloadProgress: progress,
+		downloadProgress: overallProgress,
+		moduleProgress,
+		failedCount,
 		canDownload:
 			isOnline &&
 			isConnected &&
@@ -159,8 +289,9 @@ export default function useDownload() {
 		handlePause: handlePause,
 		handleRetry: handleRetry,
 		handleCancel: handleCancel,
-		isDownloadActive: status === "downloading",
-		currentModule: currentModule,
-		currentModuleIndex: currentModuleIndex,
+		// isDownloadActive: status === "downloading",
+		isDownloadActive: status !== "idle",
+		currentModule,
+		currentModuleIndex,
 	};
 }
