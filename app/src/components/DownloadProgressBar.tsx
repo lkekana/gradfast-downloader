@@ -6,12 +6,12 @@ import { useModuleSelection } from "@/stores/selectionStore";
 import useDownload from "@/stores/downloadStore";
 
 interface DownloadProgressBarProps {
-	downloadPath: string;
+	// downloadPath: string;
 	className?: string;
 }
 
 export default function DownloadProgressBar({
-	downloadPath,
+	// downloadPath,
 	className,
 }: DownloadProgressBarProps) {
 	const { selectedCount } = useModuleSelection();
@@ -27,7 +27,9 @@ export default function DownloadProgressBar({
 			<div className="flex items-center justify-between">
 				<div className="flex items-center gap-2">
 					<div className="w-4 h-4 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-					<span className="font-medium">Downloading modules…</span>
+					<span className="font-medium">
+						Downloading {selectedCount} module{selectedCount !== 1 ? "s" : ""}…
+					</span>
 				</div>
 				<div className="flex items-center gap-2">
 					<span className="text-sm font-mono text-muted-foreground pr-4">
@@ -58,11 +60,15 @@ export default function DownloadProgressBar({
 
 			<div className="flex justify-between text-xs text-muted-foreground">
 				<p>
-					{selectedCount} module{selectedCount !== 1 ? "s" : ""} • Est. time:{" "}
-					{remainingSeconds}s remaining
+					{/* Saving to: <span className="font-mono">{downloadPath}</span> */}
+					{currentModule ? (
+						<span className="font-medium">{`Processing ${currentModule.code.prefix}${currentModule.code.number} (${currentModuleIndex + 1}/${selectedCount})`}</span>
+					) : (
+						`Preparing download (${currentModuleIndex + 1}/${selectedCount})...`
+					)}
 				</p>
 				<p className="text-right">
-					Saving to: <span className="font-mono">{downloadPath}</span>
+					Est. time:{" "} {remainingSeconds}s remaining
 				</p>
 			</div>
 		</DownloadContainer>

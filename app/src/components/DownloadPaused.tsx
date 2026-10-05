@@ -6,12 +6,12 @@ import useDownload from "@/stores/downloadStore";
 import { useModuleSelection } from "@/stores/selectionStore";
 
 interface DownloadPausedProps {
-	downloadPath: string;
+	// downloadPath: string;
 	className?: string;
 }
 
 export default function DownloadPaused({
-	downloadPath,
+	// downloadPath,
 	className,
 }: DownloadPausedProps) {
 	const { selectedCount } = useModuleSelection();
@@ -52,11 +52,20 @@ export default function DownloadPaused({
 
 			<div className="flex justify-between text-xs text-muted-foreground">
 				<p>
-					{selectedCount} module{selectedCount !== 1 ? "s" : ""} • Paused at{" "}
-					{progressValue}%
+					{/* Saving to: <span className="font-mono">{downloadPath}</span> */}
+					{currentModule ? (
+						<span className="font-medium">{`Paused at ${progressValue}% for ${selectedCount} module${selectedCount !== 1 ? "s" : ""}`}</span>
+					) : (
+						"Waiting to resume..."
+					)}
 				</p>
 				<p className="text-right">
-					Saving to: <span className="font-mono">{downloadPath}</span>
+					{/* Saving to: <span className="font-mono">{downloadPath}</span> */}
+					{currentModule ? (
+						<span className="font-medium">{`Stopped on ${currentModule.code.prefix}${currentModule.code.number} (${currentModuleIndex + 1}/${selectedCount})`}</span>
+					) : (
+						"Waiting to resume..."
+					)}
 				</p>
 			</div>
 		</DownloadContainer>

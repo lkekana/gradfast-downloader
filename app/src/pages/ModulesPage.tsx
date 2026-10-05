@@ -226,13 +226,13 @@ export default function ModulesPage() {
 						<>
 							{downloadState === "downloading" && (
 								<DownloadProgressBar
-									downloadPath={downloadPath}
+									// downloadPath={downloadPath}
 								/>
 							)}
 
 							{downloadState === "paused" && (
 								<DownloadPaused
-									downloadPath={downloadPath}
+									// downloadPath={downloadPath}
 								/>
 							)}
 
@@ -243,7 +243,7 @@ export default function ModulesPage() {
 
 							{downloadState === "idle" && (
 								<DownloadBar
-									activeFilterCount={activeFilterCount}
+									// activeFilterCount={activeFilterCount}
 								/>
 							)}
 						</>

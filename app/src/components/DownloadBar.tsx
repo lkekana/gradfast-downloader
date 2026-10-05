@@ -12,12 +12,12 @@ import useDownload from "@/stores/downloadStore";
 import { useModuleSelection } from "@/stores/selectionStore";
 
 interface DownloadBarProps {
-	activeFilterCount?: number;
+	// activeFilterCount?: number;
 	className?: string;
 }
 
 export default function DownloadBar({
-	activeFilterCount = 0,
+	// activeFilterCount = 0,
 	className,
 }: DownloadBarProps) {
 	const { isOnline, isConnected } = useConnection();
@@ -33,12 +33,12 @@ export default function DownloadBar({
 				<span className="text-muted-foreground ml-1">
 					module{selectedCount !== 1 ? "s" : ""} selected
 				</span>
-				{activeFilterCount > 0 && (
+				{/* {activeFilterCount > 0 && (
 					<Badge variant="outline" className="ml-4 text-[10px]">
 						{activeFilterCount} filter{activeFilterCount !== 1 ? "s" : ""}{" "}
 						active
 					</Badge>
-				)}
+				)} */}
 			</div>
 
 			<Tooltip>
