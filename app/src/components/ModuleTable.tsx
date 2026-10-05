@@ -29,6 +29,8 @@ interface ModulesTableProps {
 	onClearFilters?: () => void;
 }
 
+const checkboxClass = "w-4 h-4 rounded";
+
 export default function ModulesTable({
 	filteredModules,
 	onClearFilters,
@@ -53,11 +55,14 @@ export default function ModulesTable({
 				<TableHeader className="sticky top-0 bg-background z-10">
 					<TableRow>
 						<TableHead className="w-12">
+						<div className="flex items-center justify-center h-full">
 							<Checkbox
 								checked={allSelected}
 								onCheckedChange={handleSelectAllChange}
 								disabled={isDownloadActive}
+								className={checkboxClass}
 							/>
+							</div>
 						</TableHead>
 						<TableHead>Module</TableHead>
 						<TableHead>Name</TableHead>
@@ -82,16 +87,19 @@ export default function ModulesTable({
 									isSelected
 										? "bg-primary/5 hover:bg-primary/10"
 										: "hover:bg-muted/50"
-								} ${isDownloadActive ? "opacity-50 cursor-not-allowed" : ""}`}
+								} ${isDownloadActive ? "opacity-75 cursor-not-allowed" : ""}`}
 								onClick={() => toggleModule(mod)}
 							>
-								<TableCell onClick={(e) => e.stopPropagation()}>
+								<TableCell
+								className="w-12" onClick={(e) => e.stopPropagation()}>
+								<div className="flex items-center justify-center h-full">
 									<Checkbox
 										checked={isSelected}
 										onCheckedChange={() => toggleModule(mod)}
 										disabled={isDownloadActive}
 										className={checkboxClass}
 									/>
+									</div>
 								</TableCell>
 								<TableCell className="font-mono font-medium">
 									{mod.code.prefix}
@@ -134,7 +142,7 @@ export default function ModulesTable({
 												</Link>
 											</Button>
 										</HoverCardTrigger>
-										<HoverCardContent className="w-80 p-3">
+										<HoverCardContent className={`w-80 p-3 ${isDownloadActive ? "opacity-0" : ""}`}>
 											<div className="space-y-2">
 												<div className="flex items-center justify-end">
 													<h4 className="font-medium text-base px-2">
@@ -192,6 +200,14 @@ export default function ModulesTable({
 															</span>
 															<span className="font-medium">
 																{pastPaperCounts.tutorials}
+															</span>
+														</div>
+														<div className="flex items-center gap-1">
+															<span className="text-muted-foreground">
+																📄 Other:
+															</span>
+															<span className="font-medium">
+																{pastPaperCounts.other}
 															</span>
 														</div>
 													</div>

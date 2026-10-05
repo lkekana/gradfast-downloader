@@ -26,8 +26,8 @@ const SettingsDropdown: React.FC = () => {
 						Settings
 					</Link>
 				</DropdownMenuItem>
-				<DropdownMenuItem>Check for updates</DropdownMenuItem>
-				<DropdownMenuSeparator />
+				{/* <DropdownMenuItem disabled>Check for updates</DropdownMenuItem>
+				<DropdownMenuSeparator /> */}
 				<DropdownMenuItem className="text-muted-foreground">
 					v1.0.0
 				</DropdownMenuItem>

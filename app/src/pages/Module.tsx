@@ -116,19 +116,19 @@ export default function ModulePage({
 					<div className="flex-1 min-w-0">
 						<div className="flex items-center gap-2 flex-wrap">
 							<h1 className="text-lg font-semibold font-mono">{moduleId}</h1>
-							{module.faculty && (
+							{moduleInfo.faculty && (
 								<Badge variant="outline" className="text-xs">
-									{facultyAbbreviation(module.faculty)}
+									{facultyAbbreviation(moduleInfo.faculty)}
 								</Badge>
 							)}
-							{module.period && (
+							{moduleInfo.period && (
 								<Badge variant="secondary" className="text-xs">
-									{module.period}
+									{periodAbbreviation(moduleInfo.period)}
 								</Badge>
 							)}
 						</div>
 						<p className="text-sm text-muted-foreground truncate">
-							{module.name}
+							{moduleInfo.name}
 						</p>
 					</div>
 					{hasPapers && (
@@ -171,7 +171,7 @@ export default function ModulePage({
 							<Calendar className="w-5 h-5 text-muted-foreground" />
 							<div>
 								<p className="text-xs text-muted-foreground">Period</p>
-								<p className="font-semibold">{module.period}</p>
+								<p className="font-semibold">{moduleInfo.period}</p>
 							</div>
 						</CardContent>
 					</Card>
@@ -229,7 +229,7 @@ export default function ModulePage({
 									</p> */}
 								{Array.isArray(moduleInfo.prerequisites) ? (
 									<ul className="list-disc list-inside text-sm">
-										{moduleInfo.prerequisites.map((prereq, index) => (
+										{moduleInfo.prerequisites.map((prereq) => (
 											<li key={prereq}>{prereq}</li>
 										))}
 									</ul>
@@ -238,6 +238,24 @@ export default function ModulePage({
 										{moduleInfo.prerequisites}
 									</p>
 								)}
+							</CardContent>
+						</Card>
+
+						<Card>
+							<CardHeader>
+								<CardTitle className="text-lg flex items-center gap-2">
+									<Link2 className="w-4 h-4" />
+									Associated Programmes
+								</CardTitle>
+							</CardHeader>
+							<CardContent>
+								<ul className="list-disc list-inside text-sm">
+									{moduleInfo.associatedProgrammes.map((prog) => (
+										<li key={prog.programmeCode}>
+											{`${prog.programmeName} (${prog.curriculumName})`}
+										</li>
+									))}
+								</ul>
 							</CardContent>
 						</Card>
 					</TabsContent>
@@ -359,9 +377,9 @@ export default function ModulePage({
 							</CardHeader>
 							<CardContent className="space-y-4">
 								<DetailRow label="Full Code" value={moduleId} />
-								<DetailRow label="Name" value={module.name} />
-								{module.faculty && (
-									<DetailRow label="Faculty" value={module.faculty} />
+								<DetailRow label="Name" value={moduleInfo.name} />
+								{moduleInfo.faculty && (
+									<DetailRow label="Faculty" value={moduleInfo.faculty} />
 								)}
 								{moduleInfo.qualification && (
 									<DetailRow
@@ -391,10 +409,10 @@ export default function ModulePage({
 										icon={<Clock className="w-4 h-4" />}
 									/>
 								)}
-								{module.period && (
+								{moduleInfo.period && (
 									<DetailRow
 										label="Academic Period"
-										value={periodAbbreviation(module.period)}
+										value={moduleInfo.period}
 										icon={<Calendar className="w-4 h-4" />}
 									/>
 								)}

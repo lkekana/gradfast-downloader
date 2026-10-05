@@ -20,7 +20,7 @@ export interface SettingsState {
 	destinationFolder: string;
 	moduleSubfolders: boolean;
 	zipMultipleFiles: boolean;
-	namingPattern: string;
+	namingPattern: NamingPattern;
 	parallelDownloads: number;
 	retryAttempts: number;
 
@@ -59,7 +59,7 @@ const defaultSettings: SettingsState = {
 	destinationFolder: downloadPath,
 	moduleSubfolders: true,
 	zipMultipleFiles: false,
-	namingPattern: "default",
+	namingPattern: "default" as NamingPattern,
 	parallelDownloads: 3,
 	retryAttempts: 3,
 

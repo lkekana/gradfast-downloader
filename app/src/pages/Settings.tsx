@@ -861,7 +861,7 @@ export default function SettingsPage() {
 										value={namingPattern}
 										onValueChange={(v) =>
 											useSettingsStore.getState().updateSettings({
-												namingPattern: v,
+												namingPattern: v as NamingPattern,
 											})
 										}
 									>
