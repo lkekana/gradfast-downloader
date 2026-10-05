@@ -3,11 +3,11 @@ import { toast } from "@/hooks/use-toast";
 import { useConnection, useConnectionStore } from "@/stores/connectionStore";
 import { useSelectionStore } from "@/stores/selectionStore";
 import type { Module, PastPaper } from "@/lib/types";
-import { cachedPastPapers } from "@/lib/data";
+import { useApiStore } from "./apiStore";
 
 type DownloadStateStatus = "idle" | "downloading" | "paused" | "error";
-type ModuleStatus = "pending" | "downloading" | "completed" | "failed";
-type PastPaperDownloadItem = {
+export type ModuleStatus = "pending" | "preparing" | "downloading" | "completed" | "failed";
+export type PastPaperDownloadItem = {
 	paper: PastPaper;
 	available: boolean;
 	downloaded: boolean;
@@ -56,18 +56,20 @@ export const useDownloadStore = create<DownloadState>((set, get) => ({
 		const moduleCount = modulesToDownload.size || 1; // Avoid division by zero
 		const speedFactor = Math.max(0.5, Math.min(2, 3 / moduleCount)); // More modules = slower per-item
 
-		downloadInterval = setInterval(() => {
-			set((state) => {
+		const prepareModuleForDownload = useApiStore.getState().prepareModuleForDownload;
+
+		downloadInterval = setInterval(async () => {
+				const state = get();
 				// Only proceed if still in downloading state
 				if (state.status !== "downloading") {
 					if (downloadInterval) clearInterval(downloadInterval);
 					downloadInterval = null;
-					return {};
+					return;
 				}
 
 				// Check for completion
 				const activeIndex = state.moduleProgress.findIndex(
-					(m) => m.status === "pending" || m.status === "downloading"
+					(m) => m.status === "pending" || m.status === "preparing" || m.status === "downloading"
 				);
 
 				if (activeIndex === -1) {
@@ -92,7 +94,7 @@ export const useDownloadStore = create<DownloadState>((set, get) => ({
 						set({ status: "idle", moduleProgress: [] });
 					}, 400);
 
-					return {};
+					return;
 				}
 
 				const current = state.moduleProgress[activeIndex];
@@ -101,12 +103,15 @@ export const useDownloadStore = create<DownloadState>((set, get) => ({
 				let currentPapers = current.papers;
 				// Initialize papers for this module if not already done
 				if (currentPapers.length === 0) {
-					const papers = cachedPastPapers[current.module.code.prefix + current.module.code.number] || [];
-					currentPapers = papers.map((paper) => ({
-						paper,
-						available: Math.random() < 0.9, // 90% chance the paper is available
-						downloaded: false,
-					}));
+					// const papers = await prepareModuleForDownload(current.module.code);
+					// currentPapers = papers.map((paper) => ({
+					// 	paper,
+					// 	available: Math.random() < 0.9, // 90% chance the paper is available
+					// 	downloaded: false,
+					// }));
+					prepareModuleForDownload(current.module.code).then((papers) => {
+						currentPapers = papers;
+					});
 				}
 
 				// Add variable increment for realism (network fluctuation simulation)
@@ -116,59 +121,99 @@ export const useDownloadStore = create<DownloadState>((set, get) => ({
 				// const index = Math.floor(nextProgress / 100 * modulesToDownload.size);
 
 				if (current.status === "pending") {
-					// Simulate a random failure 10% of the time when starting a module
-					if (Math.random() < 0.1) {
-						newModuleProgress[activeIndex] = {
-							...current,
-							status: "failed",
-							progress: 100,
-							papers: currentPapers.map((p) => ({ ...p, downloaded: false })),
-						};
-					} else {
-						newModuleProgress[activeIndex] = {
-							...current,
-							status: "downloading",
-							progress: 0,
-							papers: currentPapers,
-						};
+					set((state) => {
+						const newModuleProgress = [...state.moduleProgress];
+						newModuleProgress[activeIndex] = { ...current, status: "preparing" };
+						return { moduleProgress: newModuleProgress };
+					});
+
+					try {
+						const papers = await prepareModuleForDownload(current.module.code);
+						alert(JSON.stringify(papers, null, 2));
+						const currentState = get();
+						const currentMod = currentState.moduleProgress[activeIndex];
+						if (!currentMod || currentMod.status !== "preparing") return;
+
+						const currentPapers = papers.map((paper) => ({
+							...paper,
+							available: Math.random() < 0.9, // 90% chance the paper is available
+						}));
+
+						// Simulate a random failure 10% of the time when starting a module
+						const failed = Math.random() < 0.1;
+
+						set((state) => {
+							const newModuleProgress = [...state.moduleProgress];
+							const mod = newModuleProgress[activeIndex];
+							if (mod.status !== "preparing") return {}; // Double-check inside set
+
+							newModuleProgress[activeIndex] = {
+								...mod,
+								status: failed ? "failed" : "downloading",
+								progress: failed ? 100 : 0,
+								papers: currentPapers,
+							};
+							return { moduleProgress: newModuleProgress };
+						});
+					} catch (error) {
+						console.error("Error preparing module for download:", error);
+						set((state) => {
+							const newModuleProgress = [...state.moduleProgress];
+							const mod = newModuleProgress[activeIndex];
+							if (mod.status !== "preparing") return {};
+
+							newModuleProgress[activeIndex] = {
+								...mod,
+								status: "failed",
+								progress: 100,
+							};
+							return { moduleProgress: newModuleProgress };
+						});
 					}
-				} else {
+					return; // Skip progress increment logic until fetching is complete
+				}
+
+				if (current.status === "downloading") {
 					const fluctuation = 0.7 + Math.random() * 0.6;
 					const increment = baseIncrement * speedFactor * fluctuation;
 					// const nextProgress = Math.min(100, current.progress + increment);
 					// const nextProgress = Math.min(100, (current.papers.filter(p => p.downloaded).length / current.papers.length) * 100 + increment);
-					const currentProgress = current.progress ?? 0;
-					const nextProgress = Math.min(100, currentProgress + increment);
-					// console.log(`Module ${current.module.code.prefix}${current.module.code.number}: nextProgress=${nextProgress}`);
-					const newStatus = nextProgress >= 100 ? "completed" : "downloading";
-					// newModuleProgress[activeIndex] = {
-					// 	...current,
-					// 	status: newStatus,
-					// 	progress: nextProgress,
-					// };
-					newModuleProgress[activeIndex] = {
-						...current,
-						status: newStatus,
-						progress: nextProgress,
-						papers: currentPapers.map((p, index) => {
-							if (p.downloaded || !p.available) return p; // Skip if already downloaded or unavailable
-							// Simulate download completion based on progress
-							const paperProgressThreshold = currentPapers.length > 0 
-                                ? ((index + 1) / currentPapers.length) * 100 
-                                : 100;
-							console.log(`Module ${current.module.code.prefix}${current.module.code.number} - Paper ${index + 1}: nextProgress=${nextProgress}, threshold=${paperProgressThreshold}`);
-							if (nextProgress >= paperProgressThreshold) {
-								return { ...p, downloaded: true };
-							}
-							return p;
-						}),
-					};
+					set((state) => {
+						const current = state.moduleProgress[activeIndex]; // Re-read current state
+						if (!current || current.status !== "downloading") return {};
+						const currentProgress = current.progress ?? 0;
+						const nextProgress = Math.min(100, currentProgress + increment);
+						// console.log(`Module ${current.module.code.prefix}${current.module.code.number}: nextProgress=${nextProgress}`);
+						const newStatus = nextProgress >= 100 ? "completed" : "downloading";
+
+						const newModuleProgress = [...state.moduleProgress];
+						// newModuleProgress[activeIndex] = {
+						// 	...current,
+						// 	status: newStatus,
+						// 	progress: nextProgress,
+						// };
+						newModuleProgress[activeIndex] = {
+							...current,
+							status: newStatus,
+							progress: nextProgress,
+							papers: current.papers.map((p, index) => {
+								if (p.downloaded || !p.available) return p; // Skip if already downloaded or unavailable
+								// Simulate download completion based on progress
+								const paperProgressThreshold = current.papers.length > 0 
+									? ((index + 1) / current.papers.length) * 100 
+									: 100;
+								console.log(`Module ${current.module.code.prefix}${current.module.code.number} - Paper ${index + 1}: nextProgress=${nextProgress}, threshold=${paperProgressThreshold}`);
+								if (nextProgress >= paperProgressThreshold) {
+									return { ...p, downloaded: true };
+								}
+								return p;
+							}),
+						};
+						return { moduleProgress: newModuleProgress };
+					});
 				}
 
 				return { moduleProgress: newModuleProgress };
-				
-
-			});
 		}, 200); // Update every 200ms for smooth progress bar
 	},
 

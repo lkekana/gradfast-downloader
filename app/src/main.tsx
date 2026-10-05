@@ -8,9 +8,7 @@ import { ConnectionManager } from "./components/ConnectionManager.tsx";
 import {
 	TooltipProvider,
 } from "@/components/ui/tooltip";
-
-
-const queryClient = new QueryClient();
+import { queryClient } from "./lib/queryClient.ts";
 
 createRoot(document.getElementById("root")!).render(
 	<StrictMode>

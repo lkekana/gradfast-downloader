@@ -6,6 +6,8 @@ import type { GradfastModules, Module, PastPaper } from "@/lib/types";
 import { useSettingsStore } from "./useSettingsStore";
 import pLimit from "p-limit";
 import { toast } from "@/hooks/use-toast";
+import { queryClient } from "@/lib/queryClient";
+import { PastPaperDownloadItem } from "./downloadStore";
 
 // biome-ignore lint/suspicious/noExplicitAny: FetchType is a generic fetch function that returns any type of data
 type FetchType = (url: string, options?: RequestInit) => Promise<any>;
@@ -29,6 +31,7 @@ interface ApiState {
 	// setCurrentModuleCode: React.Dispatch<React.SetStateAction<string | null>>;
 	// moduleInfoQuery: DefinedUseQueryResult<Module | null, Error>
 	// modulePastPapersQuery: DefinedUseQueryResult<PastPaper[], Error>
+	prepareModuleForDownload: (moduleCode: { prefix: string; number: number }) => Promise<PastPaperDownloadItem[]>;
 }
 
 export const useApiStore = create<ApiState>((set, get) => ({
@@ -212,6 +215,20 @@ export const useApiStore = create<ApiState>((set, get) => ({
 		});
 	},
 
+
+	prepareModuleForDownload: async (moduleCode) => {
+		const apiFetch = get().apiFetch;
+		const options = getPastPapersOptions(moduleCode, apiFetch);
+		const papers = await queryClient.query({
+		  ...options,
+		  staleTime: 0, // Force refetch to get the latest data
+		});
+		return papers.map((paper) => ({
+			paper,
+			downloaded: false,
+			available: false,
+		}));
+	},
 }));
 
 export const getModuleInfoOptions = (

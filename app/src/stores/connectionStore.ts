@@ -1,7 +1,8 @@
 import { create } from "zustand";
 import { toast } from "@/hooks/use-toast";
 import type { DefinedUseQueryResult } from "@tanstack/react-query";
-import { useApiStore } from "./apiStore";
+import { getModulesOptions, useApiStore } from "./apiStore";
+import { queryClient } from "@/lib/queryClient";
 
 interface ConnectionState {
 	isOnline: boolean;
@@ -28,15 +29,8 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
 	setReconnectError: (val) => set({ reconnectError: val }),
 
 	attemptReconnect: async () => {
-		alert("Attempting to reconnect...");
+		// alert("Attempting to reconnect...");
 		const { isOnline, isConnected, isReconnecting } = get();
-		// const {
-		// 	refetch: getAPIModules,
-		// 	error: apiError,
-		// 	isLoading,
-		// 	isFetching,
-		// 	isPending,
-		// } = useModules; //  wrapper for react-query's useQuery to fetch modules from the API
 		if (isConnected) return;
 		if (isReconnecting || !isOnline) return;
 		// if (isLoading || isFetching || isPending) return;
@@ -45,9 +39,9 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
 
 		try {
 			// get the modules from the API to check if the connection is successful
-			// await getAPIModules();
 			const apiFetch = useApiStore.getState().apiFetch;
-           	await apiFetch(`${import.meta.env.VITE_API_PROXY}/modules`);
+			const options = getModulesOptions(apiFetch);
+			await queryClient.query(options);
 
 			set({ isConnected: true, reconnectError: null });
 			// toast({
