@@ -15,9 +15,6 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import {
-	TooltipProvider,
-} from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import { downloadPath } from "@/lib/api";
 import {
@@ -84,7 +81,6 @@ export default function ModulesPage() {
 	// };
 
 	return (
-		<TooltipProvider>
 			<div className="flex flex-col h-screen bg-background">
 				<ModulesToolbar />
 
@@ -254,6 +250,5 @@ export default function ModulesPage() {
 					)}
 				</main>
 			</div>
-		</TooltipProvider>
 	);
 }

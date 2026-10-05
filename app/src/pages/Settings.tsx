@@ -7,6 +7,7 @@ import {
 	// FolderOpen,
 	HardDrive,
 	Layers,
+	LoaderCircle,
 	Monitor,
 	Moon,
 	RefreshCcw,
@@ -52,6 +53,7 @@ import { useToast } from "@/hooks/use-toast";
 import { type ModuleRole, type NamingPattern, type PaperType, useSettingsStore } from "@/stores/useSettingsStore";
 import { useConnection } from "@/stores/connectionStore";
 import { useTheme } from "@/stores/themeStore";
+import MiniDownloadCard from "@/components/MiniDownloadCard";
 
 const programmes = [
 	{
@@ -434,7 +436,8 @@ export default function SettingsPage() {
 								</TooltipContent>
 							</Tooltip>
 						)}
-					</div>
+						<MiniDownloadCard />
+									</div>
 				</div>
 			</header>
 			<div className="max-w-4xl mx-auto p-4 md:p-6 space-y-6">

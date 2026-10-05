@@ -56,6 +56,8 @@ import {
   import { useApiStore } from "../stores/apiStore";
   import { Label } from "@/components/ui/label"
   import { Switch } from "@/components/ui/switch"
+import useDownload from "@/stores/downloadStore";
+import MiniDownloadCard from "@/components/MiniDownloadCard";
 
 interface ModulePageProps {
 	module: Module;
@@ -71,6 +73,7 @@ export default function ModulePage({
 	onBack,
 }: ModulePageProps) {
 	const nav = useNavigate();
+	const { isDownloadActive } = useDownload();
 
 	const moduleId = `${module.code.prefix}${module.code.number}`;
 	const hasPapers = pastPapers.length > 0;
@@ -129,10 +132,14 @@ export default function ModulePage({
 						</p>
 					</div>
 					{hasPapers && (
+						isDownloadActive ? 
+						<MiniDownloadCard />
+						:
+						(
 						<Button size="sm" onClick={handleDownloadAll} className="gap-1">
 							<Download className="w-4 h-4" />
 							Download All
-						</Button>
+						</Button>)
 					)}
 				</div>
 			</header>
