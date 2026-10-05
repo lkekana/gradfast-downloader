@@ -88,7 +88,7 @@ const MiniDownloadCard: React.FC = () => {
 								{mp.status === "downloading" && (
 									<LoaderCircle className="w-5 h-5 text-primary animate-spin" />
 								)}
-								{mp.status === "pending" && (
+								{mp.status === "pending" || mp.status === "preparing" && (
 									<div className="w-5 h-5 rounded-full border-2 border-muted-foreground/30" />
 								)}
 							</div>
@@ -103,6 +103,7 @@ const MiniDownloadCard: React.FC = () => {
 									{/* {mp.status === "downloading" && `${Math.round(mp.progress)}%`} */}
 									{mp.status === "downloading" && `${downloadedPapersCount}/${totalPapersCount}${unavailablePapersCount > 0 ? ` (${unavailablePapersCount} unavailable)` : ""}`}
 									{mp.status === "pending" && "Pending"}
+									{mp.status === "preparing" && "Preparing..."}
 								</p>
 								{mp.status === "downloading" && (
 									// <Progress value={mp.progress} className="h-1 mt-1" />

@@ -313,7 +313,7 @@ export default function useDownload() {
         : 0;
 
 	const activeIndex = moduleProgress.findIndex(
-		(m) => m.status === "downloading" || m.status === "pending"
+		(m) => m.status === "downloading" || m.status === "pending" || m.status === "preparing"
 	);
 	const currentModule =
 		activeIndex !== -1 ? moduleProgress[activeIndex].module : null;
