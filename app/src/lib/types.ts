@@ -65,3 +65,14 @@ export type GradfastModules = {
 	code: number;
 	name: string;
 }[];
+
+export type GradfastModuleInfo = {
+	code: {
+		prefix: string;
+		number: number;
+	};
+	name: string;
+	credits: string;
+	period: string;
+	prerequisites: string[];
+};

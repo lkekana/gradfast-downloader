@@ -15,10 +15,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
-import { downloadPath } from "@/lib/api";
 import {
-	cachedModules,
 	periods,
 } from "@/lib/data";
 import { useModuleSelection } from "@/stores/selectionStore";
@@ -26,8 +23,7 @@ import { useModuleFilters } from "@/stores/filterStore";
 import useDownload from "@/stores/downloadStore";
 
 export default function ModulesPage() {
-	const { toast } = useToast();
-	const filters = useModuleFilters(cachedModules);
+	const filters = useModuleFilters();
 	const {
 		filteredModules,
 		uniquePrefixes,
@@ -201,38 +197,23 @@ export default function ModulesPage() {
 					{/* Filter Summary Bar - Shows active filters as removable chips */}
 					{activeFilterCount > 0 && (
 						<FilterSummaryBar
-							filterChips={filters.filterChips}
-							removeFilterChip={filters.removeFilterChip}
-							activeFilterCount={activeFilterCount}
-							clearAllFilters={filters.clearAllFilters}
 							isDownloading={isDownloadActive}
 						/>
 					)}
 
 					{/* Module Table */}
-					<ModulesTable
-						filteredModules={filteredModules}
-						onClearFilters={() => {
-							filters.clearAllFilters();
-							filters.setSearchQuery("");
-							// setPrefixFilter([]);
-							// setFacultyFilter([]);
-							// setPeriodFilter([]);
-						}}
-					/>
+					<ModulesTable />
 
 					{/* Sticky Download UI - Dynamic State */}
 					{selectedCount > 0 && (
 						<>
 							{downloadState === "downloading" && (
 								<DownloadProgressBar
-									// downloadPath={downloadPath}
 								/>
 							)}
 
 							{downloadState === "paused" && (
 								<DownloadPaused
-									// downloadPath={downloadPath}
 								/>
 							)}
 

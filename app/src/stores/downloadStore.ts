@@ -358,7 +358,6 @@ export const useDownloadStore = create<DownloadState>((set, get) => ({
 							failedCount > 0
 								? `🎉 Download complete (${failedCount} failed)`
 								: "🎉 Download complete",
-						// description: `Your selected modules have been downloaded to ${downloadPath}`,
 						variant: "default",
 					});
 

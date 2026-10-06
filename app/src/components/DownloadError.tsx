@@ -12,7 +12,7 @@ export function DownloadError({
 	className,
 }: DownloadErrorProps) {
 	const reconnectError = useConnectionStore((s) => s.reconnectError);
-	const { handleRetry, handleCancel } = useDownload();
+	const { handleResume, handleCancel } = useDownload();
 	return (
 		<DownloadContainer className={`border-red-500/50 ${className}`}>
 			<div className="flex items-center justify-between">
@@ -21,7 +21,7 @@ export function DownloadError({
 					<p className="text-sm text-red-600">{reconnectError}</p>
 				</div>
 				<div className="flex items-center gap-2">
-					<Button variant="outline" size="sm" onClick={handleRetry}>
+					<Button variant="outline" size="sm" onClick={handleResume}>
 						Retry
 					</Button>
 					<Button variant="ghost" size="sm" onClick={handleCancel}>

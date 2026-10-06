@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { useMemo } from "react";
-import { facultyAbbreviation, periodAbbreviation } from "@/lib/data";
+import { cachedModules as modules, facultyAbbreviation, periodAbbreviation } from "@/lib/data";
 import type { Module } from "@/lib/types";
 
 interface FilterState {
@@ -80,7 +80,7 @@ export const useFilterStore = create<FilterState>((set) => ({
 		}),
 }));
 
-export function useModuleFilters(modules: Module[]) {
+export function useModuleFilters() {
 	const searchQuery = useFilterStore((state) => state.searchQuery);
 	const setSearchQuery = useFilterStore((state) => state.setSearchQuery);
 	const prefixFilter = useFilterStore((state) => state.prefixFilter);
@@ -95,12 +95,12 @@ export function useModuleFilters(modules: Module[]) {
 	// Derived data
 	const uniquePrefixes = useMemo(
 		() => [...new Set(modules.map((m) => m.code.prefix))].sort(),
-		[modules],
+		[],
 	);
 
 	const uniqueFaculties = useMemo(
 		() => [...new Set(modules.map((m) => m.faculty).filter(Boolean))].sort(),
-		[modules],
+		[],
 	);
 
 	const filteredModules = useMemo(() => {
@@ -133,7 +133,6 @@ export function useModuleFilters(modules: Module[]) {
 		prefixFilter,
 		facultyFilter,
 		periodFilter,
-		modules,
 	]);
 
 	const filterChips = useMemo(() => {

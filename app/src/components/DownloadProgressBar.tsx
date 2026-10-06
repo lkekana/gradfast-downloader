@@ -6,12 +6,10 @@ import { useModuleSelection } from "@/stores/selectionStore";
 import useDownload from "@/stores/downloadStore";
 
 interface DownloadProgressBarProps {
-	// downloadPath: string;
 	className?: string;
 }
 
 export default function DownloadProgressBar({
-	// downloadPath,
 	className,
 }: DownloadProgressBarProps) {
 	const { selectedCount } = useModuleSelection();
@@ -60,7 +58,6 @@ export default function DownloadProgressBar({
 
 			<div className="flex justify-between text-xs text-muted-foreground">
 				<p>
-					{/* Saving to: <span className="font-mono">{downloadPath}</span> */}
 					{currentModule ? (
 						<span className="font-medium">{`Processing ${currentModule.code.prefix}${currentModule.code.number} (${currentModuleIndex + 1}/${selectedCount})`}</span>
 					) : (

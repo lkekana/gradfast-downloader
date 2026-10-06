@@ -1,30 +1,17 @@
 import type React from "react";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
+import useDownload, { useDownloadStore } from "@/stores/downloadStore";
+import { useModuleFilters } from "@/stores/filterStore";
 
 interface FilterSummaryBarProps {
-	filterChips: {
-		id: string;
-		label: string;
-		type: "period" | "faculty" | "prefix";
-		value: string;
-	}[];
-	removeFilterChip: (chip: {
-		type: "period" | "faculty" | "prefix";
-		value: string;
-	}) => void;
-	activeFilterCount: number;
-	clearAllFilters: () => void;
 	isDownloading: boolean;
 }
 
 const FilterSummaryBar: React.FC<FilterSummaryBarProps> = ({
-	filterChips,
-	removeFilterChip,
-	activeFilterCount,
-	clearAllFilters,
 	isDownloading,
 }) => {
+	const { filterChips, removeFilterChip, activeFilterCount, clearAllFilters } = useModuleFilters();
 	return (
 		<div className="flex flex-wrap items-center gap-2 mb-4 animate-in fade-in slide-in-from-top-1">
 			<span className="text-xs font-medium text-muted-foreground mr-1">

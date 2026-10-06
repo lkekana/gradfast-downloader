@@ -1,5 +1,6 @@
+/** biome-ignore-all lint/suspicious/noArrayIndexKey: Using index as key is acceptable here since the moduleProgress array is stable and not reordered. */
 import { LoaderCircle, Pause, AlertCircle, CheckCircle2, XCircle } from "lucide-react";
-import React from "react";
+import type React from "react";
 import { Button } from "@/components/ui/button";
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
 import { Progress } from "@/components/ui/progress";
@@ -69,11 +70,11 @@ const MiniDownloadCard: React.FC = () => {
 				{/* Scrollable Module List */}
 				<div className="max-h-64 overflow-y-auto p-2 space-y-2">
 					{moduleProgress.map((mp, index) => {
-                        const progressValue = mp.papers.filter((p) => p.downloaded).length / mp.papers.length * 100;
+                        const progressValue = mp.papers.length > 0 ? mp.papers.filter((p) => p.downloaded).length / mp.papers.length * 100 : 0;
 						const downloadedPapersCount = mp.papers.filter((p) => p.downloaded).length;
 						const totalPapersCount = mp.papers.length;
 						const unavailablePapersCount = mp.papers.filter((p) => p.available === false).length;
-                        return (
+						return (
 						<div
 							key={`${mp.module.code.prefix}${mp.module.code.number}-${index}`}
 							className="flex items-center gap-3 p-2 rounded-md hover:bg-accent/50 transition-colors"

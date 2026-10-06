@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { downloadPath } from "@/lib/api";
 
 export type AcademicLevel = "undergrad" | "postgrad";
 export type NamingPattern = "default" | "code-year-type" | "name-year-type" | "code-name-year" | "faculty-code-year";
@@ -17,7 +16,6 @@ export interface SettingsState {
 	year: string;
 
 	// ========== DOWNLOAD PREFERENCES ==========
-	destinationFolder: string;
 	moduleSubfolders: boolean;
 	zipMultipleFiles: boolean;
 	namingPattern: NamingPattern;
@@ -56,7 +54,6 @@ const defaultSettings: SettingsState = {
 	department: "",
 	year: "",
 
-	destinationFolder: downloadPath,
 	moduleSubfolders: true,
 	zipMultipleFiles: false,
 	namingPattern: "default" as NamingPattern,
