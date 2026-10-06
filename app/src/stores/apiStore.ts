@@ -7,15 +7,39 @@ import type { GradfastModules, Module, PastPaper } from "@/lib/types";
 type FetchType = (url: string, options?: RequestInit) => Promise<any>;
 type ProxyFetchType = (url: string, options?: RequestInit) => Promise<Response>;
 
+export type CloudfrontPolicy = {
+	Statement: {
+		Resource: string;
+		Condition: {
+			DateLessThan: {
+				"AWS:EpochTime": number;
+			};
+		};
+	}[];
+};
+
+export const parseCloudfrontPolicy = (policyb64: string): CloudfrontPolicy | null => {
+	try {
+		const cleanedB64 = policyb64.replace(/-/g, "+").replace(/_/g, "=").replace(/~/g, "/");
+		const decodedText = atob(cleanedB64);
+		const obj = JSON.parse(decodedText) as CloudfrontPolicy;
+		return obj;
+	} catch (error) {
+		console.error("Failed to parse CloudFront-Policy cookie value:", error);
+		return null;
+	}
+};
+
 interface ApiState {
 	cookies: string | null;
 	apiFetch: FetchType;
 	proxyFetch: ProxyFetchType;
+	cookiesExpired: () => boolean;
+	refreshCookies: () => Promise<void>;
 }
 
 export const useApiStore = create<ApiState>((set, get) => ({
 	cookies: null,
-	setCookies: (cookies: string) => set({ cookies }),
 
 	apiFetch: async (url, options = {}) => {
 		const { cookies } = get();
@@ -42,7 +66,11 @@ export const useApiStore = create<ApiState>((set, get) => ({
 	},
 
 	proxyFetch: async (url, options = {}) => {
-		const { cookies } = get();
+		const { cookies, cookiesExpired, refreshCookies } = get();
+		if (cookiesExpired()) {
+			await refreshCookies();
+		}
+
 		const requestHeaders = new Headers(options.headers || {});
 		if (cookies) {
 			requestHeaders.set("X-Cookies", cookies);
@@ -70,6 +98,75 @@ export const useApiStore = create<ApiState>((set, get) => ({
 			set({ cookies: xCookiesHeader });
 		}
 		return response;
+	},
+
+	cookiesExpired: () => {
+		const { cookies } = get();
+		if (!cookies) return true;
+		try {
+			const decoded = atob(cookies);
+			const parsed = JSON.parse(decoded) as { name: string; value: string }[];
+			// find the cookie with name "CloudFront-Policy"
+			const policyCookie = parsed.find(
+				(cookie: { name: string; value: string }) =>
+					cookie.name === "CloudFront-Policy",
+			);
+			if (!policyCookie) return true;
+			const policyValue = policyCookie.value;
+			// policyValue is a base64 encoded JSON string, so we need to decode it first
+			const policy = parseCloudfrontPolicy(policyValue);
+			if (policy === null) return true;
+			const expirationTime =
+				policy.Statement[0].Condition.DateLessThan["AWS:EpochTime"];
+			const currentTime = Math.floor(Date.now() / 1000);
+			return currentTime >= expirationTime;
+		} catch (error) {
+			console.error("Error checking cookies expiration:", error);
+			return true;
+		}
+	},
+
+	refreshCookies: async () => {
+		const { cookies } = get();
+		if (cookies === null) {
+			// cookies never received
+			const response = await fetch(`${import.meta.env.VITE_AUTH_PROXY}/auth`, {
+				method: "GET",
+			});
+			if (!response.ok) {
+				throw new Error(`Failed to refresh cookies: ${response.status}`);
+			}
+			const newCookies = response.headers.get("x-cookies");
+			if (newCookies) {
+				set({ cookies: newCookies });
+			}
+		}
+		else {
+			// cookies exist, refresh them by making a request to the API proxy with the current cookies
+			const randomModule = cachedModules[Math.floor(Math.random() * cachedModules.length)];
+			const code = `${randomModule.code.prefix}${randomModule.code.number}`;
+			const { apiFetch } = get();
+			await apiFetch(
+				`${import.meta.env.VITE_API_PROXY}/module/${code}`,
+				{
+					method: "GET",
+					headers: {
+						"X-Cookies": cookies,
+					},
+				},
+			);
+			if (get().cookiesExpired()) {
+				await apiFetch(`${import.meta.env.VITE_API_PROXY}/module/${code}/past-papers`, {
+					method: "GET",
+					headers: {
+						"X-Cookies": cookies,
+					},
+				});
+			}
+			if (get().cookiesExpired()) {
+				throw new Error("Failed to refresh cookies");
+			}
+		}
 	},
 }));
 
