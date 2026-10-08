@@ -3,6 +3,7 @@ import React from "react";
 import SettingsDropdown from "./SettingsDropdown";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { useConnection } from "@/stores/connectionStore";
+import MiniDownloadCard from "./MiniDownloadCard";
 
 export function ModulesToolbar() {
 	const { isOnline, isConnected, isReconnecting, attemptReconnect, reconnectError } = useConnection();
@@ -110,7 +111,10 @@ export function ModulesToolbar() {
 				)}
 			</div>
 
-			<SettingsDropdown />
+			<div className="flex items-center">
+				<MiniDownloadCard />
+				<SettingsDropdown />
+			</div>
 		</header>
 	);
 }

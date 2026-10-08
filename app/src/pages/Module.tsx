@@ -132,14 +132,13 @@ export default function ModulePage({
 						</p>
 					</div>
 					{hasPapers && (
-						isDownloadActive ? 
-						<MiniDownloadCard />
-						:
-						(
-						<Button size="sm" onClick={handleDownloadAll} className="gap-1">
+						<>
+						<Button size="sm" onClick={handleDownloadAll} disabled={isDownloadActive} className="gap-1">
 							<Download className="w-4 h-4" />
 							Download All
-						</Button>)
+						</Button>
+						<MiniDownloadCard />
+						</>
 					)}
 				</div>
 			</header>
