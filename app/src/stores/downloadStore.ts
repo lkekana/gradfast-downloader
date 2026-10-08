@@ -35,7 +35,7 @@ interface DownloadState {
 	processQueue: () => Promise<void>;
 	startSimulation: () => void;
 	downloadSelection: () => Promise<void>;
-	downloadModule: (module: Module, dirHandle: FileSystemDirectoryHandle, papers?: PastPaper[]) => Promise<void>;
+	downloadModule: (module: Module, papers?: PastPaper[]) => Promise<void>;
 	handlePause: () => void;
 	handleResume: () => void;
 	handleCancel: () => void;
@@ -498,7 +498,15 @@ export const useDownloadStore = create<DownloadState>((set, get) => ({
 		}
 	},
 
-	downloadModule: async (module, dirHandle, papers) => {
+	downloadModule: async (module, papers) => {
+		let dirHandle: FileSystemDirectoryHandle | undefined = undefined;
+		try {
+			dirHandle = await window.showDirectoryPicker({ mode: "readwrite" });
+		}
+		catch (err) {
+			console.warn("User cancelled directory picker", err);
+			return;
+		}
 		get().addTask(module, dirHandle, papers);
 		if (get().status !== "downloading") {
 			set({ status: "downloading", abortController: new AbortController() });

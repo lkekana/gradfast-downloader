@@ -80,16 +80,8 @@ export default function ModulePage({
 	const hasPapers = pastPapers.length > 0;
 
 	const handleDownloadAll = async () => {
-		try {
 			console.log(`Downloading all papers for ${moduleId}`);
-			const dirHandle = await window.showDirectoryPicker({
-				mode: 'readwrite',
-			});
-			await downloadModule(module, dirHandle);
-		}
-		catch (error) {
-			console.log("User cancelled directory picker", error);
-		}
+			await downloadModule(module);
 	};
 
 	const handleBack = () => {
@@ -488,26 +480,8 @@ function PaperCategory({
 	};
 
 	const downloadSelection = useCallback(async () => {
-		try {
-			const dirHandle = await window.showDirectoryPicker({
-				mode: 'readwrite',
-			});
-			const papersToCheck = selectedPapers.filter(p => paperAvailability[p.url] === undefined);
-			if (papersToCheck.length > 0) {
-				await Promise.all(papersToCheck.map(p => 
-					queryClient.query(getPaperAvailabilityOptions(p, proxyFetch))
-				));
-			}
-			// Build final list reading directly from the freshly populated cache
-			const finalList = selectedPapers.filter((paper) => {
-				const cached = queryClient.getQueryData(["paperAvailability", paper.url]);
-				return cached !== false;
-			});
-			downloadModule(module, dirHandle, finalList);
-		} catch (error) {
-			console.error("Error during download:", error);
-		}
-	}, [selectedPapers, paperAvailability, module, downloadModule, proxyFetch]);
+		downloadModule(module, selectedPapers);
+	}, [selectedPapers, module, downloadModule]);
 
 	return (
 		<div className="border rounded-lg p-4 hover:bg-muted/30 transition-colors">
