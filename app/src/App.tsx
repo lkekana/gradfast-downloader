@@ -1,50 +1,61 @@
-import { useEffect, useState } from "react";
-import { Route, Routes, useParams } from "react-router";
-import { Toaster } from "@/components/ui/toaster";
-import { getModuleInfo, getModulePastPapers } from "./lib/api.ts";
-import { modules } from "./lib/data.ts";
-import type { ModuleInfo, PastPaper } from "./lib/types.ts";
-import ModulePageSkeleton from "./pages/ModuleSkeleton.tsx";
-import ModulesPage from "./pages/ModulesPage.tsx";
-import ModulePage from "./pages/module.tsx";
-import SettingsPage from "./pages/settings.tsx";
+import { Navigate, Route, Routes, useParams } from "react-router";
+import ModulePageSkeleton from "./pages/ModuleSkeleton";
+import ModulesPage from "./pages/ModulesPage";
+import ModulePage from "./pages/Module";
+import SettingsPage from "./pages/Settings.tsx";
+import Test from "./pages/test.tsx";
+import { useModuleInfo, useModulePastPapers } from "./stores/apiStore";
+import { getModuleInfo } from "./lib/data";
 
 function ModulePageWrapper() {
 	const { code } = useParams<{ code: string }>();
-	const [moduleInfo, setModuleInfo] = useState<ModuleInfo | null>(null);
-	const [pastPapers, setPastPapers] = useState<PastPaper[] | null>(null);
+
 	// code will be in form "abc1234", we want to split into "abc" and "1234" where there can be any number of letters and digits, but letters always come first
 	const match = code?.match(/^([a-zA-Z]+)(\d+)$/);
-	if (!match) {
-		return null;
-	}
-	const [prefix, number] = [match[1], parseInt(match[2], 10)];
-	const module = modules.find(
-		(m) =>
-			m.code.prefix.toLowerCase() === prefix.toLowerCase() &&
-			m.code.number === number,
-	);
+	const isValid = match !== null && match !== undefined;
+	const prefix = match ? match[1] : "";
+	const number = match ? parseInt(match[2], 10) : 0;
 
-	useEffect(() => {
-		if (module) {
-			// Fetch module info and past papers in parallel
-			Promise.all([
-				getModuleInfo(module.code),
-				getModulePastPapers(module.code),
-			]).then(([info, papers]) => {
-				setModuleInfo(info);
-				setPastPapers(papers);
-			});
-		}
-	}, [module]);
-	return module && moduleInfo !== null && pastPapers !== null ? (
+	const {
+		data: module,
+		isPending: isModulePending,
+		isError: isModuleError,
+	} = useModuleInfo({ prefix, number }, {enabled: isValid});
+	const { data: pastPapers, isPending: isPapersPending } = useModulePastPapers({
+		prefix,
+		number,
+	}, {enabled: isValid});
+	console.log(pastPapers);
+
+	if (!isValid) {
+		return <Navigate to="/404" replace />;
+	}
+
+	if (isModulePending || isPapersPending) {
+		return <ModulePageSkeleton />;
+	}
+
+	if (isModuleError || !module) {
+		// If the API confirms it doesn't exist, or network failed
+		return <Navigate to="/404" replace />;
+	}
+
+	const moduleInfo = getModuleInfo(module.code);
+
+	if (!moduleInfo) {
+		return (
+			<div className="p-4 text-center text-muted-foreground">
+				Module details missing from local cache.
+			</div>
+		);
+	}
+
+	return (
 		<ModulePage
 			module={module}
 			moduleInfo={moduleInfo}
-			pastPapers={pastPapers}
+			pastPapers={pastPapers || []}
 		/>
-	) : (
-		<ModulePageSkeleton />
 	);
 }
 
@@ -59,10 +70,10 @@ export default function App() {
 					<Route path="/" element={<ModulesPage />} />
 					<Route path="/settings" element={<SettingsPage />} />
 					<Route path="/modules/:code" element={<ModulePageWrapper />} />
+					{/* <Route path="/test" element={<Test />} /> */}
 				</Routes>
 			</main>
 
-			<Toaster />
 		</div>
 	);
 }

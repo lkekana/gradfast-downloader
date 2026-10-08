@@ -203,12 +203,10 @@ export const getModuleInfoOptions = (
 		staleTime: 1000 * 60 * 55, // 55 minutes
 		gcTime: 1000 * 60 * 60 * 24, // 24 hours
 		initialData: () => {
-			return (
-				cachedModules.find(
+			return cachedModules.find(
 					(m) =>
 						m.code.prefix === moduleCode.prefix &&
 						m.code.number === moduleCode.number,
-				) || null
 			);
 		},
 	});
@@ -239,7 +237,7 @@ export const getPastPapersOptions = (
 		staleTime: 1000 * 60 * 55, // 55 minutes
 		gcTime: 1000 * 60 * 60 * 24, // 24 hours
 		initialData: () => {
-			return cachedPastPapers[fullCode] || [];
+			return cachedPastPapers[fullCode];
 		},
 	});
 };
@@ -275,23 +273,32 @@ export const getPaperAvailabilityOptions = (
 	retry: 1,
 });
 
-export function useModuleInfo(moduleCode: { prefix: string; number: number }) {
+export function useModuleInfo(moduleCode: { prefix: string; number: number }, additionalOptions: Partial<ReturnType<typeof getModuleInfoOptions>> = {}) {
 	const apiFetch = useApiStore((state) => state.apiFetch);
 	const options = getModuleInfoOptions(moduleCode, apiFetch);
-	return useQuery(options);
+	return useQuery({
+		...options,
+		...additionalOptions,
+	});
 }
 
 export function useModulePastPapers(moduleCode: {
 	prefix: string;
 	number: number;
-}) {
+}, additionalOptions: Partial<ReturnType<typeof getPastPapersOptions>> = {}) {
 	const apiFetch = useApiStore((state) => state.apiFetch);
 	const options = getPastPapersOptions(moduleCode, apiFetch);
-	return useQuery(options);
+	return useQuery({
+		...options,
+		...additionalOptions,
+	});
 }
 
-export function useModules() {
+export function useModules(additionalOptions: Partial<ReturnType<typeof getModulesOptions>> = {}) {
 	const apiFetch = useApiStore((state) => state.apiFetch);
 	const options = getModulesOptions(apiFetch);
-	return useQuery(options);
+	return useQuery({
+		...options,
+		...additionalOptions,
+	});
 }

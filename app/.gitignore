@@ -25,3 +25,6 @@ dist-ssr
 
 # my static JSON files
 src/assets/*.json
+
+# test page
+src/pages/test.*
