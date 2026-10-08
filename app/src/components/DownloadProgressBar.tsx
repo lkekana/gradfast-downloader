@@ -13,7 +13,7 @@ export default function DownloadProgressBar({
 	className,
 }: DownloadProgressBarProps) {
 	const { selectedCount } = useModuleSelection();
-	const { currentModule, currentModuleIndex, downloadProgress, handleCancel, handlePause} = useDownload();
+	const { currentModule, currentModuleIndex, downloadProgress, handleCancel, handlePause, queueSize} = useDownload();
 	const remainingSeconds = Math.max(
 		1,
 		Math.round((100 - downloadProgress) / 20),
@@ -61,7 +61,7 @@ export default function DownloadProgressBar({
 					{currentModule ? (
 						<span className="font-medium">{`Processing ${currentModule.code.prefix}${currentModule.code.number} (${currentModuleIndex + 1}/${selectedCount})`}</span>
 					) : (
-						`Preparing download (${currentModuleIndex + 1}/${selectedCount})...`
+						`Preparing download (${currentModuleIndex + 1}/${queueSize})...`
 					)}
 				</p>
 				<p className="text-right">

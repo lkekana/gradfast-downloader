@@ -12,12 +12,14 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+const IconClasses = "w-8 h-8 text-muted-foreground !size-6";
+
 const SettingsDropdown: React.FC = () => {
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
-				<Button variant="ghost" size="icon">
-					<Settings className="w-4 h-4" />
+				<Button variant="ghost" size="sm">
+					<Settings className={`${IconClasses}`} />
 				</Button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end">

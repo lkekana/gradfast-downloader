@@ -24,8 +24,7 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getPastPaperCounts } from "@/lib/api";
-import { facultyAbbreviation, periodAbbreviation } from "@/lib/data";
+import { facultyAbbreviation, periodAbbreviation, getPastPaperCounts } from "@/lib/data";
 import type { Module, ModuleInfo, PastPaper } from "@/lib/types";
 import {
 	Dialog,
@@ -53,11 +52,13 @@ import {
 	FieldLabel,
 	FieldTitle,
   } from "@/components/ui/field"
-  import { useApiStore } from "../stores/apiStore";
+  import { getPaperAvailabilityOptions, useApiStore } from "../stores/apiStore";
   import { Label } from "@/components/ui/label"
   import { Switch } from "@/components/ui/switch"
 import useDownload from "@/stores/downloadStore";
 import MiniDownloadCard from "@/components/MiniDownloadCard";
+import { useQueries } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
 
 interface ModulePageProps {
 	module: Module;
@@ -73,13 +74,22 @@ export default function ModulePage({
 	onBack,
 }: ModulePageProps) {
 	const nav = useNavigate();
-	const { isDownloadActive } = useDownload();
+	const { downloadModule, isDownloadActive } = useDownload();
 
 	const moduleId = `${module.code.prefix}${module.code.number}`;
 	const hasPapers = pastPapers.length > 0;
 
-	const handleDownloadAll = () => {
-		console.log(`Downloading all papers for ${moduleId}`);
+	const handleDownloadAll = async () => {
+		try {
+			console.log(`Downloading all papers for ${moduleId}`);
+			const dirHandle = await window.showDirectoryPicker({
+				mode: 'readwrite',
+			});
+			await downloadModule(module, dirHandle);
+		}
+		catch (error) {
+			console.log("User cancelled directory picker", error);
+		}
 	};
 
 	const handleBack = () => {
@@ -99,11 +109,6 @@ export default function ModulePage({
 		<div className="min-h-screen bg-background">
 			{/* Header */}
 			<header className="border-b bg-card px-4 py-3 sticky top-0 z-10">
-				{/* <nav className="text-xs text-muted-foreground mb-2">
-  <a href="/home" className="hover:underline">Modules</a>
-  <span className="mx-1">/</span>
-  <span className="font-medium text-foreground">{moduleId}</span>
-</nav> */}
 				<div className="flex items-center gap-3 max-w-6xl mx-auto">
 					<Button
 						variant="ghost"
@@ -233,7 +238,7 @@ export default function ModulePage({
 										))}
 									</ul>
 								) : (
-									<p className="text-sm text-muted-foreground">
+									<p className="text-sm">
 										{moduleInfo.prerequisites}
 									</p>
 								)}
@@ -294,7 +299,7 @@ export default function ModulePage({
 												title="Examinations"
 												icon="📝"
 												count={pastPaperCounts.exams}
-												moduleId={moduleId}
+												module={module}
 												type="exam"
 												papers={pastPapers.filter((p) => p.category === "Exams" || p.category === "Exam" || p.category === "Exam Opportunities")}
 											/>
@@ -304,7 +309,7 @@ export default function ModulePage({
 												title="Semester Tests"
 												icon="🧪"
 												count={pastPaperCounts.semesterTests}
-												moduleId={moduleId}
+												module={module}
 												type="semester"
 												papers={pastPapers.filter((p) => p.category === "Semester Tests" || p.category === "Semester Test")}
 											/>
@@ -314,7 +319,7 @@ export default function ModulePage({
 												title="Class Tests"
 												icon="✏️"
 												count={pastPaperCounts.classTests}
-												moduleId={moduleId}
+												module={module}
 												type="class"
 												papers={pastPapers.filter((p) => p.category === "Class Tests")}
 											/>
@@ -324,7 +329,7 @@ export default function ModulePage({
 												title="Practicals"
 												icon="🔬"
 												count={pastPaperCounts.practicals}
-												moduleId={moduleId}
+												module={module}
 												type="practical"
 												papers={pastPapers.filter((p) => p.category === "Practical Tests")}
 											/>
@@ -334,7 +339,7 @@ export default function ModulePage({
 												title="Tutorials"
 												icon="📚"
 												count={pastPaperCounts.tutorials}
-												moduleId={moduleId}
+												module={module}
 												type="tutorial"
 												papers={pastPapers.filter((p) => p.category === "Tutorials" || p.category === "Tutorial Tests")}
 											/>
@@ -344,7 +349,7 @@ export default function ModulePage({
 												title="Other"
 												icon="📄"
 												count={pastPaperCounts.other}
-												moduleId={moduleId}
+												module={module}
 												type="other"
 												papers={pastPapers.filter((p) => !["Exams", "Exam", "Semester Tests", "Exam Opportunities", "Semester Test", "Class Tests", "Tutorials", "Tutorial Tests", "Practical Tests"].includes(p.category))}
 											/>
@@ -428,28 +433,43 @@ function PaperCategory({
 	title,
 	icon,
 	count,
-	moduleId,
+	module,
 	type,
 	papers,
 }: {
 	title: string;
 	icon: string;
 	count: number;
-	moduleId: string;
+	module: Module;
 	type: string;
 	papers: PastPaper[];
 }) {
 	const [selectedPapers, setSelectedPapers] = useState<PastPaper[]>(papers);
-	const [paperAvailability, setPaperAvailability] = useState<Record<string, boolean>>({});
 	// const [zipEnabled, setZipEnabled] = useState<boolean>(false);
-	// const handlePaperDownload = useApiStore((state) => state.handlePaperDownload);
-	const handlePapersDownload = useApiStore((state) => state.handlePapersDownload);
-	// const checkPapersAvailability = useApiStore((state) => state.checkPapersAvailability);
-	const checkPapersAvailabilityDynamic = useApiStore((state) => state.checkPapersAvailabilityDynamic);
 	const [checkEarly, setCheckEarly] = useState<boolean>(false);
-	const [checking, setChecking] = useState<boolean>(false);
-	const [downloading, setDownloading] = useState<boolean>(false);
-	const [progress, setProgress] = useState<number>(0);
+	const {downloadModule, isDownloadActive} = useDownload();
+	const proxyFetch = useApiStore((state) => state.proxyFetch);
+	const moduleId = `${module.code.prefix}${module.code.number}`;
+
+	const availabilityQueries = useQueries({
+		queries: papers.map((paper) => ({
+			...getPaperAvailabilityOptions(paper, proxyFetch),
+			// Only auto-fetch if the switch is on AND the paper is selected
+			enabled: checkEarly && selectedPapers.includes(paper), 
+		})),
+	});
+	const checking = availabilityQueries.some((q) => q.isFetching);
+	const paperAvailability = useMemo(() => {
+		const map: Record<string, boolean> = {};
+		availabilityQueries.forEach((q, i) => {
+			if (q.isSuccess) {
+				map[papers[i].url] = q.data;
+			} else if (q.isError) {
+				map[papers[i].url] = false;
+			}
+		});
+		return map;
+	}, [availabilityQueries, papers]);
 
 	const toggleSelectAll = () => {
 		if (selectedPapers.length === papers.length) {
@@ -467,61 +487,27 @@ function PaperCategory({
 		}
 	};
 
-	const checkAvailability = useCallback(async () => {
-		setChecking(true);
-		const papersToCheck = selectedPapers.filter((paper) => paperAvailability[paper.url] === undefined);
-		if (papersToCheck.length === 0) {
-			setChecking(false);
-			return;
-		}
-
-		// const results = await checkPapersAvailability(papersToCheck);
-		// const availabilityMap: Record<string, boolean> = {};
-		// results.forEach(({ paper, available }) => {
-		// 	availabilityMap[paper.url] = available;
-		// });
-		// setPaperAvailability(availabilityMap);
-
-		await checkPapersAvailabilityDynamic(papersToCheck, (paper, isAvailable) => {
-			setPaperAvailability((prev) => ({
-				...prev,
-				[paper.url]: isAvailable,
-			}));
-		});
-		setChecking(false);
-	}, [selectedPapers, paperAvailability, checkPapersAvailabilityDynamic]);
-
 	const downloadSelection = useCallback(async () => {
-		setDownloading(true);
 		try {
 			const dirHandle = await window.showDirectoryPicker({
 				mode: 'readwrite',
 			});
-			// selectedPapers.forEach((paper) => {
-			// 	handlePaperDownload(moduleId, paper);
-			// });
-			await checkAvailability();
-			// await new Promise(resolve => setTimeout(resolve, 5000)) // Wait for 1 second to ensure availability check is complete
-			const finalList = selectedPapers.filter((paper) => paperAvailability[paper.url] !== false);
-			await handlePapersDownload(dirHandle, moduleId, finalList, (_paper: PastPaper) => {
-				setProgress((prev) => prev + 1);
+			const papersToCheck = selectedPapers.filter(p => paperAvailability[p.url] === undefined);
+			if (papersToCheck.length > 0) {
+				await Promise.all(papersToCheck.map(p => 
+					queryClient.query(getPaperAvailabilityOptions(p, proxyFetch))
+				));
+			}
+			// Build final list reading directly from the freshly populated cache
+			const finalList = selectedPapers.filter((paper) => {
+				const cached = queryClient.getQueryData(["paperAvailability", paper.url]);
+				return cached !== false;
 			});
+			downloadModule(module, dirHandle, finalList);
 		} catch (error) {
 			console.error("Error during download:", error);
-		} finally {
-			setDownloading(false);
 		}
-	}, [selectedPapers, moduleId, handlePapersDownload, checkAvailability, paperAvailability]);
-
-	useEffect(() => {
-		if (checkEarly && !checking && selectedPapers.length > 0) {
-			checkAvailability();
-		}
-	}, [selectedPapers, checkEarly, checkAvailability, checking]);
-
-	useEffect(() => {
-		console.log("Paper availability updated:", paperAvailability);
-	}, [paperAvailability]);
+	}, [selectedPapers, paperAvailability, module, downloadModule, proxyFetch]);
 
 	return (
 		<div className="border rounded-lg p-4 hover:bg-muted/30 transition-colors">
@@ -622,10 +608,10 @@ function PaperCategory({
     </div>
 <Button
   variant="default"
-  disabled={selectedPapers.length === 0 || downloading || (checkEarly && checking)}
+  disabled={selectedPapers.length === 0 || isDownloadActive || (checkEarly && checking)}
 onClick={downloadSelection}
 >
-	{ downloading ? (
+	{ isDownloadActive ? (
 		<>
 		<LoaderCircle className="w-4 h-4 animate-spin text-muted-foreground mr-1" />
 		{`Downloading ${selectedPapers.length} ${title.toLowerCase()}`}

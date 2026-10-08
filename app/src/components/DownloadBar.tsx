@@ -22,7 +22,7 @@ export default function DownloadBar({
 }: DownloadBarProps) {
 	const { isOnline, isConnected } = useConnection();
 	const { selectedCount } = useModuleSelection();
-	const { handleDownload, canDownload } = useDownload();
+	const { downloadSelection, canDownload } = useDownload();
 
 	return (
 		<DownloadContainer
@@ -45,7 +45,7 @@ export default function DownloadBar({
 				<TooltipTrigger asChild>
 					<span className="w-full sm:w-auto">
 						<Button
-							onClick={handleDownload}
+							onClick={downloadSelection}
 							className="gap-2"
 							disabled={!canDownload}
 						>

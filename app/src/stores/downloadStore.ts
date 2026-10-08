@@ -34,8 +34,8 @@ interface DownloadState {
 	addTask: (module: Module, dirHandle: FileSystemDirectoryHandle, papers?: PastPaper[]) => void;
 	processQueue: () => Promise<void>;
 	startSimulation: () => void;
-	handleDownload: () => Promise<void>;
-	startSpecificDownload: (module: Module, dirHandle: FileSystemDirectoryHandle, papers?: PastPaper[]) => void;
+	downloadSelection: () => Promise<void>;
+	downloadModule: (module: Module, dirHandle: FileSystemDirectoryHandle, papers?: PastPaper[]) => Promise<void>;
 	handlePause: () => void;
 	handleResume: () => void;
 	handleCancel: () => void;
@@ -108,8 +108,7 @@ export const useDownloadStore = create<DownloadState>((set, get) => ({
 				(m) =>
 					m.module.code.prefix === module.code.prefix &&
 					m.module.code.number === module.code.number &&
-					m.status !== "completed" &&
-					m.status !== "failed"
+					m.status !== "completed"
 			);
 			if (exists) return {};
 
@@ -474,7 +473,7 @@ export const useDownloadStore = create<DownloadState>((set, get) => ({
 		}, 200); // Update every 200ms for smooth progress bar
 	},
 
-	handleDownload: async () => {
+	downloadSelection: async () => {
 		const { status } = get();
 		const { isOnline, isConnected } = useConnectionStore.getState();
 		const selectedModules = Array.from(useSelectionStore.getState().selectedModules);
@@ -493,19 +492,18 @@ export const useDownloadStore = create<DownloadState>((set, get) => ({
 				get().addTask(module, dirHandle);
 			}
 			set({ status: "downloading", abortController: new AbortController() });
-			get().processQueue();
+			await get().processQueue();
 		} catch (err) {
 			console.log("User cancelled directory picker", err);
 		}
 	},
 
-	startSpecificDownload: async (module, dirHandle, papers) => {
+	downloadModule: async (module, dirHandle, papers) => {
 		get().addTask(module, dirHandle, papers);
 		if (get().status !== "downloading") {
 			set({ status: "downloading", abortController: new AbortController() });
-			get().processQueue();
+			await get().processQueue();
 		}
-		alert("Specific download started for module: " + module.code.prefix + module.code.number);
 	},
 
 	handlePause: () => {
@@ -549,17 +547,17 @@ export default function useDownload() {
 	const selectedCount = useSelectionStore((s) => s.selectedModules.size);
 	const status = useDownloadStore((s) => s.status);
 	const moduleProgress = useDownloadStore((s) => s.moduleProgress);
-	const handleDownload = useDownloadStore((s) => s.handleDownload);
+	const downloadSelection = useDownloadStore((s) => s.downloadSelection);
 	const handlePause = useDownloadStore((s) => s.handlePause);
 	const handleResume = useDownloadStore((s) => s.handleResume);
 	const handleCancel = useDownloadStore((s) => s.handleCancel);
-	const startSpecificDownload = useDownloadStore((s) => s.startSpecificDownload);
+	const downloadModule = useDownloadStore((s) => s.downloadModule);
 
 	// Derived State
 	const totalModules = moduleProgress.length;
 	const overallProgress = moduleProgress.length > 0 
         ? (moduleProgress.reduce((acc, m) => acc + (m.progress || 0), 0) / totalModules) 
-        : 0;
+        : 0;	
 
 	const activeIndex = moduleProgress.findIndex(
 		(m) => m.status === "downloading" || m.status === "pending" || m.status === "preparing"
@@ -568,6 +566,7 @@ export default function useDownload() {
 		activeIndex !== -1 ? moduleProgress[activeIndex].module : null;
 	const currentModuleIndex = activeIndex !== -1 ? activeIndex : 0;
 	const failedCount = moduleProgress.filter((m) => m.status === "failed").length;
+	const queueSize = moduleProgress.filter((m) => m.status === "pending" || m.status === "preparing" || m.status === "downloading").length;
 
 	return {
 		downloadState: status,
@@ -579,13 +578,14 @@ export default function useDownload() {
 			isConnected &&
 			status === "idle" &&
 			selectedCount > 0,
-		handleDownload,
+		downloadSelection,
 		handlePause,
 		handleResume,
 		handleCancel,
-		startSpecificDownload,
+		downloadModule,
 		isDownloadActive: status !== "idle",
 		currentModule,
 		currentModuleIndex,
+		queueSize,
 	};
 }
