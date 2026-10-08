@@ -168,7 +168,7 @@ export const useDownloadStore = create<DownloadState>((set, get) => ({
 					const fetched = await get().prepareModuleForDownload(current.module.code);
 					papersToProcess = fetched.map((p) => p.paper);
 
-					const { includePaperTypes } = useSettingsStore.getState();
+					const { includePaperTypes, yearRange } = useSettingsStore.getState();
 					papersToProcess = papersToProcess.filter((paper) => {
 						switch (paper.category.toLowerCase()) {
 							case "exams":
@@ -189,9 +189,15 @@ export const useDownloadStore = create<DownloadState>((set, get) => ({
 								return includePaperTypes.other;
 						}
 					});
+					papersToProcess = papersToProcess.filter((paper) => {
+						const year = parseInt(paper.year, 10);
+						if (year < 2000 || Number.isNaN(year)) return true; // include papers with invalid years
+						return year >= yearRange[0] && year <= yearRange[1];
+					});
 				}
 
 				if (papersToProcess.length === 0) {
+					alert(`No past papers found for ${current.module.code.prefix}${current.module.code.number} with the current filter settings.`);
 					set((state) => {
 						const newProgress = [...state.moduleProgress];
 						newProgress[currentIndex] = { ...newProgress[currentIndex], status: "completed", progress: 100 };

@@ -1,4 +1,4 @@
-import type { Module, ModuleInfo, PastPaper } from "./types";
+import type { ModuleInfo, PastPaper } from "./types";
 import catalog from "../assets/catalog.json";
 import moduleInfo from "../assets/module_info.json";
 
