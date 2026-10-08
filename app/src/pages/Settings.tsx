@@ -49,11 +49,11 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useToast } from "@/hooks/use-toast";
 import { type ModuleRole, type NamingPattern, type PaperType, useSettingsStore } from "@/stores/useSettingsStore";
 import { useConnection } from "@/stores/connectionStore";
 import { useTheme } from "@/stores/themeStore";
 import MiniDownloadCard from "@/components/MiniDownloadCard";
+import { toast } from "sonner";
 
 const programmes = [
 	{
@@ -188,7 +188,6 @@ const moduleRoles: { id: ModuleRole; label: string; description: string }[]
 ];
 
 export default function SettingsPage() {
-	const { toast } = useToast();
 	const {isOnline, isConnected, isReconnecting, attemptReconnect, reconnectError} = useConnection();
 	
 	const { themeSetting, setThemeSetting } = useTheme();
@@ -282,8 +281,7 @@ export default function SettingsPage() {
 
 		setIsSaving(false);
 		setShowSaveSuccess(true);
-		toast({
-			title: "Settings saved",
+		toast.success("Settings saved", {
 			description: "Your preferences have been updated successfully.",
 		});
 		setTimeout(() => setShowSaveSuccess(false), 3000);
@@ -291,19 +289,10 @@ export default function SettingsPage() {
 
 	const handleReset = () => {
 		useSettingsStore.getState().resetSettings(); // Resets to defaults and clears localStorage
-		toast({
-			title: "Settings reset",
+		toast.info("Settings reset", {
 			description: "All settings have been reset to defaults.",
-			variant: "destructive",
 		});
 	};
-
-	// const handleBrowseFolder = () => {
-	// 	toast({
-	// 		title: "Folder picker",
-	// 		description: "Native folder picker would open here.",
-	// 	});
-	// };
 
 	const toggleModuleRole = (role: ModuleRole) => {
 		useSettingsStore.getState().updateSettings({
@@ -425,7 +414,7 @@ export default function SettingsPage() {
 									</button>
 								</TooltipTrigger>
 								<TooltipContent side="bottom">
-									{isConnected && <p>✅ Connected to past papers server</p>}
+									{isConnected && <p>Connected to past papers server</p>}
 									{isReconnecting && <p>🔄 Attempting to reconnect…</p>}
 									{!isConnected && !isReconnecting && (
 										<p>🔌 Click to reconnect to server</p>
@@ -437,7 +426,7 @@ export default function SettingsPage() {
 							</Tooltip>
 						)}
 						<MiniDownloadCard />
-									</div>
+						</div>
 				</div>
 			</header>
 			<div className="max-w-4xl mx-auto p-4 md:p-6 space-y-6">
@@ -1236,8 +1225,7 @@ export default function SettingsPage() {
 											);
 											if (settings) {
 												navigator.clipboard.writeText(settings);
-												toast({
-													title: "Copied!",
+												toast.success("Copied!", {
 													description: "Settings JSON copied to clipboard",
 												});
 											}

@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { toast } from "@/hooks/use-toast";
 import { useConnection, useConnectionStore } from "@/stores/connectionStore";
 import { useSelectionStore } from "@/stores/selectionStore";
 import { type NamingPattern, useSettingsStore } from "./useSettingsStore";
@@ -8,6 +7,7 @@ import { getPaperAvailabilityOptions, getPastPapersOptions, useApiStore } from "
 import pLimit from "p-limit";
 import mime from "mime";
 import { queryClient } from "@/lib/queryClient";
+import { toast } from "sonner";
 
 type DownloadStateStatus = "idle" | "downloading" | "paused" | "error";
 export type ModuleStatus = "pending" | "preparing" | "downloading" | "completed" | "failed";
@@ -143,13 +143,14 @@ export const useDownloadStore = create<DownloadState>((set, get) => ({
 
 			if (currentIndex === -1) {
 				const failedCount = state.moduleProgress.filter((m) => m.status === "failed").length;
-				toast({
-					title: failedCount > 0 ? `🎉 Download complete (${failedCount} failed)` : "🎉 Download complete",
-				});
-				set({ status: "idle" });
+				setTimeout(() => {
+					toast.success(failedCount > 0
+						? `Download complete (${failedCount} failed)`
+						: "Download complete", { position: "top-center" });
+				}, 500);				set({ status: "idle" });
 				setTimeout(() => {
 					useSelectionStore.getState().clearSelection();
-				}, 500);
+				}, 1000);
 				return;
 			}
 
@@ -359,13 +360,11 @@ export const useDownloadStore = create<DownloadState>((set, get) => ({
 					const failedCount = state.moduleProgress.filter(
 						(m) => m.status === "failed"
 					).length;
-					toast({
-						title:
-							failedCount > 0
-								? `🎉 Download complete (${failedCount} failed)`
-								: "🎉 Download complete",
-						variant: "default",
-					});
+					setTimeout(() => {
+						toast.success(failedCount > 0
+							? `🎉 Download complete (${failedCount} failed)`
+							: "🎉 Download complete", { position: "top-center" });
+					}, 1000);
 
 					// Small delay before resetting to show 100%
 					setTimeout(() => {
@@ -396,7 +395,6 @@ export const useDownloadStore = create<DownloadState>((set, get) => ({
 
 					try {
 						const papers = await prepareModuleForDownload(current.module.code);
-						alert(JSON.stringify(papers, null, 2));
 						const currentState = get();
 						const currentMod = currentState.moduleProgress[activeIndex];
 						if (!currentMod || currentMod.status !== "preparing") return;

@@ -1,8 +1,7 @@
 import { create } from "zustand";
-import { toast } from "@/hooks/use-toast";
-import type { DefinedUseQueryResult } from "@tanstack/react-query";
 import { getModulesOptions, useApiStore } from "./apiStore";
 import { queryClient } from "@/lib/queryClient";
+import { toast } from "sonner";
 
 interface ConnectionState {
 	isOnline: boolean;
@@ -54,7 +53,7 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
 			set({
 				reconnectError: "Failed to connect. Check your network settings.",
 			});
-			toast({ title: "❌ Connection failed", variant: "destructive" });
+			toast.error("Connection failed", { position: "top-center" });
 			// Auto-clear error after 5 seconds
 			setTimeout(() => get().setReconnectError(null), 5000);
 		} finally {
