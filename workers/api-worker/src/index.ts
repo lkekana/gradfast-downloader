@@ -11,7 +11,11 @@
  * Learn more at https://developers.cloudflare.com/workers/
  */
 
-import type { ExecutionContext, ExportedHandler, Request as WorkerRequest } from "@cloudflare/workers-types";
+import type {
+	ExecutionContext,
+	ExportedHandler,
+	Request as WorkerRequest,
+} from "@cloudflare/workers-types";
 import {
 	type Cookies,
 	corsAPIHeaders,
@@ -23,7 +27,11 @@ import {
 } from "@workers/shared";
 
 export default {
-	async fetch(request: WorkerRequest, _env: unknown, _ctx: ExecutionContext): Promise<Response> {
+	async fetch(
+		request: WorkerRequest,
+		_env: unknown,
+		_ctx: ExecutionContext,
+	): Promise<Response> {
 		if (request.method === "OPTIONS") {
 			return new Response(null, {
 				status: 204, // No Content
@@ -37,19 +45,34 @@ export default {
 			return new Response("Method not allowed", { status: 405 });
 		}
 
-		const targetURL = new URL(request.url).searchParams.get("url");
-		if (!targetURL) {
-			return new Response("Missing target URL", { status: 400 });
+		const requestURL = new URL(request.url);
+
+		let targetURL: URL;
+		if (requestURL.pathname === "/proxy" || requestURL.pathname === "/proxy/") {
+			const urlParam = requestURL.searchParams.get("url");
+			if (!urlParam) {
+				return new Response("Missing target URL", { status: 400 });
+			}
+
+			try {
+				targetURL = new URL(urlParam);
+			} catch (e) {
+				return new Response("Invalid target URL format", { status: 400 });
+			}
+
+			console.log(`Proxying request to: ${targetURL.href}`);
+			// if not https://api.gradfast.com, return 403
+			if (targetURL.origin !== "https://api.gradfast.com") {
+				return new Response("Forbidden", { status: 403 });
+			}
+		} else {
+			targetURL = new URL(`https://api.gradfast.com${requestURL.pathname}${requestURL.search}`);
 		}
 
-		const targetURLObject = new URL(targetURL);
-		console.log(`Proxying request to: ${targetURLObject.href}`);
-		// if not https://api.gradfast.com, return 403
-		if (targetURLObject.origin !== "https://api.gradfast.com") {
-			return new Response("Forbidden", { status: 403 });
-		}
-
-		const proxyRequestHeaders = new Headers({ ...initialHeaders, ...Object.fromEntries(request.headers) });
+		const proxyRequestHeaders = new Headers({
+			...initialHeaders,
+			...Object.fromEntries(request.headers),
+		});
 		proxyRequestHeaders.delete("Host");
 		proxyRequestHeaders.delete("Origin");
 
@@ -79,11 +102,18 @@ export default {
 		if (proxyResponse.headers.has("set-cookie")) {
 			const proxyRequestCookies = updateCookies(proxyResponse, userCookies);
 			if (proxyRequestCookies.length > 0) {
-				responseHeaders.set("X-Cookies", getXCookiesHeader(proxyRequestCookies));
+				responseHeaders.set(
+					"X-Cookies",
+					getXCookiesHeader(proxyRequestCookies),
+				);
 
 				// set cache max-age to 55min if there is a CloudFront-Policy cookie in the response
 				// (expires after 1 hour)
-				if (proxyRequestCookies.some((cookie) => cookie.name.includes("CloudFront-Policy"))) {
+				if (
+					proxyRequestCookies.some((cookie) =>
+						cookie.name.includes("CloudFront-Policy"),
+					)
+				) {
 					cacheMaxAge = 3300; // 55 minutes in seconds
 				}
 			}
