@@ -1,5 +1,9 @@
 {
     "rust-analyzer.linkedProjects": [
         "./app/src-tauri/Cargo.toml"
+    ],
+    // "deno.enable": true,
+    "deno.enablePaths": [
+        "./scripts"
     ]
 }

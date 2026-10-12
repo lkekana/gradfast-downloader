@@ -437,7 +437,6 @@ function PaperCategory({
 	papers: PastPaper[];
 }) {
 	const [selectedPapers, setSelectedPapers] = useState<PastPaper[]>(papers);
-	// const [zipEnabled, setZipEnabled] = useState<boolean>(false);
 	const [checkEarly, setCheckEarly] = useState<boolean>(false);
 	const {downloadModule, isDownloadActive} = useDownload();
 	const proxyFetch = useApiStore((state) => state.proxyFetch);
