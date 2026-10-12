@@ -11,3 +11,11 @@ dist-ssr
 .vinxi
 __unconfig*
 todos.json
+
+# my static JSON files
+src/assets/*.json
+
+# test page
+src/pages/test.*
+# Local Netlify folder
+.netlify
