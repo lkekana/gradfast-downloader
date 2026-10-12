@@ -108,7 +108,7 @@ export default function ModulePage({
 						onClick={handleBack}
 						className="shrink-0"
 					>
-						<ArrowLeft className="w-4 h-4" />
+						<ArrowLeft className="w-4 h-4 text-muted-foreground" />
 					</Button>
 					<div className="flex-1 min-w-0">
 						<div className="flex items-center gap-2 flex-wrap">

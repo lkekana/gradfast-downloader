@@ -8,6 +8,8 @@ import pLimit from "p-limit";
 import mime from "mime";
 import { queryClient } from "@/lib/queryClient";
 import { toast } from "sonner";
+import { type ZipDirectoryEntry, ZipFS } from "@zip.js/zip.js";
+import { supported as fsAPISupported } from 'browser-fs-access';
 
 type DownloadStateStatus = "idle" | "downloading" | "paused" | "error";
 export type ModuleStatus = "pending" | "preparing" | "downloading" | "completed" | "failed";
@@ -19,7 +21,7 @@ export type PastPaperDownloadItem = {
 
 export interface ModuleProgressState {
 	module: Module;
-	dirHandle: FileSystemDirectoryHandle;
+	dirHandle: FileSystemDirectoryHandle | undefined;
 	status: ModuleStatus;
 	papers: PastPaperDownloadItem[]; // Track progress for each past paper
 	progress: number; // 0 to 100 for this specific module
@@ -31,7 +33,7 @@ interface DownloadState {
 	abortController: AbortController | null;
 
 	prepareModuleForDownload: (moduleCode: { prefix: string; number: number }) => Promise<PastPaperDownloadItem[]>;
-	addTask: (module: Module, dirHandle: FileSystemDirectoryHandle, papers?: PastPaper[]) => void;
+	addTask: (module: Module, dirHandle: FileSystemDirectoryHandle | undefined, papers?: PastPaper[]) => void;
 	processQueue: () => Promise<void>;
 	startSimulation: () => void;
 	downloadSelection: () => Promise<void>;
@@ -197,16 +199,17 @@ export const useDownloadStore = create<DownloadState>((set, get) => ({
 				}
 
 				if (papersToProcess.length === 0) {
-					alert(`No past papers found for ${current.module.code.prefix}${current.module.code.number} with the current filter settings.`);
+					// alert(`No past papers found for ${current.module.code.prefix}${current.module.code.number} with the current filter settings.`);
+					toast.warning(`No past papers found for ${current.module.code.prefix}${current.module.code.number} with your current filter settings.`, {position: "top-center"});
 					set((state) => {
 						const newProgress = [...state.moduleProgress];
-						newProgress[currentIndex] = { ...newProgress[currentIndex], status: "completed", progress: 100 };
+						newProgress[currentIndex] = { ...newProgress[currentIndex], status: "failed", progress: 100 };
 						return { moduleProgress: newProgress };
 					});
 					continue;
 				}
 
-				const { parallelDownloads } = useSettingsStore.getState();
+				const { parallelDownloads, zipMultipleFiles } = useSettingsStore.getState();
 				const limit = pLimit(parallelDownloads || 3);
 				const signal = get().abortController?.signal;
 
@@ -250,32 +253,80 @@ export const useDownloadStore = create<DownloadState>((set, get) => ({
 					continue;
 				}
 
+				const zipFs = new ZipFS();
 				let destinationHandle = current.dirHandle;
+				let subFolder: ZipDirectoryEntry | undefined = undefined;
 				const { moduleSubfolders, namingPattern } = useSettingsStore.getState();
 
-				if (moduleSubfolders) {
-					// ensure the names are cleaned for filesystem compatibility (alphanumeric and spaces only)
-					const cleanedModuleCode = `${current.module.code.prefix}${current.module.code.number}`.replace(/[^a-zA-Z0-9 ]/g, "").trim();
-					const cleanedModuleName = current.module.name.replace(/[^a-zA-Z0-9 ]/g, "").trim();
-					destinationHandle = await current.dirHandle.getDirectoryHandle(
-						`${cleanedModuleCode} - ${cleanedModuleName}`,
-						{ create: true }
-					);
+				// ensure the names are cleaned for filesystem compatibility (alphanumeric and spaces only)
+				const cleanedModuleCode = `${current.module.code.prefix}${current.module.code.number}`.replace(/[^a-zA-Z0-9 ]/g, "").trim();
+				const cleanedModuleName = current.module.name.replace(/[^a-zA-Z0-9 ]/g, "").trim();
+				
+				if (zipMultipleFiles) {
+					if (availablePapers.length > 1) {
+						// then we will zip
+						subFolder = zipFs.addDirectory(`${cleanedModuleCode} - ${cleanedModuleName}`);
+					}
+					else {
+						// we will return the single file as is, no need to zip
+					}
+				}
+				else {
+					if (fsAPISupported && current.dirHandle !== undefined) {
+						// we will save the files directly to a user's chosen directory
+						if (moduleSubfolders) {
+							// we will need to create a subfolder for the module
+							destinationHandle = await current.dirHandle.getDirectoryHandle(
+								`${cleanedModuleCode} - ${cleanedModuleName}`,
+								{ create: true }
+							);
+						}
+						else {
+							// we save the files in the chosen directory without subfolders
+						}
+					}
+					else {
+						// we will have to send the files one by one
+					}
 				}
 
-				let completedCount = 0;
+				let completedCount = availablePapers.filter(p => p.downloaded).length;
+
+				// If everything is somehow already downloaded, go to next module in queue
+				if (completedCount === availablePapers.length) {
+					set((state) => {
+						const newProgress = [...state.moduleProgress];
+						newProgress[currentIndex] = { ...newProgress[currentIndex], status: "completed", progress: 100 };
+						return { moduleProgress: newProgress };
+					});
+					continue;
+				}
 
 				const downloadPromises = availablePapers.map((item) =>
 					limit(async () => {
+						if (item.downloaded) return; // skip if it was downloaded before a pause
 						if (get().status !== "downloading") throw new Error("Paused");
 
 						const blob = await (await useApiStore.getState().proxyFetch(item.paper.url, { signal })).blob();
 						const fileName = getFileName(namingPattern, current.module, item.paper, blob.type);
 
-						const fileHandle = await destinationHandle.getFileHandle(fileName, { create: true });
-						const writableStream = await fileHandle.createWritable();
-						await writableStream.write(blob);
-						await writableStream.close();
+						if (zipMultipleFiles && subFolder) {
+							subFolder.addBlob(fileName, blob);
+						}
+						else if (fsAPISupported && destinationHandle) {
+							const fileHandle = await destinationHandle.getFileHandle(fileName, { create: true });
+							const writableStream = await fileHandle.createWritable();
+							await writableStream.write(blob);
+							await writableStream.close();
+						}
+						else {
+							// Fallback: trigger download for single file
+							const link = document.createElement("a");
+							link.href = URL.createObjectURL(blob);
+							link.download = fileName;
+							link.click();
+							URL.revokeObjectURL(link.href);
+						}
 
 						set((state) => {
 							const newProgress = [...state.moduleProgress];
@@ -292,6 +343,14 @@ export const useDownloadStore = create<DownloadState>((set, get) => ({
 				);
 
 				await Promise.all(downloadPromises);
+				if (zipMultipleFiles && subFolder) {
+					const zipBlob = await zipFs.exportBlob();
+					const link = document.createElement("a");
+					link.href = URL.createObjectURL(zipBlob);
+					link.download = `${cleanedModuleCode}.zip`;
+					link.click();
+					URL.revokeObjectURL(link.href);
+				}
 
 				set((state) => {
 					const newProgress = [...state.moduleProgress];
@@ -486,26 +545,31 @@ export const useDownloadStore = create<DownloadState>((set, get) => ({
 		}
 
 		// startSimulation();
-		try {
-			const dirHandle = await window.showDirectoryPicker({ mode: "readwrite" });
-			for (const module of selectedModules) {
-				get().addTask(module, dirHandle);
+		let dirHandle: FileSystemDirectoryHandle | undefined = undefined;
+		if (fsAPISupported) {
+			try {
+				dirHandle = await window.showDirectoryPicker({ mode: "readwrite" });
 			}
-			set({ status: "downloading", abortController: new AbortController() });
-			await get().processQueue();
-		} catch (err) {
-			console.log("User cancelled directory picker", err);
+			catch (err) {
+				console.warn("User cancelled directory picker", err);
+			}
 		}
+		for (const module of selectedModules) {
+			get().addTask(module, dirHandle);
+		}
+		set({ status: "downloading", abortController: new AbortController() });
+		await get().processQueue();
 	},
 
 	downloadModule: async (module, papers) => {
 		let dirHandle: FileSystemDirectoryHandle | undefined = undefined;
-		try {
-			dirHandle = await window.showDirectoryPicker({ mode: "readwrite" });
-		}
-		catch (err) {
-			console.warn("User cancelled directory picker", err);
-			return;
+		if (fsAPISupported) {
+			try {
+				dirHandle = await window.showDirectoryPicker({ mode: "readwrite" });
+			}
+			catch (err) {
+				console.warn("User cancelled directory picker", err);
+			}
 		}
 		get().addTask(module, dirHandle, papers);
 		if (get().status !== "downloading") {

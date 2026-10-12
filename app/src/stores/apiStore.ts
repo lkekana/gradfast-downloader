@@ -250,6 +250,7 @@ export const getModulesOptions = (apiFetch: FetchType) => {
 			const data = await apiFetch(`${import.meta.env.VITE_API_PROXY}/modules`);
 			return data as GradfastModules;
 		},
+		staleTime: 1000 * 60 * 60, // 1 hour
 		initialData: [],
 	});
 };

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { supported } from 'browser-fs-access';
 
 export type AcademicLevel = "undergrad" | "postgrad";
 export type NamingPattern = "default" | "code-year-type" | "name-year-type" | "code-name-year" | "faculty-code-year";
@@ -55,9 +56,9 @@ const defaultSettings: SettingsState = {
 	year: "",
 
 	moduleSubfolders: true,
-	zipMultipleFiles: false,
+	zipMultipleFiles: !supported, // Enable zipping by default for non-chromium browsers (since they don't support writing multiple files to disk)
 	namingPattern: "default" as NamingPattern,
-	parallelDownloads: 3,
+	parallelDownloads: 2,
 	retryAttempts: 3,
 
 	includeModuleRoles: { fundamental: true, core: true, elective: false },
@@ -74,7 +75,7 @@ const defaultSettings: SettingsState = {
 		tutorials: true,
 		other: true,
 	},
-	yearRange: [2010, new Date().getFullYear()],
+	yearRange: [2000, new Date().getFullYear()],
 	preferMostRecent: true,
 
 	includeMetadata: true,

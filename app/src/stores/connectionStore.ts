@@ -40,7 +40,7 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
 			// get the modules from the API to check if the connection is successful
 			const apiFetch = useApiStore.getState().apiFetch;
 			const options = getModulesOptions(apiFetch);
-			await queryClient.query(options);
+			await queryClient.refetchQueries(options);
 
 			set({ isConnected: true, reconnectError: null });
 			// toast({

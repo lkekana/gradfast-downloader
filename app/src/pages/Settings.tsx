@@ -3,11 +3,12 @@ import {
 	BookOpen,
 	Check,
 	Database,
+	FileArchive,
 	FileText,
 	// FolderOpen,
 	HardDrive,
 	Layers,
-	LoaderCircle,
+	// LoaderCircle,
 	Monitor,
 	Moon,
 	RefreshCcw,
@@ -206,6 +207,7 @@ export default function SettingsPage() {
 	const year = useSettingsStore((state) => state.year);
 	// const destinationFolder = useSettingsStore((state) => state.destinationFolder);
 	const moduleSubfolders = useSettingsStore((state) => state.moduleSubfolders);
+	const zipMultipleFiles = useSettingsStore((state) => state.zipMultipleFiles);
 	const namingPattern = useSettingsStore((state) => state.namingPattern);
 	const parallelDownloads = useSettingsStore(
 		(state) => state.parallelDownloads,
@@ -340,9 +342,9 @@ export default function SettingsPage() {
 							onClick={handleBack}
 							className="shrink-0"
 						>
-							<ArrowLeft className="w-4 h-4" />
+							<ArrowLeft className="w-4 h-4 text-muted-foreground" />
 						</Button>
-						<h1 className="text-2xl font-bold flex items-center gap-2">
+						<h1 className="text-2xl font-semibold flex items-center gap-2">
 							<Settings2 className="w-6 h-6" />
 							Settings
 						</h1>
@@ -839,6 +841,26 @@ export default function SettingsPage() {
 										onCheckedChange={(checked) =>
 											useSettingsStore.getState().updateSettings({
 												moduleSubfolders: checked,
+											})
+										}
+									/>
+								</div>
+
+								<div className="flex items-center justify-between">
+									<div className="space-y-0.5">
+										<Label className="text-base flex items-center gap-2">
+											<FileArchive className="w-4 h-4" />
+											Zip multiple files
+										</Label>
+										<p className="text-sm text-muted-foreground">
+											Download a single ZIP file instead of multiple individual files.<br />Note: This is enabled by default on non-Chromium browsers (Firefox, Safari, etc)
+										</p>
+									</div>
+									<Switch
+										checked={zipMultipleFiles}
+										onCheckedChange={(checked) =>
+											useSettingsStore.getState().updateSettings({
+												zipMultipleFiles: checked,
 											})
 										}
 									/>
