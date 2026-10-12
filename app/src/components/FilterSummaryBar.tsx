@@ -11,7 +11,8 @@ interface FilterSummaryBarProps {
 const FilterSummaryBar: React.FC<FilterSummaryBarProps> = ({
 	isDownloading,
 }) => {
-	const { filterChips, removeFilterChip, activeFilterCount, clearAllFilters } = useModuleFilters();
+	const { filterChips, removeFilterChip, activeFilterCount, clearAllFilters } =
+		useModuleFilters();
 	return (
 		<div className="flex flex-wrap items-center gap-2 mb-4 animate-in fade-in slide-in-from-top-1">
 			<span className="text-xs font-medium text-muted-foreground mr-1">

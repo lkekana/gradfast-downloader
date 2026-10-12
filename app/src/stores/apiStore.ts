@@ -18,9 +18,14 @@ export type CloudfrontPolicy = {
 	}[];
 };
 
-export const parseCloudfrontPolicy = (policyb64: string): CloudfrontPolicy | null => {
+export const parseCloudfrontPolicy = (
+	policyb64: string,
+): CloudfrontPolicy | null => {
 	try {
-		const cleanedB64 = policyb64.replace(/-/g, "+").replace(/_/g, "=").replace(/~/g, "/");
+		const cleanedB64 = policyb64
+			.replace(/-/g, "+")
+			.replace(/_/g, "=")
+			.replace(/~/g, "/");
 		const decodedText = atob(cleanedB64);
 		const obj = JSON.parse(decodedText) as CloudfrontPolicy;
 		return obj;
@@ -80,10 +85,10 @@ export const useApiStore = create<ApiState>((set, get) => ({
 		proxyURL.searchParams.append("url", url);
 
 		// the URL object converts spaces to +, but we want %20 for spaces in the query string, so we need to replace + with %20
-		const [baseUrl, queryString] = proxyURL.href.split('?');
-		const finalUrl = queryString 
-		? `${baseUrl}?${queryString.replace(/\+/g, '%20')}` 
-		: baseUrl;
+		const [baseUrl, queryString] = proxyURL.href.split("?");
+		const finalUrl = queryString
+			? `${baseUrl}?${queryString.replace(/\+/g, "%20")}`
+			: baseUrl;
 
 		const response = await fetch(finalUrl, {
 			...options,
@@ -140,28 +145,28 @@ export const useApiStore = create<ApiState>((set, get) => ({
 			if (newCookies) {
 				set({ cookies: newCookies });
 			}
-		}
-		else {
+		} else {
 			// cookies exist, refresh them by making a request to the API proxy with the current cookies
-			const randomModule = cachedModules[Math.floor(Math.random() * cachedModules.length)];
+			const randomModule =
+				cachedModules[Math.floor(Math.random() * cachedModules.length)];
 			const code = `${randomModule.code.prefix}${randomModule.code.number}`;
 			const { apiFetch } = get();
-			await apiFetch(
-				`${import.meta.env.VITE_API_PROXY}/module/${code}`,
-				{
-					method: "GET",
-					headers: {
-						"X-Cookies": cookies,
-					},
+			await apiFetch(`${import.meta.env.VITE_API_PROXY}/module/${code}`, {
+				method: "GET",
+				headers: {
+					"X-Cookies": cookies,
 				},
-			);
+			});
 			if (get().cookiesExpired()) {
-				await apiFetch(`${import.meta.env.VITE_API_PROXY}/module/${code}/past-papers`, {
-					method: "GET",
-					headers: {
-						"X-Cookies": cookies,
+				await apiFetch(
+					`${import.meta.env.VITE_API_PROXY}/module/${code}/past-papers`,
+					{
+						method: "GET",
+						headers: {
+							"X-Cookies": cookies,
+						},
 					},
-				});
+				);
 			}
 			if (get().cookiesExpired()) {
 				throw new Error("Failed to refresh cookies");
@@ -204,9 +209,9 @@ export const getModuleInfoOptions = (
 		gcTime: 1000 * 60 * 60 * 24, // 24 hours
 		initialData: () => {
 			return cachedModules.find(
-					(m) =>
-						m.code.prefix === moduleCode.prefix &&
-						m.code.number === moduleCode.number,
+				(m) =>
+					m.code.prefix === moduleCode.prefix &&
+					m.code.number === moduleCode.number,
 			);
 		},
 	});
@@ -257,24 +262,28 @@ export const getModulesOptions = (apiFetch: FetchType) => {
 
 export const getPaperAvailabilityOptions = (
 	paper: PastPaper,
-	proxyFetch: ProxyFetchType
-) => queryOptions({
-	queryKey: ["paperAvailability", paper.url],
-	queryFn: async () => {
-		try {
-			const resp = await proxyFetch(paper.url, { method: "HEAD" });
-			return resp.ok;
-		} catch (_error) {
-			// proxyFetch throws if !response.ok, so we catch it and return false
-			return false; 
-		}
-	},
-	staleTime: 1000 * 60 * 60 * 24 * 365, // 1 year
-	gcTime: 1000 * 60 * 60 * 24 * 365,    // 1 year
-	retry: 1,
-});
+	proxyFetch: ProxyFetchType,
+) =>
+	queryOptions({
+		queryKey: ["paperAvailability", paper.url],
+		queryFn: async () => {
+			try {
+				const resp = await proxyFetch(paper.url, { method: "HEAD" });
+				return resp.ok;
+			} catch (_error) {
+				// proxyFetch throws if !response.ok, so we catch it and return false
+				return false;
+			}
+		},
+		staleTime: 1000 * 60 * 60 * 24 * 365, // 1 year
+		gcTime: 1000 * 60 * 60 * 24 * 365, // 1 year
+		retry: 1,
+	});
 
-export function useModuleInfo(moduleCode: { prefix: string; number: number }, additionalOptions: Partial<ReturnType<typeof getModuleInfoOptions>> = {}) {
+export function useModuleInfo(
+	moduleCode: { prefix: string; number: number },
+	additionalOptions: Partial<ReturnType<typeof getModuleInfoOptions>> = {},
+) {
 	const apiFetch = useApiStore((state) => state.apiFetch);
 	const options = getModuleInfoOptions(moduleCode, apiFetch);
 	return useQuery({
@@ -283,10 +292,13 @@ export function useModuleInfo(moduleCode: { prefix: string; number: number }, ad
 	});
 }
 
-export function useModulePastPapers(moduleCode: {
-	prefix: string;
-	number: number;
-}, additionalOptions: Partial<ReturnType<typeof getPastPapersOptions>> = {}) {
+export function useModulePastPapers(
+	moduleCode: {
+		prefix: string;
+		number: number;
+	},
+	additionalOptions: Partial<ReturnType<typeof getPastPapersOptions>> = {},
+) {
 	const apiFetch = useApiStore((state) => state.apiFetch);
 	const options = getPastPapersOptions(moduleCode, apiFetch);
 	return useQuery({
@@ -295,7 +307,9 @@ export function useModulePastPapers(moduleCode: {
 	});
 }
 
-export function useModules(additionalOptions: Partial<ReturnType<typeof getModulesOptions>> = {}) {
+export function useModules(
+	additionalOptions: Partial<ReturnType<typeof getModulesOptions>> = {},
+) {
 	const apiFetch = useApiStore((state) => state.apiFetch);
 	const options = getModulesOptions(apiFetch);
 	return useQuery({

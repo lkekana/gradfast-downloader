@@ -86,10 +86,16 @@ export function useConnection() {
 	const isConnected = useConnectionStore((state) => state.isConnected);
 	const setIsConnected = useConnectionStore((state) => state.setIsConnected);
 	const isReconnecting = useConnectionStore((state) => state.isReconnecting);
-	const setIsReconnecting = useConnectionStore((state) => state.setIsReconnecting);
+	const setIsReconnecting = useConnectionStore(
+		(state) => state.setIsReconnecting,
+	);
 	const reconnectError = useConnectionStore((state) => state.reconnectError);
-	const setReconnectError = useConnectionStore((state) => state.setReconnectError);
-	const attemptReconnect = useConnectionStore((state) => state.attemptReconnect);
+	const setReconnectError = useConnectionStore(
+		(state) => state.setReconnectError,
+	);
+	const attemptReconnect = useConnectionStore(
+		(state) => state.attemptReconnect,
+	);
 
 	return {
 		isOnline,

@@ -5,9 +5,7 @@ import "./index.css";
 import App from "./App.tsx";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ConnectionManager } from "./components/ConnectionManager.tsx";
-import {
-	TooltipProvider,
-} from "@/components/ui/tooltip";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { queryClient } from "./lib/queryClient.ts";
 import { Toaster } from "sonner";
 

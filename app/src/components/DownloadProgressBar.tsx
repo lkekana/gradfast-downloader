@@ -13,7 +13,14 @@ export default function DownloadProgressBar({
 	className,
 }: DownloadProgressBarProps) {
 	const { selectedCount } = useModuleSelection();
-	const { currentModule, currentModuleIndex, downloadProgress, handleCancel, handlePause, queueSize} = useDownload();
+	const {
+		currentModule,
+		currentModuleIndex,
+		downloadProgress,
+		handleCancel,
+		handlePause,
+		queueSize,
+	} = useDownload();
 	const remainingSeconds = Math.max(
 		1,
 		Math.round((100 - downloadProgress) / 20),
@@ -64,9 +71,7 @@ export default function DownloadProgressBar({
 						`Preparing download (${currentModuleIndex + 1}/${queueSize})...`
 					)}
 				</p>
-				<p className="text-right">
-					Est. time:{" "} {remainingSeconds}s remaining
-				</p>
+				<p className="text-right">Est. time: {remainingSeconds}s remaining</p>
 			</div>
 		</DownloadContainer>
 	);

@@ -1,10 +1,21 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { supported } from 'browser-fs-access';
+import { supported } from "browser-fs-access";
 
 export type AcademicLevel = "undergrad" | "postgrad";
-export type NamingPattern = "default" | "code-year-type" | "name-year-type" | "code-name-year" | "faculty-code-year";
-export type PaperType = "exams" | "semesterTests" | "classTests" | "practicals" | "tutorials" | "other";
+export type NamingPattern =
+	| "default"
+	| "code-year-type"
+	| "name-year-type"
+	| "code-name-year"
+	| "faculty-code-year";
+export type PaperType =
+	| "exams"
+	| "semesterTests"
+	| "classTests"
+	| "practicals"
+	| "tutorials"
+	| "other";
 export type ModuleRole = "fundamental" | "core" | "elective";
 
 export interface SettingsState {

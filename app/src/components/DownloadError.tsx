@@ -8,9 +8,7 @@ interface DownloadErrorProps {
 	className?: string;
 }
 
-export function DownloadError({
-	className,
-}: DownloadErrorProps) {
+export function DownloadError({ className }: DownloadErrorProps) {
 	const reconnectError = useConnectionStore((s) => s.reconnectError);
 	const { handleResume, handleCancel } = useDownload();
 	return (

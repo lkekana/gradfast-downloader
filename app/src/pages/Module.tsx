@@ -24,7 +24,11 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { facultyAbbreviation, periodAbbreviation, getPastPaperCounts } from "@/lib/data";
+import {
+	facultyAbbreviation,
+	periodAbbreviation,
+	getPastPaperCounts,
+} from "@/lib/data";
 import type { Module, ModuleInfo, PastPaper } from "@/lib/types";
 import {
 	Dialog,
@@ -33,8 +37,8 @@ import {
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
-  } from "@/components/ui/dialog"
-  import {
+} from "@/components/ui/dialog";
+import {
 	Table,
 	TableBody,
 	// TableCaption,
@@ -42,7 +46,7 @@ import {
 	TableHead,
 	TableHeader,
 	TableRow,
-  } from "@/components/ui/table"
+} from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
 	Field,
@@ -51,10 +55,10 @@ import {
 	FieldGroup,
 	FieldLabel,
 	FieldTitle,
-  } from "@/components/ui/field"
-  import { getPaperAvailabilityOptions, useApiStore } from "../stores/apiStore";
-  import { Label } from "@/components/ui/label"
-  import { Switch } from "@/components/ui/switch"
+} from "@/components/ui/field";
+import { getPaperAvailabilityOptions, useApiStore } from "../stores/apiStore";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import useDownload from "@/stores/downloadStore";
 import MiniDownloadCard from "@/components/MiniDownloadCard";
 import { useQueries } from "@tanstack/react-query";
@@ -80,8 +84,8 @@ export default function ModulePage({
 	const hasPapers = pastPapers.length > 0;
 
 	const handleDownloadAll = async () => {
-			console.log(`Downloading all papers for ${moduleId}`);
-			await downloadModule(module);
+		console.log(`Downloading all papers for ${moduleId}`);
+		await downloadModule(module);
 	};
 
 	const handleBack = () => {
@@ -130,11 +134,16 @@ export default function ModulePage({
 					</div>
 					{hasPapers && (
 						<>
-						<Button size="sm" onClick={handleDownloadAll} disabled={isDownloadActive} className="gap-1">
-							<Download className="w-4 h-4" />
-							Download All
-						</Button>
-						<MiniDownloadCard />
+							<Button
+								size="sm"
+								onClick={handleDownloadAll}
+								disabled={isDownloadActive}
+								className="gap-1"
+							>
+								<Download className="w-4 h-4" />
+								Download All
+							</Button>
+							<MiniDownloadCard />
 						</>
 					)}
 				</div>
@@ -230,9 +239,7 @@ export default function ModulePage({
 										))}
 									</ul>
 								) : (
-									<p className="text-sm">
-										{moduleInfo.prerequisites}
-									</p>
+									<p className="text-sm">{moduleInfo.prerequisites}</p>
 								)}
 							</CardContent>
 						</Card>
@@ -293,7 +300,12 @@ export default function ModulePage({
 												count={pastPaperCounts.exams}
 												module={module}
 												type="exam"
-												papers={pastPapers.filter((p) => p.category === "Exams" || p.category === "Exam" || p.category === "Exam Opportunities")}
+												papers={pastPapers.filter(
+													(p) =>
+														p.category === "Exams" ||
+														p.category === "Exam" ||
+														p.category === "Exam Opportunities",
+												)}
 											/>
 										)}
 										{pastPaperCounts.semesterTests > 0 && (
@@ -303,7 +315,11 @@ export default function ModulePage({
 												count={pastPaperCounts.semesterTests}
 												module={module}
 												type="semester"
-												papers={pastPapers.filter((p) => p.category === "Semester Tests" || p.category === "Semester Test")}
+												papers={pastPapers.filter(
+													(p) =>
+														p.category === "Semester Tests" ||
+														p.category === "Semester Test",
+												)}
 											/>
 										)}
 										{pastPaperCounts.classTests > 0 && (
@@ -313,7 +329,9 @@ export default function ModulePage({
 												count={pastPaperCounts.classTests}
 												module={module}
 												type="class"
-												papers={pastPapers.filter((p) => p.category === "Class Tests")}
+												papers={pastPapers.filter(
+													(p) => p.category === "Class Tests",
+												)}
 											/>
 										)}
 										{pastPaperCounts.practicals > 0 && (
@@ -323,7 +341,9 @@ export default function ModulePage({
 												count={pastPaperCounts.practicals}
 												module={module}
 												type="practical"
-												papers={pastPapers.filter((p) => p.category === "Practical Tests")}
+												papers={pastPapers.filter(
+													(p) => p.category === "Practical Tests",
+												)}
 											/>
 										)}
 										{pastPaperCounts.tutorials > 0 && (
@@ -333,7 +353,11 @@ export default function ModulePage({
 												count={pastPaperCounts.tutorials}
 												module={module}
 												type="tutorial"
-												papers={pastPapers.filter((p) => p.category === "Tutorials" || p.category === "Tutorial Tests")}
+												papers={pastPapers.filter(
+													(p) =>
+														p.category === "Tutorials" ||
+														p.category === "Tutorial Tests",
+												)}
 											/>
 										)}
 										{pastPaperCounts.other > 0 && (
@@ -343,7 +367,20 @@ export default function ModulePage({
 												count={pastPaperCounts.other}
 												module={module}
 												type="other"
-												papers={pastPapers.filter((p) => !["Exams", "Exam", "Semester Tests", "Exam Opportunities", "Semester Test", "Class Tests", "Tutorials", "Tutorial Tests", "Practical Tests"].includes(p.category))}
+												papers={pastPapers.filter(
+													(p) =>
+														![
+															"Exams",
+															"Exam",
+															"Semester Tests",
+															"Exam Opportunities",
+															"Semester Test",
+															"Class Tests",
+															"Tutorials",
+															"Tutorial Tests",
+															"Practical Tests",
+														].includes(p.category),
+												)}
 											/>
 										)}
 									</div>
@@ -438,7 +475,7 @@ function PaperCategory({
 }) {
 	const [selectedPapers, setSelectedPapers] = useState<PastPaper[]>(papers);
 	const [checkEarly, setCheckEarly] = useState<boolean>(false);
-	const {downloadModule, isDownloadActive} = useDownload();
+	const { downloadModule, isDownloadActive } = useDownload();
 	const proxyFetch = useApiStore((state) => state.proxyFetch);
 	const moduleId = `${module.code.prefix}${module.code.number}`;
 
@@ -446,7 +483,7 @@ function PaperCategory({
 		queries: papers.map((paper) => ({
 			...getPaperAvailabilityOptions(paper, proxyFetch),
 			// Only auto-fetch if the switch is on AND the paper is selected
-			enabled: checkEarly && selectedPapers.includes(paper), 
+			enabled: checkEarly && selectedPapers.includes(paper),
 		})),
 	});
 	const checking = availabilityQueries.some((q) => q.isFetching);
@@ -495,74 +532,91 @@ function PaperCategory({
 			</div>
 			<div className="space-y-2">
 				{papers.slice(0, 3).map((paper, i) => {
-				return (
-					<Button
-						key={paper.url}
-						variant="ghost"
-						size="sm"
-						className="w-full justify-start text-xs h-8"
-						onClick={() => console.log(`View ${type} ${i + 1} for ${moduleId}`)}
-					>
-						<FileText className="w-3 h-3 mr-2 opacity-50" />
-						{paper.year} - {paper.description} {paper.memo === "yes" && "(Memo)"}
-					</Button>
-				)
+					return (
+						<Button
+							key={paper.url}
+							variant="ghost"
+							size="sm"
+							className="w-full justify-start text-xs h-8"
+							onClick={() =>
+								console.log(`View ${type} ${i + 1} for ${moduleId}`)
+							}
+						>
+							<FileText className="w-3 h-3 mr-2 opacity-50" />
+							{paper.year} - {paper.description}{" "}
+							{paper.memo === "yes" && "(Memo)"}
+						</Button>
+					);
 				})}
-				
+
 				<Dialog>
-				<DialogTrigger><Button variant="link" size="sm" className="h-6 px-0 text-xs">
-						View all {count} {title.toLowerCase()} →
-					</Button></DialogTrigger>
-				<DialogContent>
-					<DialogHeader>
-					<DialogTitle>{`All ${title} for ${moduleId}`}</DialogTitle>
-					{/* <DialogDescription>
+					<DialogTrigger>
+						<Button variant="link" size="sm" className="h-6 px-0 text-xs">
+							View all {count} {title.toLowerCase()} →
+						</Button>
+					</DialogTrigger>
+					<DialogContent>
+						<DialogHeader>
+							<DialogTitle>{`All ${title} for ${moduleId}`}</DialogTitle>
+							{/* <DialogDescription>
 						This action cannot be undone. This will permanently delete your account
 						and remove your data from our servers.
 					</DialogDescription> */}
-					</DialogHeader>
-					<Table>
-  {/* <TableCaption>A list of your recent invoices.</TableCaption> */}
-  <TableHeader>
-    <TableRow>
-	  <TableHead>Year</TableHead>
-      <TableHead>Description</TableHead>
-	  <TableHead>Has Memo?</TableHead>
-	  <TableHead>Available?</TableHead>
-      <TableHead><Checkbox checked={selectedPapers.length === papers.length} onCheckedChange={toggleSelectAll} /></TableHead>
-    </TableRow>
-  </TableHeader>
-  <TableBody>
-	{papers.map((paper) => {
-					return (
-						<TableRow key={paper.url}>
-							<TableCell className="font-medium">{paper.year}</TableCell>
-							<TableCell>{paper.description}</TableCell>
-							<TableCell>{paper.memo}</TableCell>
-							<TableCell>
-								{paperAvailability[paper.url] === true ? (
-									<Check className="w-4 h-4 text-green-600" />
-								) : paperAvailability[paper.url] === false ? (
-									<CircleAlert className="w-4 h-4 text-red-600" />
-								) : checking ? (
-									<LoaderCircle className="w-4 h-4 animate-spin text-muted-foreground" />
-								) : (
-									<span className="text-xs text-muted-foreground">—</span>
-								)}
-							</TableCell>
-							<TableCell>
-								<Checkbox
-									disabled={paperAvailability[paper.url] === false}
-									checked={selectedPapers.includes(paper) && paperAvailability[paper.url] !== false}
-									onCheckedChange={() => selectPaper(paper)}
-								/>
-							</TableCell>
-						</TableRow>
-					);
-				})}
-  </TableBody>
-</Table>
-{/* <FieldGroup>
+						</DialogHeader>
+						<Table>
+							{/* <TableCaption>A list of your recent invoices.</TableCaption> */}
+							<TableHeader>
+								<TableRow>
+									<TableHead>Year</TableHead>
+									<TableHead>Description</TableHead>
+									<TableHead>Has Memo?</TableHead>
+									<TableHead>Available?</TableHead>
+									<TableHead>
+										<Checkbox
+											checked={selectedPapers.length === papers.length}
+											onCheckedChange={toggleSelectAll}
+										/>
+									</TableHead>
+								</TableRow>
+							</TableHeader>
+							<TableBody>
+								{papers.map((paper) => {
+									return (
+										<TableRow key={paper.url}>
+											<TableCell className="font-medium">
+												{paper.year}
+											</TableCell>
+											<TableCell>{paper.description}</TableCell>
+											<TableCell>{paper.memo}</TableCell>
+											<TableCell>
+												{paperAvailability[paper.url] === true ? (
+													<Check className="w-4 h-4 text-green-600" />
+												) : paperAvailability[paper.url] === false ? (
+													<CircleAlert className="w-4 h-4 text-red-600" />
+												) : checking ? (
+													<LoaderCircle className="w-4 h-4 animate-spin text-muted-foreground" />
+												) : (
+													<span className="text-xs text-muted-foreground">
+														—
+													</span>
+												)}
+											</TableCell>
+											<TableCell>
+												<Checkbox
+													disabled={paperAvailability[paper.url] === false}
+													checked={
+														selectedPapers.includes(paper) &&
+														paperAvailability[paper.url] !== false
+													}
+													onCheckedChange={() => selectPaper(paper)}
+												/>
+											</TableCell>
+										</TableRow>
+									);
+								})}
+							</TableBody>
+						</Table>
+						{/* <FieldGroup>
 <FieldLabel>
         <Field orientation="horizontal">
 		  <Checkbox id="zip-checkbox" name="zip-checkbox" checked={zipEnabled} onCheckedChange={(checked) => setZipEnabled(checked === true)} />
@@ -575,30 +629,41 @@ function PaperCategory({
         </Field>
       </FieldLabel>
     </FieldGroup> */}
-<div className="flex items-center space-x-2 justify-end mt-4">
-      <Label htmlFor="check-availability" className="text-xs font-normal">Check Availability before Download</Label>
-      <Switch id="check-availability" checked={checkEarly} onCheckedChange={(checked) => setCheckEarly(checked === true)} />
-    </div>
-<Button
-  variant="default"
-  disabled={selectedPapers.length === 0 || isDownloadActive || (checkEarly && checking)}
-onClick={downloadSelection}
->
-	{ isDownloadActive ? (
-		<>
-		<LoaderCircle className="w-4 h-4 animate-spin text-muted-foreground mr-1" />
-		{`Downloading ${selectedPapers.length} ${title.toLowerCase()}`}
-		</>
-	) :
-	  (
-	  <>
-	  <Download className="w-4 h-4 mr-1" />	
-{`Download selected ${title.toLowerCase()}`}
-</>
-)
-	}
-</Button>
-				</DialogContent>
+						<div className="flex items-center space-x-2 justify-end mt-4">
+							<Label
+								htmlFor="check-availability"
+								className="text-xs font-normal"
+							>
+								Check Availability before Download
+							</Label>
+							<Switch
+								id="check-availability"
+								checked={checkEarly}
+								onCheckedChange={(checked) => setCheckEarly(checked === true)}
+							/>
+						</div>
+						<Button
+							variant="default"
+							disabled={
+								selectedPapers.length === 0 ||
+								isDownloadActive ||
+								(checkEarly && checking)
+							}
+							onClick={downloadSelection}
+						>
+							{isDownloadActive ? (
+								<>
+									<LoaderCircle className="w-4 h-4 animate-spin text-muted-foreground mr-1" />
+									{`Downloading ${selectedPapers.length} ${title.toLowerCase()}`}
+								</>
+							) : (
+								<>
+									<Download className="w-4 h-4 mr-1" />
+									{`Download selected ${title.toLowerCase()}`}
+								</>
+							)}
+						</Button>
+					</DialogContent>
 				</Dialog>
 			</div>
 		</div>

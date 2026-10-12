@@ -1,4 +1,3 @@
-
 import DownloadBar from "@/components/DownloadBar";
 import { DownloadError } from "@/components/DownloadError";
 import DownloadPaused from "@/components/DownloadPaused";
@@ -15,9 +14,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import {
-	periods,
-} from "@/lib/data";
+import { periods } from "@/lib/data";
 import { useModuleSelection } from "@/stores/selectionStore";
 import { useModuleFilters } from "@/stores/filterStore";
 import useDownload from "@/stores/downloadStore";
@@ -77,70 +74,70 @@ export default function ModulesPage() {
 	// };
 
 	return (
-			<div className="flex flex-col h-screen bg-background">
-				<ModulesToolbar />
+		<div className="flex flex-col h-screen bg-background">
+			<ModulesToolbar />
 
-				{/* Main Content */}
-				<main className="flex-1 p-4 overflow-hidden flex flex-col">
-					{/* Selection Toolbar */}
-					<div className="flex flex-wrap items-center gap-2 mb-4 pb-4 border-b">
-						<Input
-							placeholder="Search modules..."
-							className="w-64"
-							value={filters.searchQuery}
-							onChange={(e) => filters.setSearchQuery(e.target.value)}
+			{/* Main Content */}
+			<main className="flex-1 p-4 overflow-hidden flex flex-col">
+				{/* Selection Toolbar */}
+				<div className="flex flex-wrap items-center gap-2 mb-4 pb-4 border-b">
+					<Input
+						placeholder="Search modules..."
+						className="w-64"
+						value={filters.searchQuery}
+						onChange={(e) => filters.setSearchQuery(e.target.value)}
+						disabled={isDownloadActive}
+					/>
+
+					<FilterDropdown
+						singularLabel="period"
+						pluralLabel="periods"
+						items={periods}
+						filteredItems={filters.periodFilter}
+						setFilteredItems={filters.setPeriodFilter}
+						isDownloading={isDownloadActive}
+						isFilterActive={isFilterActive}
+						getFilterLabel={getFilterLabel}
+					/>
+
+					<FilterDropdown
+						singularLabel="faculty"
+						pluralLabel="faculties"
+						items={uniqueFaculties}
+						filteredItems={filters.facultyFilter}
+						setFilteredItems={filters.setFacultyFilter}
+						isDownloading={isDownloadActive}
+						isFilterActive={isFilterActive}
+						getFilterLabel={getFilterLabel}
+					/>
+
+					<FilterDropdown
+						singularLabel="prefix"
+						pluralLabel="prefixes"
+						items={uniquePrefixes}
+						filteredItems={filters.prefixFilter}
+						setFilteredItems={filters.setPrefixFilter}
+						isDownloading={isDownloadActive}
+						isFilterActive={isFilterActive}
+						getFilterLabel={getFilterLabel}
+						renderItem={(prefix) => <>{prefix}*</>}
+					/>
+
+					{/* Show only when any filter is active */}
+					{activeFilterCount > 0 && (
+						<Button
+							variant="ghost"
+							size="sm"
+							onClick={filters.clearAllFilters}
 							disabled={isDownloadActive}
-						/>
+							className="text-muted-foreground hover:text-foreground"
+						>
+							Clear all filters
+						</Button>
+					)}
 
-						<FilterDropdown
-							singularLabel="period"
-							pluralLabel="periods"
-							items={periods}
-							filteredItems={filters.periodFilter}
-							setFilteredItems={filters.setPeriodFilter}
-							isDownloading={isDownloadActive}
-							isFilterActive={isFilterActive}
-							getFilterLabel={getFilterLabel}
-						/>
-
-						<FilterDropdown
-							singularLabel="faculty"
-							pluralLabel="faculties"
-							items={uniqueFaculties}
-							filteredItems={filters.facultyFilter}
-							setFilteredItems={filters.setFacultyFilter}
-							isDownloading={isDownloadActive}
-							isFilterActive={isFilterActive}
-							getFilterLabel={getFilterLabel}
-						/>
-
-						<FilterDropdown
-							singularLabel="prefix"
-							pluralLabel="prefixes"
-							items={uniquePrefixes}
-							filteredItems={filters.prefixFilter}
-							setFilteredItems={filters.setPrefixFilter}
-							isDownloading={isDownloadActive}
-							isFilterActive={isFilterActive}
-							getFilterLabel={getFilterLabel}
-							renderItem={(prefix) => <>{prefix}*</>}
-						/>
-
-						{/* Show only when any filter is active */}
-						{activeFilterCount > 0 && (
-							<Button
-								variant="ghost"
-								size="sm"
-								onClick={filters.clearAllFilters}
-								disabled={isDownloadActive}
-								className="text-muted-foreground hover:text-foreground"
-							>
-								Clear all filters
-							</Button>
-						)}
-
-						{/* Show only when a search query is entered */}
-						{/* {filters.searchQuery && (
+					{/* Show only when a search query is entered */}
+					{/* {filters.searchQuery && (
 							<Button
 								variant="ghost"
 								size="sm"
@@ -152,84 +149,69 @@ export default function ModulesPage() {
 							</Button>
 						)} */}
 
-						<div className="flex items-center gap-2 ml-auto">
-							<Button
-								variant="outline"
-								size="sm"
-								onClick={() => selectAllVisible(filteredModules)} // could've also been `selectAllVisible.bind(null, filteredModules)`
-								disabled={isDownloadActive}
-							>
-								Select all
-							</Button>
-							<Button
-								variant="outline"
-								size="sm"
-								onClick={clearSelection}
-								disabled={isDownloadActive}
-							>
-								Clear
-							</Button>
-							<DropdownMenu>
-								<DropdownMenuTrigger asChild>
-									<Button
-										variant="outline"
-										size="sm"
-										disabled={isDownloadActive}
+					<div className="flex items-center gap-2 ml-auto">
+						<Button
+							variant="outline"
+							size="sm"
+							onClick={() => selectAllVisible(filteredModules)} // could've also been `selectAllVisible.bind(null, filteredModules)`
+							disabled={isDownloadActive}
+						>
+							Select all
+						</Button>
+						<Button
+							variant="outline"
+							size="sm"
+							onClick={clearSelection}
+							disabled={isDownloadActive}
+						>
+							Clear
+						</Button>
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<Button variant="outline" size="sm" disabled={isDownloadActive}>
+									Select by prefix
+								</Button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent>
+								{uniquePrefixes.map((prefix) => (
+									<DropdownMenuItem
+										key={prefix}
+										onClick={() => selectByPrefix(prefix)}
+										className="font-mono text-xs"
 									>
-										Select by prefix
-									</Button>
-								</DropdownMenuTrigger>
-								<DropdownMenuContent>
-									{uniquePrefixes.map((prefix) => (
-										<DropdownMenuItem
-											key={prefix}
-											onClick={() => selectByPrefix(prefix)}
-											className="font-mono text-xs"
-										>
-											{prefix}* modules
-										</DropdownMenuItem>
-									))}
-								</DropdownMenuContent>
-							</DropdownMenu>
-						</div>
+										{prefix}* modules
+									</DropdownMenuItem>
+								))}
+							</DropdownMenuContent>
+						</DropdownMenu>
 					</div>
+				</div>
 
-					{/* Filter Summary Bar - Shows active filters as removable chips */}
-					{activeFilterCount > 0 && (
-						<FilterSummaryBar
-							isDownloading={isDownloadActive}
-						/>
-					)}
+				{/* Filter Summary Bar - Shows active filters as removable chips */}
+				{activeFilterCount > 0 && (
+					<FilterSummaryBar isDownloading={isDownloadActive} />
+				)}
 
-					{/* Module Table */}
-					<ModulesTable />
+				{/* Module Table */}
+				<ModulesTable />
 
-					{/* Sticky Download UI - Dynamic State */}
-					{selectedCount > 0 && (
-						<>
-							{downloadState === "downloading" && (
-								<DownloadProgressBar
-								/>
-							)}
+				{/* Sticky Download UI - Dynamic State */}
+				{selectedCount > 0 && (
+					<>
+						{downloadState === "downloading" && <DownloadProgressBar />}
 
-							{downloadState === "paused" && (
-								<DownloadPaused
-								/>
-							)}
+						{downloadState === "paused" && <DownloadPaused />}
 
-							{downloadState === "error" && (
-								<DownloadError
-								/>
-							)}
+						{downloadState === "error" && <DownloadError />}
 
-							{downloadState === "idle" && (
-								<DownloadBar
-									// activeFilterCount={activeFilterCount}
-								/>
-							)}
-						</>
-					)}
-				</main>
-			</div>
+						{downloadState === "idle" && (
+							<DownloadBar
+							// activeFilterCount={activeFilterCount}
+							/>
+						)}
+					</>
+				)}
+			</main>
+		</div>
 	);
 }

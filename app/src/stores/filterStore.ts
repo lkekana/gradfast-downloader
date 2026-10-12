@@ -1,6 +1,10 @@
 import { create } from "zustand";
 import { useMemo } from "react";
-import { cachedModules as modules, facultyAbbreviation, periodAbbreviation } from "@/lib/data";
+import {
+	cachedModules as modules,
+	facultyAbbreviation,
+	periodAbbreviation,
+} from "@/lib/data";
 import type { Module } from "@/lib/types";
 
 interface FilterState {
@@ -111,8 +115,7 @@ export function useModuleFilters() {
 						.toLowerCase()
 						.includes(searchQuery.toLowerCase());
 				const matchesPrefix =
-					prefixFilter.length === 0 ||
-					prefixFilter.includes(mod.code.prefix);
+					prefixFilter.length === 0 || prefixFilter.includes(mod.code.prefix);
 				const matchesFaculty =
 					facultyFilter.length === 0 ||
 					(mod.faculty && facultyFilter.includes(mod.faculty));
@@ -128,12 +131,7 @@ export function useModuleFilters() {
 					return a.code.number - b.code.number;
 				return a.code.prefix.localeCompare(b.code.prefix);
 			});
-	}, [
-		searchQuery,
-		prefixFilter,
-		facultyFilter,
-		periodFilter,
-	]);
+	}, [searchQuery, prefixFilter, facultyFilter, periodFilter]);
 
 	const filterChips = useMemo(() => {
 		const chips: {

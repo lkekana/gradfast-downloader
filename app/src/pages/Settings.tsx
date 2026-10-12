@@ -50,7 +50,12 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { type ModuleRole, type NamingPattern, type PaperType, useSettingsStore } from "@/stores/useSettingsStore";
+import {
+	type ModuleRole,
+	type NamingPattern,
+	type PaperType,
+	useSettingsStore,
+} from "@/stores/useSettingsStore";
 import { useConnection } from "@/stores/connectionStore";
 import { useTheme } from "@/stores/themeStore";
 import MiniDownloadCard from "@/components/MiniDownloadCard";
@@ -136,33 +141,34 @@ const departments = {
 };
 
 const years = ["1", "2", "3", "4", "Honours", "Masters", "PhD"];
-const namingPatterns: { id: NamingPattern; label: string; example: string }[] = [
-	{
-		id: "default",
-		label: "DEFAULT: {code}_{year}_{type}_{timestamp?}.pdf",
-		example: "COS101_Exam_2007_Sup+MEMO - 1423492357235.pdf",
-	},
-	{
-		id: "code-year-type",
-		label: "{code}_{year}_{type}.pdf",
-		example: "COS101_2024_exam.pdf",
-	},
-	{
-		id: "name-year-type",
-		label: "{name}_{year}_{type}.pdf",
-		example: "Intro to CS_2024_exam.pdf",
-	},
-	{
-		id: "code-name-year",
-		label: "{code}_{name}_{year}.pdf",
-		example: "COS101_Intro to CS_2024.pdf",
-	},
-	{
-		id: "faculty-code-year",
-		label: "{faculty}/{code}/{year}_{type}.pdf",
-		example: "SCI/COS101/2024_exam.pdf",
-	},
-];
+const namingPatterns: { id: NamingPattern; label: string; example: string }[] =
+	[
+		{
+			id: "default",
+			label: "DEFAULT: {code}_{year}_{type}_{timestamp?}.pdf",
+			example: "COS101_Exam_2007_Sup+MEMO - 1423492357235.pdf",
+		},
+		{
+			id: "code-year-type",
+			label: "{code}_{year}_{type}.pdf",
+			example: "COS101_2024_exam.pdf",
+		},
+		{
+			id: "name-year-type",
+			label: "{name}_{year}_{type}.pdf",
+			example: "Intro to CS_2024_exam.pdf",
+		},
+		{
+			id: "code-name-year",
+			label: "{code}_{name}_{year}.pdf",
+			example: "COS101_Intro to CS_2024.pdf",
+		},
+		{
+			id: "faculty-code-year",
+			label: "{faculty}/{code}/{year}_{type}.pdf",
+			example: "SCI/COS101/2024_exam.pdf",
+		},
+	];
 
 const paperTypes: { id: PaperType; label: string; icon: string }[] = [
 	{ id: "exams", label: "Examinations", icon: "📝" },
@@ -173,8 +179,7 @@ const paperTypes: { id: PaperType; label: string; icon: string }[] = [
 	{ id: "other", label: "Other", icon: "📄" },
 ];
 
-const moduleRoles: { id: ModuleRole; label: string; description: string }[]
-= [
+const moduleRoles: { id: ModuleRole; label: string; description: string }[] = [
 	{
 		id: "fundamental",
 		label: "Fundamental",
@@ -189,8 +194,14 @@ const moduleRoles: { id: ModuleRole; label: string; description: string }[]
 ];
 
 export default function SettingsPage() {
-	const {isOnline, isConnected, isReconnecting, attemptReconnect, reconnectError} = useConnection();
-	
+	const {
+		isOnline,
+		isConnected,
+		isReconnecting,
+		attemptReconnect,
+		reconnectError,
+	} = useConnection();
+
 	const { themeSetting, setThemeSetting } = useTheme();
 	const [programmeSearchQuery, setProgrammeSearchQuery] = useState("");
 	const [isSaving, setIsSaving] = useState<boolean>(false);
@@ -381,7 +392,7 @@ export default function SettingsPage() {
 										type="button"
 										onClick={
 											// isConnected || isReconnecting
-											() => isConnected ? undefined : attemptReconnect()
+											() => (isConnected ? undefined : attemptReconnect())
 										}
 										disabled={isReconnecting}
 										className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-colors ${
@@ -428,7 +439,7 @@ export default function SettingsPage() {
 							</Tooltip>
 						)}
 						<MiniDownloadCard />
-						</div>
+					</div>
 				</div>
 			</header>
 			<div className="max-w-4xl mx-auto p-4 md:p-6 space-y-6">
@@ -576,11 +587,9 @@ export default function SettingsPage() {
 										}
 										size="sm"
 										onClick={() =>
-											useSettingsStore
-												.getState()
-												.updateSettings({
-													programmeSelectionMode: "hierarchical",
-												})
+											useSettingsStore.getState().updateSettings({
+												programmeSelectionMode: "hierarchical",
+											})
 										}
 										className="gap-2"
 									>
@@ -853,7 +862,11 @@ export default function SettingsPage() {
 											Zip multiple files
 										</Label>
 										<p className="text-sm text-muted-foreground">
-											Download a single ZIP file instead of multiple individual files.<br />Note: This is enabled by default on non-Chromium browsers (Firefox, Safari, etc)
+											Download a single ZIP file instead of multiple individual
+											files.
+											<br />
+											Note: This is enabled by default on non-Chromium browsers
+											(Firefox, Safari, etc)
 										</p>
 									</div>
 									<Switch

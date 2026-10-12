@@ -9,11 +9,15 @@ interface DownloadPausedProps {
 	className?: string;
 }
 
-export default function DownloadPaused({
-	className,
-}: DownloadPausedProps) {
+export default function DownloadPaused({ className }: DownloadPausedProps) {
 	const { selectedCount } = useModuleSelection();
-	const {currentModule, currentModuleIndex, downloadProgress, handleResume, handleCancel} = useDownload();
+	const {
+		currentModule,
+		currentModuleIndex,
+		downloadProgress,
+		handleResume,
+		handleCancel,
+	} = useDownload();
 	const progressValue = Math.min(100, Math.round(downloadProgress));
 
 	return (

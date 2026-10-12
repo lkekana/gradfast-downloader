@@ -1,4 +1,5 @@
 // ModulePageSkeleton.tsx
+/** biome-ignore-all lint/suspicious/noArrayIndexKey: This is a skeleton component, so using index as key is acceptable. */
 
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router";

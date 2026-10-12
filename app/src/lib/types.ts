@@ -1,16 +1,16 @@
 export type PaperCategory =
-  | "Exams"
-  | "Exam"
-  | "Semester Tests"
-  | "Semester Test"
-  | "Class Tests"
-  | "Tutorials"
-  | "Tutorial Tests"
-  | "Clicker Tests"
-  | "Assignments"
-  | "Practical Tests"
-  | "Exam Opportunities"
-  | "Sample Questions";
+	| "Exams"
+	| "Exam"
+	| "Semester Tests"
+	| "Semester Test"
+	| "Class Tests"
+	| "Tutorials"
+	| "Tutorial Tests"
+	| "Clicker Tests"
+	| "Assignments"
+	| "Practical Tests"
+	| "Exam Opportunities"
+	| "Sample Questions";
 
 export type MemoStatus = "yes" | "no" | "partial";
 

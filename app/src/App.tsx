@@ -20,11 +20,14 @@ function ModulePageWrapper() {
 		data: module,
 		isPending: isModulePending,
 		isError: isModuleError,
-	} = useModuleInfo({ prefix, number }, {enabled: isValid});
-	const { data: pastPapers, isPending: isPapersPending } = useModulePastPapers({
-		prefix,
-		number,
-	}, {enabled: isValid});
+	} = useModuleInfo({ prefix, number }, { enabled: isValid });
+	const { data: pastPapers, isPending: isPapersPending } = useModulePastPapers(
+		{
+			prefix,
+			number,
+		},
+		{ enabled: isValid },
+	);
 	console.log(pastPapers);
 
 	if (!isValid) {
@@ -73,7 +76,6 @@ export default function App() {
 					{/* <Route path="/test" element={<Test />} /> */}
 				</Routes>
 			</main>
-
 		</div>
 	);
 }

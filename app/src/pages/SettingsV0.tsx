@@ -71,8 +71,13 @@ const namingPatterns = [
 
 export default function SettingsPageV0() {
 	const { toast } = useToast();
-	const { isOnline, isConnected, isReconnecting, attemptReconnect, reconnectError } = useConnection();
-	
+	const {
+		isOnline,
+		isConnected,
+		isReconnecting,
+		attemptReconnect,
+		reconnectError,
+	} = useConnection();
 
 	// Form state
 	const [programme, setProgramme] = useState<string>("");
@@ -223,7 +228,7 @@ export default function SettingsPageV0() {
 													// isConnected || isReconnecting
 													// 	? undefined
 													// 	: attemptReconnect
-													() => isConnected ? undefined : attemptReconnect()
+													() => (isConnected ? undefined : attemptReconnect())
 												}
 												disabled={isReconnecting}
 												className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-colors ${

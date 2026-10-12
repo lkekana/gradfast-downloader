@@ -6,7 +6,13 @@ import { useConnection } from "@/stores/connectionStore";
 import MiniDownloadCard from "./MiniDownloadCard";
 
 export function ModulesToolbar() {
-	const { isOnline, isConnected, isReconnecting, attemptReconnect, reconnectError } = useConnection();
+	const {
+		isOnline,
+		isConnected,
+		isReconnecting,
+		attemptReconnect,
+		reconnectError,
+	} = useConnection();
 
 	return (
 		<header className="border-b bg-card px-4 py-3 flex items-center justify-between">
@@ -44,7 +50,7 @@ export function ModulesToolbar() {
 								type="button"
 								onClick={
 									// isConnected || isReconnecting ? undefined : attemptReconnect
-									() => isConnected ? undefined : attemptReconnect()
+									() => (isConnected ? undefined : attemptReconnect())
 								}
 								disabled={isReconnecting}
 								className={`flex items-center gap-1.5 transition-opacity ${

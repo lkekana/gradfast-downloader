@@ -45,7 +45,11 @@ if (typeof window !== "undefined") {
 		if (item === "light" || item === "dark" || item === "system") {
 			initialSetting = item;
 		}
-	} catch {}
+	} catch (_e) {
+		console.warn(
+			"Failed to read theme from localStorage, defaulting to system theme.",
+		);
+	}
 }
 
 // 2. Apply IMMEDIATELY before React even hydrates! (Zero FOUC)

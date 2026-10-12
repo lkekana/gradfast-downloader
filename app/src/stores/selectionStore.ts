@@ -17,7 +17,8 @@ export const useSelectionStore = create<SelectionState>((set, get) => ({
 	selectedModules: new Set<Module>(),
 	toggleModule: (module) =>
 		set((state) => {
-			const isDownloadActive = useDownloadStore.getState().status === "downloading";
+			const isDownloadActive =
+				useDownloadStore.getState().status === "downloading";
 			if (isDownloadActive) return {};
 			const next = new Set(state.selectedModules);
 			next.has(module) ? next.delete(module) : next.add(module);
@@ -26,10 +27,11 @@ export const useSelectionStore = create<SelectionState>((set, get) => ({
 
 	selectAllVisible: (visibleModules) =>
 		set(() => {
-			const isDownloadActive = useDownloadStore.getState().status === "downloading";
+			const isDownloadActive =
+				useDownloadStore.getState().status === "downloading";
 			if (isDownloadActive) return {};
 			return {
-                selectedModules: new Set(visibleModules),
+				selectedModules: new Set(visibleModules),
 			};
 		}),
 
@@ -37,39 +39,33 @@ export const useSelectionStore = create<SelectionState>((set, get) => ({
 
 	selectByPrefix: (prefix) =>
 		set(() => {
-			const isDownloadActive = useDownloadStore.getState().status === "downloading";
+			const isDownloadActive =
+				useDownloadStore.getState().status === "downloading";
 			if (isDownloadActive) return {};
 			return {
 				selectedModules: new Set(
-					modules
-						.filter((m) => m.code.prefix === prefix),
+					modules.filter((m) => m.code.prefix === prefix),
 				),
 			};
 		}),
 
 	selectByFaculty: (faculty) =>
 		set(() => {
-			const isDownloadActive = useDownloadStore.getState().status === "downloading";
+			const isDownloadActive =
+				useDownloadStore.getState().status === "downloading";
 			if (isDownloadActive) return {};
 			return {
-				selectedModules: new Set(
-					modules
-						.filter((m) => m.faculty === faculty)
-						,
-				),
+				selectedModules: new Set(modules.filter((m) => m.faculty === faculty)),
 			};
 		}),
 
 	selectByPeriod: (period) =>
 		set(() => {
-			const isDownloadActive = useDownloadStore.getState().status === "downloading";
+			const isDownloadActive =
+				useDownloadStore.getState().status === "downloading";
 			if (isDownloadActive) return {};
 			return {
-				selectedModules: new Set(
-					modules
-						.filter((m) => m.period === period)
-				,
-				),
+				selectedModules: new Set(modules.filter((m) => m.period === period)),
 			};
 		}),
 }));
@@ -77,9 +73,7 @@ export const useSelectionStore = create<SelectionState>((set, get) => ({
 export function useModuleSelection() {
 	const selectedModules = useSelectionStore((state) => state.selectedModules);
 	const toggleModule = useSelectionStore((state) => state.toggleModule);
-	const selectAllVisible = useSelectionStore(
-		(state) => state.selectAllVisible,
-	);
+	const selectAllVisible = useSelectionStore((state) => state.selectAllVisible);
 	const clearSelection = useSelectionStore((state) => state.clearSelection);
 	const selectByPrefix = useSelectionStore((state) => state.selectByPrefix);
 	const selectByFaculty = useSelectionStore((state) => state.selectByFaculty);
@@ -92,8 +86,7 @@ export function useModuleSelection() {
 		selectAllVisible: selectAllVisible,
 		clearSelection: clearSelection,
 		selectByPrefix: (prefix: string) => selectByPrefix(prefix, modules),
-		selectByFaculty: (faculty: string) =>
-			selectByFaculty(faculty, modules),
+		selectByFaculty: (faculty: string) => selectByFaculty(faculty, modules),
 		selectByPeriod: (period: string) => selectByPeriod(period, modules),
 		selectedCount: selectedModules.size,
 	};
