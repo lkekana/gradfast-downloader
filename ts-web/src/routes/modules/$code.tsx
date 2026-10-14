@@ -1,17 +1,30 @@
-import { useModuleInfo, useModulePastPapers } from "@/stores/apiStore";
-import { getModuleInfo } from "@/lib/data";
+import { getModuleInfoOptions, getPastPapersOptions, useApiStore, useModuleInfo, useModulePastPapers } from "@/stores/apiStore";
 import { createFileRoute, getRouteApi, Navigate } from "@tanstack/react-router";
 import ModulePageSkeleton from "./-skeleton";
 import ModulePage from "./-module";
+import { getServerModuleData } from "#/lib/data.functions";
+import { useQuery } from "@tanstack/react-query";
+import { queryClient } from "#/lib/queryClient";
+import { useEffect } from "react";
 
 export const Route = createFileRoute("/modules/$code")({
+	loader: async ({ params }) => {
+		const match = params.code?.match(/^([a-zA-Z]+)(\d+)$/);
+		if (!match) throw new Error("Invalid module code");
+		const prefix = match[1];
+		const number = parseInt(match[2], 10);
+
+		return await getServerModuleData({
+			data: { prefix, number },
+		});
+	},
 	component: ModulePageWrapper,
 });
 
-const routeApi = getRouteApi('/modules/$code');
-
-export default function ModulePageWrapper() {
-	const { code } = routeApi.useParams()
+function ModulePageWrapper() {
+	const serverData = Route.useLoaderData();
+	const { code } = Route.useParams();
+	const apiFetch = useApiStore((state) => state.apiFetch);
 
 	// code will be in form "abc1234", we want to split into "abc" and "1234" where there can be any number of letters and digits, but letters always come first
 	const match = code?.match(/^([a-zA-Z]+)(\d+)$/);
@@ -19,50 +32,64 @@ export default function ModulePageWrapper() {
 	const prefix = match ? match[1] : "";
 	const number = match ? parseInt(match[2], 10) : 0;
 
-	const {
-		data: module,
-		isPending: isModulePending,
-		isError: isModuleError,
-	} = useModuleInfo({ prefix, number }, { enabled: isValid });
-	const { data: pastPapers, isPending: isPapersPending } = useModulePastPapers(
-		{
-			prefix,
-			number,
-		},
-		{ enabled: isValid },
-	);
-	console.log(pastPapers);
+	// const {
+	// 	data: module,
+	// 	isPending: isModulePending,
+	// 	isError: isModuleError,
+	// } = useModuleInfo({ prefix, number }, { enabled: isValid });
+	// const { data: pastPapers, isPending: isPapersPending } = useModulePastPapers(
+	// 	{
+	// 		prefix,
+	// 		number,
+	// 	},
+	// 	{ enabled: isValid },
+	// );
+	// console.log(pastPapers);
 
 	if (!isValid) {
 		// return <Navigate to="/404" replace />;
 		return <Navigate to="/" replace />;
 	}
 
-	if (isModulePending || isPapersPending) {
-		return <ModulePageSkeleton />;
-	}
+	// if (isModulePending || isPapersPending) {
+	// 	return <ModulePageSkeleton />;
+	// }
 
-	if (isModuleError || !module) {
-		// If the API confirms it doesn't exist, or network failed
-		// return <Navigate to="/404" replace />;
-		return <Navigate to="/" replace />;
-	}
+	// if (isModuleError || !module) {
+	// 	// If the API confirms it doesn't exist, or network failed
+	// 	// return <Navigate to="/404" replace />;
+	// 	return <Navigate to="/" replace />;
+	// }
 
-	const moduleInfo = getModuleInfo(module.code);
+	// const moduleInfo = getModuleInfo(module.code);
 
-	if (!moduleInfo) {
-		return (
-			<div className="p-4 text-center text-muted-foreground">
-				Module details missing from local cache.
-			</div>
-		);
-	}
+	// if (!moduleInfo) {
+	// 	return (
+	// 		<div className="p-4 text-center text-muted-foreground">
+	// 			Module details missing from local cache.
+	// 		</div>
+	// 	);
+	// }
+
+	// Use initialData to seed the cache instantly on the client
+	const { data: module } = useQuery({
+		...getModuleInfoOptions({ prefix, number }, apiFetch),
+		initialData: serverData?.moduleInfo, // Seeds cache synchronously!
+	  });
+	  
+	  const { data: pastPapers } = useQuery({
+		...getPastPapersOptions({ prefix, number }, apiFetch),
+		initialData: serverData?.pastPapers, // Seeds cache synchronously!
+	  });
+
+	if (!module || !pastPapers) return <ModulePageSkeleton />;
+
 
 	return (
 		<ModulePage
 			module={module}
-			moduleInfo={moduleInfo}
-			pastPapers={pastPapers || []}
+			moduleInfo={serverData.moduleInfo}
+			pastPapers={pastPapers}
 		/>
 	);
 }

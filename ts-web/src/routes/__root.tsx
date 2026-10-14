@@ -1,4 +1,9 @@
-import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
+import {
+	ClientOnly,
+	HeadContent,
+	Scripts,
+	createRootRoute,
+} from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { TanStackDevtools } from "@tanstack/react-devtools";
 
@@ -6,8 +11,11 @@ import appCss from "../styles.css?url";
 import { ConnectionManager } from "#/components/ConnectionManager";
 import { queryClient } from "#/lib/queryClient";
 import { TooltipProvider } from "@radix-ui/react-tooltip";
-import { QueryClientProvider } from "@tanstack/react-query";
+import { dehydrate, HydrationBoundary, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
+import { syncThemeOnClient } from "#/stores/themeStore";
+import { useEffect } from "react";
+import { getStaticModulesOptions } from "#/stores/apiStore";
 
 export const Route = createRootRoute({
 	head: () => ({
@@ -32,9 +40,21 @@ export const Route = createRootRoute({
 		],
 	}),
 	shellComponent: RootDocument,
+	loader: async () => {
+		await queryClient.query(getStaticModulesOptions());
+		return {
+			dehydratedState: dehydrate(queryClient),
+		};
+	},
 });
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+	const { dehydratedState } = Route.useLoaderData();
+	
+	useEffect(() => {
+		syncThemeOnClient();
+	}, []);
+
 	return (
 		<html lang="en">
 			<head>
@@ -42,11 +62,15 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 			</head>
 			<body>
 				<QueryClientProvider client={queryClient}>
+				<HydrationBoundary state={dehydratedState}>
 					<TooltipProvider>
-						<ConnectionManager />
+						<ClientOnly>
+							<ConnectionManager />
+						</ClientOnly>
 						<Toaster />
 						{children}
 					</TooltipProvider>
+				</HydrationBoundary>
 				</QueryClientProvider>
 				<TanStackDevtools
 					config={{

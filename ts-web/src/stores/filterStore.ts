@@ -1,11 +1,12 @@
 import { create } from "zustand";
 import { useMemo } from "react";
 import {
-	cachedModules as modules,
 	facultyAbbreviation,
 	periodAbbreviation,
 } from "@/lib/data";
 import type { Module } from "@/lib/types";
+import { getStaticModulesOptions } from "./apiStore";
+import { useQuery } from "@tanstack/react-query";
 
 interface FilterState {
 	searchQuery: string;
@@ -95,16 +96,17 @@ export function useModuleFilters() {
 	const setPeriodFilter = useFilterStore((state) => state.setPeriodFilter);
 	const clearAllFilters = useFilterStore((state) => state.clearAllFilters);
 	const removeFilterChip = useFilterStore((state) => state.removeFilterChip);
+	const { data: modules = [] } = useQuery(getStaticModulesOptions());
 
 	// Derived data
 	const uniquePrefixes = useMemo(
 		() => [...new Set(modules.map((m) => m.code.prefix))].sort(),
-		[],
+		[modules],
 	);
 
 	const uniqueFaculties = useMemo(
 		() => [...new Set(modules.map((m) => m.faculty).filter(Boolean))].sort(),
-		[],
+		[modules],
 	);
 
 	const filteredModules = useMemo(() => {
@@ -131,7 +133,7 @@ export function useModuleFilters() {
 					return a.code.number - b.code.number;
 				return a.code.prefix.localeCompare(b.code.prefix);
 			});
-	}, [searchQuery, prefixFilter, facultyFilter, periodFilter]);
+	}, [searchQuery, prefixFilter, facultyFilter, periodFilter, modules]);
 
 	const filterChips = useMemo(() => {
 		const chips: {

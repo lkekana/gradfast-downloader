@@ -36,6 +36,14 @@ export interface Module {
 	name: string;
 	faculty: string;
 	period: string;
+	cachedPastPaperCounts?: {
+		exams: number;
+		semesterTests: number;
+		classTests: number;
+		practicals: number;
+		tutorials: number;
+		other: number;
+	};
 }
 
 export interface ModuleInfo {

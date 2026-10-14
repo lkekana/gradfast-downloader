@@ -60,10 +60,10 @@ import { useTheme } from "@/stores/themeStore";
 import MiniDownloadCard from "@/components/MiniDownloadCard";
 import { toast } from "sonner";
 
-import { createFileRoute, useRouter } from '@tanstack/react-router'
+import { ClientOnly, createFileRoute, useRouter } from "@tanstack/react-router";
+import ConnectionDot from "#/components/ConnectionDot";
 
-export const Route = createFileRoute('/settings')({ component: SettingsPage })
-
+export const Route = createFileRoute("/settings")({ component: SettingsPage });
 
 const programmes = [
 	{
@@ -197,15 +197,7 @@ const moduleRoles: { id: ModuleRole; label: string; description: string }[] = [
 	{ id: "elective", label: "Elective", description: "Optional choice modules" },
 ];
 
-export default function SettingsPage() {
-	const {
-		isOnline,
-		isConnected,
-		isReconnecting,
-		attemptReconnect,
-		reconnectError,
-	} = useConnection();
-
+function SettingsPage() {
 	const { themeSetting, setThemeSetting } = useTheme();
 	const [programmeSearchQuery, setProgrammeSearchQuery] = useState("");
 	const [isSaving, setIsSaving] = useState<boolean>(false);
@@ -338,7 +330,7 @@ export default function SettingsPage() {
 	};
 
 	return (
-		<TooltipProvider>
+		<>
 			{/* Header */}
 			<header className="border-b bg-card px-4 py-3 sticky top-0 z-10">
 				{/* <nav className="text-xs text-muted-foreground mb-2">
@@ -368,80 +360,9 @@ export default function SettingsPage() {
 						</p> */}
 					</div>
 					<div className="flex items-center gap-2">
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/50">
-									{isOnline ? (
-										<Wifi className="w-4 h-4 text-green-500" />
-									) : (
-										<WifiOff className="w-4 h-4 text-red-500" />
-									)}
-									<span className="text-xs font-medium">
-										{isOnline ? "Online" : "Offline"}
-									</span>
-								</div>
-							</TooltipTrigger>
-							<TooltipContent>
-								<p>
-									{isOnline
-										? "Internet connection active"
-										: "No internet connection"}
-								</p>
-							</TooltipContent>
-						</Tooltip>
-						{isOnline && (
-							<Tooltip>
-								<TooltipTrigger asChild>
-									<button
-										type="button"
-										onClick={
-											// isConnected || isReconnecting
-											() => (isConnected ? undefined : attemptReconnect())
-										}
-										disabled={isReconnecting}
-										className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-colors ${
-											isConnected
-												? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300"
-												: isReconnecting
-													? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300"
-													: "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 cursor-pointer hover:opacity-90"
-										}`}
-									>
-										<div className="relative">
-											<div
-												className={`w-2 h-2 rounded-full ${
-													isConnected
-														? "bg-green-500"
-														: isReconnecting
-															? "bg-yellow-500 animate-pulse"
-															: "bg-red-500"
-												}`}
-											/>
-											{isConnected && (
-												<span className="absolute inset-0 rounded-full animate-ping bg-green-400 opacity-75" />
-											)}
-										</div>
-										<span className="text-xs font-medium">
-											{isReconnecting
-												? "Connecting…"
-												: isConnected
-													? "Connected"
-													: "Disconnected"}
-										</span>
-									</button>
-								</TooltipTrigger>
-								<TooltipContent side="bottom">
-									{isConnected && <p>Connected to past papers server</p>}
-									{isReconnecting && <p>🔄 Attempting to reconnect…</p>}
-									{!isConnected && !isReconnecting && (
-										<p>🔌 Click to reconnect to server</p>
-									)}
-									{reconnectError && (
-										<p className="text-red-500">⚠️ {reconnectError}</p>
-									)}
-								</TooltipContent>
-							</Tooltip>
-						)}
+						<ClientOnly>
+							<SettingsConnectionStatus />
+						</ClientOnly>
 						<MiniDownloadCard />
 					</div>
 				</div>
@@ -1319,6 +1240,97 @@ export default function SettingsPage() {
 						: "Never"} */}
 				{/* </p> */}
 			</div>
-		</TooltipProvider>
+		</>
+	);
+}
+
+function SettingsConnectionStatus() {
+	const {
+		isOnline,
+		isConnected,
+		isReconnecting,
+		attemptReconnect,
+		reconnectError,
+	} = useConnection();
+
+	return (
+		<>
+			<Tooltip>
+				<TooltipTrigger asChild>
+					<div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/50 cursor-help">
+						{isOnline ? (
+							<Wifi className="w-4 h-4 text-green-500" />
+						) : (
+							<WifiOff className="w-4 h-4 text-red-500" />
+						)}
+						<span className="text-xs font-medium whitespace-nowrap">
+							{isOnline ? "Online" : "Offline"}
+						</span>
+					</div>
+				</TooltipTrigger>
+				<TooltipContent>
+					<p>
+						{isOnline ? "Internet connection active" : "No internet connection"}
+					</p>
+				</TooltipContent>
+			</Tooltip>
+			{isOnline && (
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<button
+							type="button"
+							onClick={() => (isConnected ? undefined : attemptReconnect())}
+							disabled={isReconnecting}
+							className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-colors ${
+								isConnected
+									? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300"
+									: isReconnecting
+										? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300"
+										: "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 cursor-pointer hover:opacity-90"
+							}`}
+							aria-label={
+								isConnected ? "Connected to server" : "Click to reconnect"
+							}
+						>
+							{/* <div className="relative shrink-0 w-2 h-2">
+								<div
+									className={`w-full h-full rounded-full transition-colors ${
+										isConnected
+											? "bg-green-500"
+											: isReconnecting
+												? "bg-yellow-500 animate-pulse"
+												: "bg-red-500"
+									}`}
+								/>
+								{isConnected && (
+									<span className="absolute inset-0 rounded-full animate-ping bg-green-400 opacity-75" />
+								)}
+							</div> */}
+														<ConnectionDot
+							  state={isConnected ? "online" : isReconnecting ? "connecting" : "offline"}
+							/>
+							
+							<span className="text-xs font-medium whitespace-nowrap">
+								{isReconnecting
+									? "Connecting…"
+									: isConnected
+										? "Connected"
+										: "Disconnected"}
+							</span>
+						</button>
+					</TooltipTrigger>
+					<TooltipContent side="bottom">
+						{isConnected && <p>Connected to Gradfast</p>}
+						{isReconnecting && <p>Attempting to reconnect…</p>}
+						{!isConnected && !isReconnecting && (
+							<p>🔌 Click to reconnect to server</p>
+						)}
+						{reconnectError && (
+							<p className="text-red-500">⚠️ {reconnectError}</p>
+						)}
+					</TooltipContent>
+				</Tooltip>
+			)}
+		</>
 	);
 }

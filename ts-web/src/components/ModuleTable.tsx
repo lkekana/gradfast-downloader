@@ -21,7 +21,7 @@ import useDownload from "@/stores/downloadStore";
 import { useModuleSelection } from "@/stores/selectionStore";
 import { getPastPapersOptions, useApiStore } from "@/stores/apiStore";
 import { useModuleFilters } from "@/stores/filterStore";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import type { CheckedState } from "@radix-ui/react-checkbox";
@@ -53,7 +53,20 @@ function ModuleRow({
 		enabled: false, // reads initialData first, `refetch` will make the request
 	});
 
-	const pastPaperCounts = getPastPaperCounts(pastPapers || []);
+	// const pastPaperCounts = getPastPaperCounts(pastPapers || []);
+	const pastPaperCounts = useMemo(() => {
+		if (!pastPapers){
+			if (mod.cachedPastPaperCounts) {
+				return mod.cachedPastPaperCounts;
+			}
+			else {
+				return getPastPaperCounts([]);
+			}
+		}
+		else {
+			return getPastPaperCounts(pastPapers);
+		}
+	}, [pastPapers, mod.cachedPastPaperCounts]);
 
 	return (
 		<TableRow
@@ -103,7 +116,7 @@ function ModuleRow({
 					openDelay={200}
 					closeDelay={100}
 					onOpenChange={async (open) => {
-						if (open && !isFetching) {
+						if (open && !isFetching && !pastPapers) {
 							console.log(`Prefetching module details for ${id}`);
 							refetch();
 						}
@@ -112,9 +125,10 @@ function ModuleRow({
 					<HoverCardTrigger asChild>
 						<Button variant="ghost" size="sm" className="gap-1">
 							<Link
-							to={`/modules/$code`}
-							params={{ code: id }}
-							className="flex items-center gap-1">
+								to={`/modules/$code`}
+								params={{ code: id }}
+								className="flex items-center gap-1"
+							>
 								Details
 								<Info className="w-3 h-3 opacity-50" />
 							</Link>
@@ -184,8 +198,8 @@ function ModuleRow({
 							<div className="pt-2 flex justify-end">
 								<Button size="sm" variant="secondary" asChild>
 									<Link
-							to={`/modules/$code`}
-							params={{ code: id }}
+										to={`/modules/$code`}
+										params={{ code: id }}
 										className="flex items-center gap-1"
 									>
 										View more

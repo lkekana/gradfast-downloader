@@ -18,12 +18,11 @@ import { periods } from "@/lib/data";
 import { useModuleSelection } from "@/stores/selectionStore";
 import { useModuleFilters } from "@/stores/filterStore";
 import useDownload from "@/stores/downloadStore";
+import { ClientOnly, createFileRoute } from "@tanstack/react-router";
 
-import { createFileRoute } from '@tanstack/react-router'
+export const Route = createFileRoute("/")({ component: ModulesPage });
 
-export const Route = createFileRoute('/')({ component: ModulesPage })
-
-export default function ModulesPage() {
+function ModulesPage() {
 	const filters = useModuleFilters();
 	const {
 		filteredModules,
@@ -197,24 +196,28 @@ export default function ModulesPage() {
 				)}
 
 				{/* Module Table */}
-				<ModulesTable />
+				<ClientOnly>
+					<ModulesTable />
+				</ClientOnly>
 
 				{/* Sticky Download UI - Dynamic State */}
-				{selectedCount > 0 && (
-					<>
-						{downloadState === "downloading" && <DownloadProgressBar />}
+				<ClientOnly>
+					{selectedCount > 0 && (
+						<>
+							{downloadState === "downloading" && <DownloadProgressBar />}
 
-						{downloadState === "paused" && <DownloadPaused />}
+							{downloadState === "paused" && <DownloadPaused />}
 
-						{downloadState === "error" && <DownloadError />}
+							{downloadState === "error" && <DownloadError />}
 
-						{downloadState === "idle" && (
-							<DownloadBar
-							// activeFilterCount={activeFilterCount}
-							/>
-						)}
-					</>
-				)}
+							{downloadState === "idle" && (
+								<DownloadBar
+								// activeFilterCount={activeFilterCount}
+								/>
+							)}
+						</>
+					)}
+				</ClientOnly>
 			</main>
 		</div>
 	);

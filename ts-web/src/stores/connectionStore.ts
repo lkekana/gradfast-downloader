@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { getModulesOptions, useApiStore } from "./apiStore";
+import { getGFModulesOptions, useApiStore } from "./apiStore";
 import { queryClient } from "@/lib/queryClient";
 import { toast } from "sonner";
 
@@ -17,7 +17,8 @@ interface ConnectionState {
 }
 
 export const useConnectionStore = create<ConnectionState>((set, get) => ({
-	isOnline: typeof window !== "undefined" ? navigator.onLine : false,
+	// isOnline: typeof window !== "undefined" ? navigator.onLine : false,
+	isOnline: false,
 	isConnected: false,
 	isReconnecting: false,
 	reconnectError: null,
@@ -39,7 +40,7 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
 		try {
 			// get the modules from the API to check if the connection is successful
 			const apiFetch = useApiStore.getState().apiFetch;
-			const options = getModulesOptions(apiFetch);
+			const options = getGFModulesOptions(apiFetch);
 			await queryClient.refetchQueries(options);
 
 			set({ isConnected: true, reconnectError: null });
@@ -61,24 +62,6 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
 		}
 	},
 }));
-
-const handleOnline = () => {
-	const state = useConnectionStore.getState();
-	state.setIsOnline(true);
-	if (!state.isConnected) setTimeout(() => state.attemptReconnect(), 1000);
-};
-
-const handleOffline = () => {
-	const state = useConnectionStore.getState();
-	state.setIsOnline(false);
-	state.setIsConnected(false);
-};
-
-// Native window listeners attached once on app load (No React required!)
-if (typeof window !== "undefined") {
-	window.addEventListener("online", handleOnline);
-	window.addEventListener("offline", handleOffline);
-}
 
 export function useConnection() {
 	const isOnline = useConnectionStore((state) => state.isOnline);

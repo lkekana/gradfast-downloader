@@ -1,7 +1,12 @@
 import { create } from "zustand";
 import { useQuery, queryOptions } from "@tanstack/react-query";
-import { cachedPastPapers, cachedModules } from "@/lib/data";
 import type { GradfastModules, Module, PastPaper } from "@/lib/types";
+import {
+	getModuleFaculty,
+	getRandomModule,
+	getServerModulesList,
+} from "#/lib/data.functions";
+import { queryClient } from "#/lib/queryClient";
 
 // biome-ignore lint/suspicious/noExplicitAny: FetchType is a generic fetch function that returns any type of data
 type FetchType = (url: string, options?: RequestInit) => Promise<any>;
@@ -147,8 +152,7 @@ export const useApiStore = create<ApiState>((set, get) => ({
 			}
 		} else {
 			// cookies exist, refresh them by making a request to the API proxy with the current cookies
-			const randomModule =
-				cachedModules[Math.floor(Math.random() * cachedModules.length)];
+			const randomModule = await getRandomModule();
 			const code = `${randomModule.code.prefix}${randomModule.code.number}`;
 			const { apiFetch } = get();
 			await apiFetch(`${import.meta.env.VITE_API_PROXY}/module/${code}`, {
@@ -175,6 +179,15 @@ export const useApiStore = create<ApiState>((set, get) => ({
 	},
 }));
 
+export const getStaticModulesOptions = () => queryOptions({
+	queryKey: ['staticModules'],
+	queryFn: async () => {
+	  return await getServerModulesList();
+	},
+	staleTime: 1000 * 60 * 60 * 24, // Static data rarely changes
+	gcTime: 1000 * 60 * 60 * 24,
+});
+
 export const getModuleInfoOptions = (
 	moduleCode: {
 		prefix: string;
@@ -187,18 +200,16 @@ export const getModuleInfoOptions = (
 		queryKey: ["moduleInfo", fullCode],
 		queryFn: async () => {
 			// make request to ${API_PROXY}/module/${currentModuleCode} and return the data
-			const data = await apiFetch(
-				`${import.meta.env.VITE_API_PROXY}/module/${fullCode}`,
-			);
+			const [data, faculty] = await Promise.all([
+				apiFetch(`${import.meta.env.VITE_API_PROXY}/module/${fullCode}`),
+				getModuleFaculty({ data: moduleCode }),
+			]);
 			return {
 				code: {
 					prefix: data.prefix,
 					number: data.code,
 				},
-				faculty:
-					cachedModules.find(
-						(m) => m.code.prefix === data.prefix && m.code.number === data.code,
-					)?.faculty || "Unknown",
+				faculty,
 				name: data.name,
 				// credits: parseInt(data.credits, 10),
 				period: data.period,
@@ -208,10 +219,9 @@ export const getModuleInfoOptions = (
 		staleTime: 1000 * 60 * 55, // 55 minutes
 		gcTime: 1000 * 60 * 60 * 24, // 24 hours
 		initialData: () => {
-			return cachedModules.find(
-				(m) =>
-					m.code.prefix === moduleCode.prefix &&
-					m.code.number === moduleCode.number,
+			const modules = queryClient.getQueryData(['staticModules']) as Module[] | undefined;
+			return modules?.find(
+				(m) => m.code.prefix === moduleCode.prefix && m.code.number === moduleCode.number
 			);
 		},
 	});
@@ -241,13 +251,13 @@ export const getPastPapersOptions = (
 		},
 		staleTime: 1000 * 60 * 55, // 55 minutes
 		gcTime: 1000 * 60 * 60 * 24, // 24 hours
-		initialData: () => {
-			return cachedPastPapers[fullCode];
-		},
+		// initialData: () => {
+		// 	return cachedPastPapers[fullCode];
+		// },
 	});
 };
 
-export const getModulesOptions = (apiFetch: FetchType) => {
+export const getGFModulesOptions = (apiFetch: FetchType) => {
 	return queryOptions({
 		queryKey: ["modules"],
 		queryFn: async () => {
@@ -308,10 +318,10 @@ export function useModulePastPapers(
 }
 
 export function useModules(
-	additionalOptions: Partial<ReturnType<typeof getModulesOptions>> = {},
+	additionalOptions: Partial<ReturnType<typeof getGFModulesOptions>> = {},
 ) {
 	const apiFetch = useApiStore((state) => state.apiFetch);
-	const options = getModulesOptions(apiFetch);
+	const options = getGFModulesOptions(apiFetch);
 	return useQuery({
 		...options,
 		...additionalOptions,

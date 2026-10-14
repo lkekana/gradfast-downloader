@@ -1,6 +1,4 @@
-import type { ModuleInfo, PastPaper } from "./types";
-import catalog from "../assets/catalog.json";
-import moduleInfo from "../assets/module_info.json";
+import type { PastPaper } from "./types";
 
 export const facultyAbbreviation = (faculty: string | undefined) => {
 	if (faculty === undefined) return "GEN";
@@ -79,90 +77,6 @@ export const periods = [
 	"Quarter 4",
 ];
 
-const retiredModules: ModuleInfo[] = [
-	{
-		code: {
-			prefix: "GLY",
-			number: 162,
-		},
-		name: "Environmental and hazard geology",
-		credits: 8,
-		associatedProgrammes: [],
-		qualification: "Undergraduate",
-		faculty: "Faculty of Natural and Agricultural Sciences",
-		content: "Note: This module is no longer offered.",
-		nqfLevel: 0,
-		prerequisites: [],
-		contactTime: "N/A",
-		language: "N/A",
-		period: "Quarter 3",
-	},
-	{
-		code: {
-			prefix: "GLY",
-			number: 161,
-		},
-		name: "Historical geology",
-		credits: 8,
-		associatedProgrammes: [],
-		qualification: "Undergraduate",
-		faculty: "Faculty of Natural and Agricultural Sciences",
-		content: "Note: This module is no longer offered.",
-		nqfLevel: 0,
-		prerequisites: [],
-		contactTime: "N/A",
-		language: "N/A",
-		period: "Quarter 4",
-	},
-	{
-		code: {
-			prefix: "WTW",
-			number: 126,
-		},
-		name: "Linear algebra",
-		credits: 8,
-		associatedProgrammes: [],
-		qualification: "Undergraduate",
-		faculty: "Faculty of Natural and Agricultural Sciences",
-		content: "Note: This module is no longer offered.",
-		nqfLevel: 0,
-		prerequisites: [],
-		contactTime: "N/A",
-		language: "N/A",
-		period: "Semester 2",
-	},
-	{
-		code: {
-			prefix: "WTW",
-			number: 128,
-		},
-		name: "Calculus",
-		credits: 8,
-		associatedProgrammes: [],
-		qualification: "Undergraduate",
-		faculty: "Faculty of Natural and Agricultural Sciences",
-		content: "Note: This module is no longer offered.",
-		nqfLevel: 0,
-		prerequisites: [],
-		contactTime: "N/A",
-		language: "N/A",
-		period: "Semester 2",
-	},
-];
-
-const titleCase = (str: string) => {
-	// title case for all words except for 'and', 'in', 'to'
-	return str
-		.split(" ")
-		.map((word) => {
-			if (["and", "in", "to"].includes(word.toLowerCase())) {
-				return word.toLowerCase();
-			}
-			return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-		})
-		.join(" ");
-};
-
 export const getPastPaperCounts = (
 	pastPapers: PastPaper[],
 ): {
@@ -204,34 +118,4 @@ export const getPastPaperCounts = (
 				].includes(p.category),
 		).length,
 	};
-};
-
-export const cachedPastPapers = catalog as unknown as Record<
-	string,
-	PastPaper[]
->;
-const someCachedModules: ModuleInfo[] = moduleInfo as unknown as ModuleInfo[];
-export const cachedModuleInfo = [...someCachedModules, ...retiredModules].map(
-	(module) => ({
-		...module,
-		name: titleCase(module.name),
-	}),
-);
-export const cachedModules = cachedModuleInfo.map((module) => ({
-	code: module.code,
-	name: module.name,
-	faculty: module.faculty,
-	period: module.period,
-}));
-
-export const getModuleInfo = (moduleCode: {
-	prefix: string;
-	number: number;
-}): ModuleInfo | undefined => {
-	const module = cachedModuleInfo.find(
-		(m) =>
-			m.code.prefix.toLowerCase() === moduleCode.prefix.toLowerCase() &&
-			m.code.number === moduleCode.number,
-	);
-	return module;
 };

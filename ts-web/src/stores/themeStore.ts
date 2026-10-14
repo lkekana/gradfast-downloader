@@ -3,8 +3,9 @@ import { create } from "zustand";
 export type Theme = "light" | "dark";
 export type ThemeSetting = Theme | "system";
 
-const COLOR_SCHEME_QUERY = "(prefers-color-scheme: dark)";
-const LOCAL_STORAGE_KEY = "theme";
+export const COLOR_SCHEME_QUERY = "(prefers-color-scheme: dark)";
+export const LOCAL_STORAGE_KEY = "theme";
+const DEFAULT_THEME: Theme = "light"; 
 
 const getSystemTheme = (): Theme => {
 	if (typeof window === "undefined") return "light"; // Default fallback
@@ -37,44 +38,15 @@ interface ThemeState {
 	actualTheme: Theme;
 }
 
-// 1. Initialize state synchronously
-let initialSetting: ThemeSetting = "system";
-if (typeof window !== "undefined") {
-	try {
-		const item = localStorage.getItem(LOCAL_STORAGE_KEY);
-		if (item === "light" || item === "dark" || item === "system") {
-			initialSetting = item;
-		}
-	} catch (_e) {
-		console.warn(
-			"Failed to read theme from localStorage, defaulting to system theme.",
-		);
-	}
-}
-
-// 2. Apply IMMEDIATELY before React even hydrates! (Zero FOUC)
-applyTheme(initialSetting);
-
 export const useThemeStore = create<ThemeState>((set) => ({
-	themeSetting: initialSetting,
-	actualTheme: resolveTheme(initialSetting),
+	themeSetting: "system",
+	actualTheme: DEFAULT_THEME,
 
 	setThemeSetting: (setting) => {
 		applyTheme(setting);
 		set({ themeSetting: setting, actualTheme: resolveTheme(setting) });
 	},
 }));
-
-// Apply if OS theme changes while in "system" mode
-if (typeof window !== "undefined") {
-	window.matchMedia(COLOR_SCHEME_QUERY).addEventListener("change", () => {
-		const state = useThemeStore.getState();
-		if (state.themeSetting === "system") {
-			applyTheme("system");
-			useThemeStore.setState({ actualTheme: resolveTheme("system") });
-		}
-	});
-}
 
 export const useTheme = () => {
 	const themeSetting = useThemeStore((state) => state.themeSetting);
@@ -88,4 +60,30 @@ export const useTheme = () => {
 		isDark: actualTheme === "dark",
 		isLight: actualTheme === "light",
 	};
+};
+
+export const syncThemeOnClient = () => {
+	if (typeof window === "undefined") return;
+	try {
+		const item = localStorage.getItem(LOCAL_STORAGE_KEY);
+		let validSetting: ThemeSetting = "system";
+		if (item === "light" || item === "dark" || item === "system") {
+			validSetting = item;
+		}
+		
+		const resolved = resolveTheme(validSetting);
+		
+		// Update DOM
+		const root = window.document.documentElement;
+		root.classList.remove("light", "dark");
+		root.classList.add(resolved);
+		
+		// Update store
+		useThemeStore.setState({
+			themeSetting: validSetting,
+			actualTheme: resolved,
+		});
+	} catch (e) {
+		console.warn("Failed to sync theme on client", e);
+	}
 };
