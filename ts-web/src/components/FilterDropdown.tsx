@@ -48,7 +48,7 @@ const FilterDropdown: React.FC<FilterDropdownProps> = ({
 					size="sm"
 					disabled={isDownloading}
 					className={
-						isFilterActive(filteredItems, items.length) ? "border-primary" : ""
+						`bg-card ${isFilterActive(filteredItems, items.length) ? "border-primary" : ""}`
 					}
 				>
 					<Filter className="w-4 h-4 mr-1" />

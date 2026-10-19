@@ -137,7 +137,7 @@ function ModulesPage() {
 				<div className="flex flex-wrap items-center gap-2 mb-4 pb-4 border-b">
 					<Input
 						placeholder="Search modules..."
-						className="w-64"
+						className="w-64 bg-card"
 						value={filters.searchQuery}
 						// onChange={(e) => filters.setSearchQuery(e.target.value)}
 						onChange={(e) => {
@@ -257,6 +257,7 @@ function ModulesPage() {
 					<div className="flex items-center gap-2 ml-auto">
 						<Button
 							variant="outline"
+							className="bg-card"
 							size="sm"
 							onClick={() => selectAllVisible(filteredModules)} // could've also been `selectAllVisible.bind(null, filteredModules)`
 							disabled={isDownloadActive}
@@ -265,6 +266,7 @@ function ModulesPage() {
 						</Button>
 						<Button
 							variant="outline"
+							className="bg-card"
 							size="sm"
 							onClick={clearSelection}
 							disabled={isDownloadActive}
@@ -273,7 +275,7 @@ function ModulesPage() {
 						</Button>
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
-								<Button variant="outline" size="sm" disabled={isDownloadActive}>
+								<Button variant="outline" className="bg-card" size="sm" disabled={isDownloadActive}>
 									Select by prefix
 								</Button>
 							</DropdownMenuTrigger>

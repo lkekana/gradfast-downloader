@@ -109,7 +109,7 @@ function ModuleRow({
 					<span className="text-muted-foreground text-xs">—</span>
 				)}
 			</TableCell>
-			<TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+			<TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
 				<HoverCard
 					openDelay={200}
 					closeDelay={100}
@@ -239,9 +239,9 @@ export default function ModulesTable() {
 	return (
 		<div className="flex-1 overflow-auto rounded-md border">
 			<Table>
-				<TableHeader className="sticky top-0 bg-background z-10">
+				<TableHeader className="sticky top-0 bg-card z-10 font-bold my-2 py-2 text-foreground">
 					<TableRow>
-						<TableHead className="w-12">
+						<TableHead className="w-12 ">
 							<div className="flex items-center justify-center h-full">
 								<Checkbox
 									checked={allSelected}
@@ -255,10 +255,10 @@ export default function ModulesTable() {
 						<TableHead>Name</TableHead>
 						<TableHead>Faculty</TableHead>
 						<TableHead>Period</TableHead>
-						<TableHead className="text-right">Actions</TableHead>
+						<TableHead className="text-center">Actions</TableHead>
 					</TableRow>
 				</TableHeader>
-				<TableBody>
+				<TableBody className="bg-card">
 					{filteredModules.map((mod) => {
 						const id = `${mod.code.prefix}${mod.code.number}`;
 						const isSelected = selectedModules.has(mod);
