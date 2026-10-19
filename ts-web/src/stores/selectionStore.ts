@@ -1,9 +1,8 @@
 import { create } from "zustand";
 import type { Module } from "@/lib/types";
-import { useDownloadStore } from "./downloadStore";
-import { getStaticModulesOptions } from "./apiStore";
+import { useDownloadStore } from "@/stores/downloadStore";
+import { getStaticModulesOptions } from "@/stores/apiStore";
 import { useQuery } from "@tanstack/react-query";
-import { queryClient } from "#/lib/queryClient";
 
 interface SelectionState {
 	selectedModules: Set<Module>;
@@ -39,9 +38,8 @@ export const useSelectionStore = create<SelectionState>((set, _get) => ({
 
 	clearSelection: () => set({ selectedModules: new Set() }),
 
-	selectByPrefix: (prefix) =>
+	selectByPrefix: (prefix, modules) =>
 		set(() => {
-			const modules = queryClient.getQueryData(['staticModules']) as Module[] | undefined || [];
 			const isDownloadActive =
 				useDownloadStore.getState().status === "downloading";
 			if (isDownloadActive) return {};
@@ -52,9 +50,8 @@ export const useSelectionStore = create<SelectionState>((set, _get) => ({
 			};
 		}),
 
-	selectByFaculty: (faculty) =>
+	selectByFaculty: (faculty, modules) =>
 		set(() => {
-			const modules = queryClient.getQueryData(['staticModules']) as Module[] | undefined || [];
 			const isDownloadActive =
 				useDownloadStore.getState().status === "downloading";
 			if (isDownloadActive) return {};
@@ -63,9 +60,8 @@ export const useSelectionStore = create<SelectionState>((set, _get) => ({
 			};
 		}),
 
-	selectByPeriod: (period) =>
+	selectByPeriod: (period, modules) =>
 		set(() => {
-			const modules = queryClient.getQueryData(['staticModules']) as Module[] | undefined || [];
 			const isDownloadActive =
 				useDownloadStore.getState().status === "downloading";
 			if (isDownloadActive) return {};

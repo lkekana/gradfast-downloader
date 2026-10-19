@@ -15,7 +15,7 @@ interface FilterDropdownProps {
 	pluralLabel: string;
 	items: string[];
 	filteredItems: string[];
-	setFilteredItems: React.Dispatch<React.SetStateAction<string[]>>;
+	setFilteredItems: (items: string[] | ((prev: string[]) => string[])) => void;
 	isDownloading: boolean;
 	isFilterActive: (filter: string[], totalItems: number) => boolean;
 	getFilterLabel: (

@@ -1,6 +1,6 @@
 import { AlertCircle, CircleStop } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DownloadContainer } from "./DownloadContainer";
+import { DownloadContainer } from "@/components/DownloadContainer";
 import useDownload from "@/stores/downloadStore";
 import { useConnectionStore } from "@/stores/connectionStore";
 

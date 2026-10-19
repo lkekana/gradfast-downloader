@@ -2,17 +2,24 @@
 import { StartClient } from "@tanstack/react-start/client";
 import { StrictMode } from "react";
 import { hydrateRoot } from "react-dom/client";
-import { useConnectionStore } from "./stores/connectionStore";
+import { useConnectionStore } from "@/stores/connectionStore";
 
 // Client-only connection management
 if (typeof window !== "undefined") {
 	const setIsOnline = useConnectionStore.getState().setIsOnline;
 	setIsOnline(navigator.onLine);
 }
+
+let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
 const handleOnline = () => {
 	const state = useConnectionStore.getState();
 	state.setIsOnline(true);
-	if (!state.isConnected) setTimeout(() => state.attemptReconnect(), 1000);
+	if (!state.isConnected){
+		if (reconnectTimeout) {
+			clearTimeout(reconnectTimeout);
+		}
+		reconnectTimeout = setTimeout(() => state.attemptReconnect(), 1000);
+	}
 };
 
 const handleOffline = () => {

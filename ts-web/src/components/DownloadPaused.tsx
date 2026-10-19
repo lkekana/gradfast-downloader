@@ -1,7 +1,7 @@
 import { CircleStop, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { DownloadContainer } from "./DownloadContainer";
+import { DownloadContainer } from "@/components/DownloadContainer";
 import useDownload from "@/stores/downloadStore";
 import { useModuleSelection } from "@/stores/selectionStore";
 

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { getGFModulesOptions, useApiStore } from "./apiStore";
+import { getGFModulesOptions, useApiStore } from "@/stores/apiStore";
 import { queryClient } from "@/lib/queryClient";
 import { toast } from "sonner";
 

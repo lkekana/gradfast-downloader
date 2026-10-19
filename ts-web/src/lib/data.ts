@@ -1,4 +1,4 @@
-import type { PastPaper } from "./types";
+import type { PastPaper } from "@/lib/types";
 
 export const facultyAbbreviation = (faculty: string | undefined) => {
 	if (faculty === undefined) return "GEN";

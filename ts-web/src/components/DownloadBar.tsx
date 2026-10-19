@@ -6,7 +6,7 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { DownloadContainer } from "./DownloadContainer";
+import { DownloadContainer } from "@/components/DownloadContainer";
 import { useConnection } from "@/stores/connectionStore";
 import useDownload from "@/stores/downloadStore";
 import { useModuleSelection } from "@/stores/selectionStore";

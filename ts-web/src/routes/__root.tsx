@@ -59,6 +59,16 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 		<html lang="en">
 			<head>
 				<HeadContent />
+				{/** biome-ignore lint/security/noDangerouslySetInnerHtml: This is necessary to set the theme before the page renders to avoid a flash of unstyled content. */}
+				<script dangerouslySetInnerHTML={{ __html: `
+					(function() {
+					try {
+						const theme = localStorage.getItem('theme');
+						const isDark = theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+						if (isDark) document.documentElement.classList.add('dark');
+					} catch (e) {}
+					})();
+				`}} />
 			</head>
 			<body>
 				<QueryClientProvider client={queryClient}>

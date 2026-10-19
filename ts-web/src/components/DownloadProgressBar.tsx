@@ -1,7 +1,7 @@
 import { Pause, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { DownloadContainer } from "./DownloadContainer";
+import { DownloadContainer } from "@/components/DownloadContainer";
 import { useModuleSelection } from "@/stores/selectionStore";
 import useDownload from "@/stores/downloadStore";
 

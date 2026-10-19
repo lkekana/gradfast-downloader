@@ -5,7 +5,7 @@ import {
 	periodAbbreviation,
 } from "@/lib/data";
 import type { Module } from "@/lib/types";
-import { getStaticModulesOptions } from "./apiStore";
+import { getStaticModulesOptions } from "@/stores/apiStore";
 import { useQuery } from "@tanstack/react-query";
 
 interface FilterState {
@@ -113,7 +113,7 @@ export function useModuleFilters() {
 		return modules
 			.filter((mod: Module) => {
 				const matchesSearch =
-					`${mod.code.prefix}${mod.code} ${mod.name} ${mod.faculty || ""}`
+					`${mod.code.prefix}${mod.code.number} ${mod.name} ${mod.faculty || ""} ${facultyAbbreviation(mod.faculty || "")}`
 						.toLowerCase()
 						.includes(searchQuery.toLowerCase());
 				const matchesPrefix =

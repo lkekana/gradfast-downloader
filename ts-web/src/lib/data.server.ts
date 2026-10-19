@@ -1,5 +1,5 @@
-import catalog from "../assets/catalog.json";
-import moduleInfo from "../assets/module_info.json";
+import catalog from "@/assets/catalog.json";
+import moduleInfo from "@/assets/module_info.json";
 import titleCase from "voca/title_case";
 
 const retiredModules: ModuleInfo[] = [
@@ -73,8 +73,8 @@ const retiredModules: ModuleInfo[] = [
 	},
 ];
 
-import type { Module, ModuleInfo, PastPaper } from "./types";
-import { getPastPaperCounts } from "./data";
+import type { Module, ModuleInfo, PastPaper } from "@/lib/types";
+import { getPastPaperCounts } from "@/lib/data";
 
 export const cachedPastPapers = catalog as unknown as Record<
 	string,
@@ -101,4 +101,3 @@ export const cachedModules: Module[] = cachedModuleInfo.map((module) => {
 		cachedPastPaperCounts: getPastPaperCounts(papers),
 	};
 });
-console.log("cachedModules", cachedModules);

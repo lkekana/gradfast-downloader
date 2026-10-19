@@ -1,13 +1,13 @@
 import { create } from "zustand";
 import { useConnection, useConnectionStore } from "@/stores/connectionStore";
 import { useSelectionStore } from "@/stores/selectionStore";
-import { type NamingPattern, useSettingsStore } from "./useSettingsStore";
+import { type NamingPattern, useSettingsStore } from "@/stores/useSettingsStore";
 import type { Module, PastPaper } from "@/lib/types";
 import {
 	getPaperAvailabilityOptions,
 	getPastPapersOptions,
 	useApiStore,
-} from "./apiStore";
+} from "@/stores/apiStore";
 import pLimit from "p-limit";
 import mime from "mime";
 import { queryClient } from "@/lib/queryClient";
