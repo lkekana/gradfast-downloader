@@ -10,23 +10,15 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as TestRouteImport } from './routes/test'
 import { Route as ModulesCodeRouteImport } from './routes/modules/$code'
+import { Route as SettingsIndexRouteImport } from './routes/settings/index'
+import { Route as SettingsDownloadRouteImport } from './routes/settings/download'
+import { Route as SettingsGeneralRouteImport } from './routes/settings/general'
+import { Route as SettingsPapersRouteImport } from './routes/settings/papers'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TestRoute = TestRouteImport.update({
-  id: '/test',
-  path: '/test',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ModulesCodeRoute = ModulesCodeRouteImport.update({
@@ -34,39 +26,86 @@ const ModulesCodeRoute = ModulesCodeRouteImport.update({
   path: '/modules/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsIndexRoute = SettingsIndexRouteImport.update({
+  id: '/settings/',
+  path: '/settings/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsDownloadRoute = SettingsDownloadRouteImport.update({
+  id: '/settings/download',
+  path: '/settings/download',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsGeneralRoute = SettingsGeneralRouteImport.update({
+  id: '/settings/general',
+  path: '/settings/general',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsPapersRoute = SettingsPapersRouteImport.update({
+  id: '/settings/papers',
+  path: '/settings/papers',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/settings': typeof SettingsRoute
-  '/test': typeof TestRoute
   '/modules/$code': typeof ModulesCodeRoute
+  '/settings/download': typeof SettingsDownloadRoute
+  '/settings/general': typeof SettingsGeneralRoute
+  '/settings/papers': typeof SettingsPapersRoute
+  '/settings/': typeof SettingsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/settings': typeof SettingsRoute
-  '/test': typeof TestRoute
   '/modules/$code': typeof ModulesCodeRoute
+  '/settings/download': typeof SettingsDownloadRoute
+  '/settings/general': typeof SettingsGeneralRoute
+  '/settings/papers': typeof SettingsPapersRoute
+  '/settings': typeof SettingsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/settings': typeof SettingsRoute
-  '/test': typeof TestRoute
   '/modules/$code': typeof ModulesCodeRoute
+  '/settings/download': typeof SettingsDownloadRoute
+  '/settings/general': typeof SettingsGeneralRoute
+  '/settings/papers': typeof SettingsPapersRoute
+  '/settings/': typeof SettingsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/settings' | '/test' | '/modules/$code'
+  fullPaths:
+    | '/'
+    | '/modules/$code'
+    | '/settings/download'
+    | '/settings/general'
+    | '/settings/papers'
+    | '/settings/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/settings' | '/test' | '/modules/$code'
-  id: '__root__' | '/' | '/settings' | '/test' | '/modules/$code'
+  to:
+    | '/'
+    | '/modules/$code'
+    | '/settings/download'
+    | '/settings/general'
+    | '/settings/papers'
+    | '/settings'
+  id:
+    | '__root__'
+    | '/'
+    | '/modules/$code'
+    | '/settings/download'
+    | '/settings/general'
+    | '/settings/papers'
+    | '/settings/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  SettingsRoute: typeof SettingsRoute
-  TestRoute: typeof TestRoute
   ModulesCodeRoute: typeof ModulesCodeRoute
+  SettingsDownloadRoute: typeof SettingsDownloadRoute
+  SettingsGeneralRoute: typeof SettingsGeneralRoute
+  SettingsPapersRoute: typeof SettingsPapersRoute
+  SettingsIndexRoute: typeof SettingsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -78,20 +117,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/test': {
-      id: '/test'
-      path: '/test'
-      fullPath: '/test'
-      preLoaderRoute: typeof TestRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/modules/$code': {
       id: '/modules/$code'
       path: '/modules/$code'
@@ -99,14 +124,44 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ModulesCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings/': {
+      id: '/settings/'
+      path: '/settings'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof SettingsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings/download': {
+      id: '/settings/download'
+      path: '/settings/download'
+      fullPath: '/settings/download'
+      preLoaderRoute: typeof SettingsDownloadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings/general': {
+      id: '/settings/general'
+      path: '/settings/general'
+      fullPath: '/settings/general'
+      preLoaderRoute: typeof SettingsGeneralRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings/papers': {
+      id: '/settings/papers'
+      path: '/settings/papers'
+      fullPath: '/settings/papers'
+      preLoaderRoute: typeof SettingsPapersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  SettingsRoute: SettingsRoute,
-  TestRoute: TestRoute,
   ModulesCodeRoute: ModulesCodeRoute,
+  SettingsDownloadRoute: SettingsDownloadRoute,
+  SettingsGeneralRoute: SettingsGeneralRoute,
+  SettingsPapersRoute: SettingsPapersRoute,
+  SettingsIndexRoute: SettingsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

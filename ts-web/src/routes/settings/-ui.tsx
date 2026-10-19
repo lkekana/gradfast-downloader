@@ -46,7 +46,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
 	Tooltip,
 	TooltipContent,
-	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
@@ -60,10 +59,10 @@ import { useTheme } from "@/stores/themeStore";
 import MiniDownloadCard from "@/components/MiniDownloadCard";
 import { toast } from "sonner";
 
-import { ClientOnly, createFileRoute, useRouter } from "@tanstack/react-router";
+import { ClientOnly, Link, useRouter } from "@tanstack/react-router";
 import ConnectionDot from "#/components/ConnectionDot";
-
-export const Route = createFileRoute("/settings")({ component: SettingsPage });
+import { homeDefaultSearchState } from "@/routes/index";
+import { Skeleton } from "#/components/ui/skeleton";
 
 const programmes = [
 	{
@@ -197,12 +196,13 @@ const moduleRoles: { id: ModuleRole; label: string; description: string }[] = [
 	{ id: "elective", label: "Elective", description: "Optional choice modules" },
 ];
 
-function SettingsPage() {
+type SettingsTab = "general" | "download" | "papers";
+
+export default function SettingsPage({ activeTab }: { activeTab: SettingsTab }) {
 	const { themeSetting, setThemeSetting } = useTheme();
 	const [programmeSearchQuery, setProgrammeSearchQuery] = useState("");
 	const [isSaving, setIsSaving] = useState<boolean>(false);
 	const [showSaveSuccess, setShowSaveSuccess] = useState<boolean>(false);
-	const [activeTab, setActiveTab] = useState<string>("general");
 
 	const programmeSelectionMode = useSettingsStore(
 		(state) => state.programmeSelectionMode,
@@ -291,15 +291,19 @@ function SettingsPage() {
 		setIsSaving(false);
 		setShowSaveSuccess(true);
 		toast.success("Settings saved", {
+			dismissible: true,
 			description: "Your preferences have been updated successfully.",
+			duration: 1500,
 		});
-		setTimeout(() => setShowSaveSuccess(false), 3000);
+		setTimeout(() => setShowSaveSuccess(false), 2000);
 	};
 
 	const handleReset = () => {
 		useSettingsStore.getState().resetSettings(); // Resets to defaults and clears localStorage
 		toast.info("Settings reset", {
+			dismissible: true,
 			description: "All settings have been reset to defaults.",
+			duration: 1500,
 		});
 	};
 
@@ -326,21 +330,18 @@ function SettingsPage() {
 	const router = useRouter();
 
 	const handleBack = () => {
-		router.history.back(); // Go back to the previous page
+        if (router.history.canGoBack()) {
+		    router.history.back(); // Go back to the previous page
+        }
+        else {
+            router.navigate({ to: "/", search: homeDefaultSearchState,});
+        }
 	};
 
 	return (
 		<>
 			{/* Header */}
 			<header className="border-b bg-card px-4 py-3 sticky top-0 z-10">
-				{/* <nav className="text-xs text-muted-foreground mb-2">
-<a href="/home" className="hover:underline">Modules</a>
-<span className="mx-1">/</span>
-<span className="font-medium text-foreground">{moduleId}</span>
-</nav> */}
-				{/* <div className="flex items-center gap-3 max-w-6xl mx-auto">
-					
-				</div> */}
 				<div className="flex items-center justify-between gap-3 max-w-6xl mx-auto">
 					<div className="flex items-center gap-4">
 						<Button
@@ -355,12 +356,9 @@ function SettingsPage() {
 							<Settings2 className="w-6 h-6" />
 							Settings
 						</h1>
-						{/* <p className="text-muted-foreground">
-							Customize your past papers experience
-						</p> */}
 					</div>
 					<div className="flex items-center gap-2">
-						<ClientOnly>
+						<ClientOnly fallback={<SettingsConnectionSkeleton />}>
 							<SettingsConnectionStatus />
 						</ClientOnly>
 						<MiniDownloadCard />
@@ -368,21 +366,29 @@ function SettingsPage() {
 				</div>
 			</header>
 			<div className="max-w-4xl mx-auto p-4 md:p-6 space-y-6">
-				{/* Header */}
-
 				{/* Settings Tabs */}
 				<Tabs
 					value={activeTab}
-					onValueChange={setActiveTab}
 					className="space-y-4"
 				>
 					<TabsList className="grid w-full grid-cols-3">
-						<TabsTrigger value="general">General</TabsTrigger>
-						{/* <TabsTrigger value="programme" disabled>Programme</TabsTrigger> */}
-						<TabsTrigger value="download">Download</TabsTrigger>
-						{/* <TabsTrigger value="filters">Filters</TabsTrigger> */}
-						<TabsTrigger value="papers">Papers</TabsTrigger>
-						{/* <TabsTrigger value="advanced">Advanced</TabsTrigger> */}
+						<TabsTrigger value="general"><Link to="/settings/general" replace={true}>
+                            General</Link></TabsTrigger>
+						{/* <TabsTrigger value="programme" disabled><Link to="/settings/programme" replace={true}>
+                            Programme</Link></TabsTrigger> */}
+						<TabsTrigger value="download"><Link to="/settings/download" replace={true}>
+                            Download
+                        </Link>
+                        </TabsTrigger>
+						{/* <TabsTrigger value="filters"><Link to="/settings/filters" replace={true}>
+                            Filters</Link></TabsTrigger> */}
+						<TabsTrigger value="papers"><Link to="/settings/papers" replace={true}>
+                            Papers
+                        </Link>
+                            </TabsTrigger>
+						{/* <TabsTrigger value="advanced"><Link to="/settings/advanced" replace={true}>
+                            Advanced
+                            </Link></TabsTrigger> */}
 					</TabsList>
 
 					{/* General Tab */}
@@ -1292,20 +1298,6 @@ function SettingsConnectionStatus() {
 								isConnected ? "Connected to server" : "Click to reconnect"
 							}
 						>
-							{/* <div className="relative shrink-0 w-2 h-2">
-								<div
-									className={`w-full h-full rounded-full transition-colors ${
-										isConnected
-											? "bg-green-500"
-											: isReconnecting
-												? "bg-yellow-500 animate-pulse"
-												: "bg-red-500"
-									}`}
-								/>
-								{isConnected && (
-									<span className="absolute inset-0 rounded-full animate-ping bg-green-400 opacity-75" />
-								)}
-							</div> */}
 														<ConnectionDot
 							  state={isConnected ? "online" : isReconnecting ? "connecting" : "offline"}
 							/>
@@ -1331,6 +1323,24 @@ function SettingsConnectionStatus() {
 					</TooltipContent>
 				</Tooltip>
 			)}
+		</>
+	);
+}
+
+function SettingsConnectionSkeleton() {
+	return (
+		<>
+			{/* Internet Status Skeleton */}
+			<div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/50">
+				<Skeleton className="h-4 w-4 rounded-full" />
+				<Skeleton className="h-3 w-12" />
+			</div>
+
+			{/* Server Connection Skeleton */}
+			<div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/50">
+				<Skeleton className="h-2.5 w-2.5 rounded-full" />
+				<Skeleton className="h-3 w-20" />
+			</div>
 		</>
 	);
 }

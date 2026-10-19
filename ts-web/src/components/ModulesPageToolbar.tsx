@@ -1,10 +1,30 @@
 import { Wifi, WifiOff } from "lucide-react";
-import SettingsDropdown from "./SettingsDropdown";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+import SettingsDropdown from "@/components/SettingsDropdown";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useConnection } from "@/stores/connectionStore";
-import MiniDownloadCard from "./MiniDownloadCard";
+import MiniDownloadCard from "@/components/MiniDownloadCard";
 import { ClientOnly } from "@tanstack/react-router";
-import ConnectionDot from "./ConnectionDot";
+import ConnectionDot from "@/components/ConnectionDot";
+import { Skeleton } from "./ui/skeleton";
+
+export function ModulesToolbar() {
+	return (
+		<header className="border-b bg-card px-4 py-3 flex items-center justify-between">
+			<div className="flex items-center gap-4">
+				<h1 className="text-2xl font-semibold mr-2">📚 Gradfast Downloader</h1>
+
+				<ClientOnly fallback={<ToolbarConnectionSkeleton />}>
+					<ToolbarConnectionStatus />
+				</ClientOnly>
+			</div>
+
+			<div className="flex items-center">
+				<MiniDownloadCard />
+				<SettingsDropdown />
+			</div>
+		</header>
+	);
+}
 
 function ToolbarConnectionStatus() {
 	const {
@@ -53,23 +73,15 @@ function ToolbarConnectionStatus() {
 								isConnected ? "Connected to server" : "Click to reconnect"
 							}
 						>
-							{/* <div className="relative shrink-0 w-2 h-2">
-								<div
-									className={`w-full h-full rounded-full transition-colors ${
-										isConnected
-											? "bg-green-500"
-											: isReconnecting
-												? "bg-yellow-500 animate-pulse"
-												: "bg-red-500"
-									}`}
-								/>
-								{isConnected && (
-									<span className="absolute inset-0 rounded-full animate-ping bg-green-400 opacity-75" />
-								)}
-							</div> */}
 							<ConnectionDot
-  state={isConnected ? "online" : isReconnecting ? "connecting" : "offline"}
-/>
+								state={
+									isConnected
+										? "online"
+										: isReconnecting
+											? "connecting"
+											: "offline"
+								}
+							/>
 							<span
 								className={`text-xs whitespace-nowrap ${
 									isConnected
@@ -107,21 +119,20 @@ function ToolbarConnectionStatus() {
 	);
 }
 
-export function ModulesToolbar() {
+function ToolbarConnectionSkeleton() {
 	return (
-		<header className="border-b bg-card px-4 py-3 flex items-center justify-between">
-			<div className="flex items-center gap-4">
-				<h1 className="text-2xl font-semibold mr-2">📚 Gradfast Downloader</h1>
-
-				<ClientOnly>
-					<ToolbarConnectionStatus />
-				</ClientOnly>
+		<>
+			{/* Internet Status Skeleton */}
+			<div className="flex items-center gap-1.5">
+				<Skeleton className="h-4 w-4 rounded-full" />
+				<Skeleton className="h-3 w-12" />
 			</div>
 
-			<div className="flex items-center">
-				<MiniDownloadCard />
-				<SettingsDropdown />
+			{/* Server Connection Skeleton */}
+			<div className="flex items-center gap-1.5">
+				<Skeleton className="h-2.5 w-2.5 rounded-full" />
+				<Skeleton className="h-3 w-16" />
 			</div>
-		</header>
+		</>
 	);
 }

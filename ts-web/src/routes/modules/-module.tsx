@@ -55,13 +55,15 @@ import {
 	FieldLabel,
 	FieldTitle,
 } from "@/components/ui/field";
-import { getPaperAvailabilityOptions, useApiStore } from "../../stores/apiStore";
+import {
+	getPaperAvailabilityOptions,
+	useApiStore,
+} from "@/stores/apiStore";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import useDownload from "@/stores/downloadStore";
 import MiniDownloadCard from "@/components/MiniDownloadCard";
 import { useQueries } from "@tanstack/react-query";
-import { queryClient } from "@/lib/queryClient";
 import { useRouter } from "@tanstack/react-router";
 
 interface ModulePageProps {
@@ -92,7 +94,12 @@ export default function ModulePage({
 		if (onBack) {
 			onBack();
 		} else {
-			router.history.back(); // Go back to the previous page
+			if (router.history.canGoBack()) {
+				router.history.back(); // Go back to the previous page
+			}
+			else {
+				router.navigate({ to: "/" });
+			}
 		}
 	};
 

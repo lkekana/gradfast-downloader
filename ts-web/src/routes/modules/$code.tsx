@@ -1,11 +1,10 @@
 import { getModuleInfoOptions, getPastPapersOptions, useApiStore, useModuleInfo, useModulePastPapers } from "@/stores/apiStore";
 import { createFileRoute, getRouteApi, Navigate } from "@tanstack/react-router";
-import ModulePageSkeleton from "./-skeleton";
-import ModulePage from "./-module";
+import ModulePageSkeleton from "@/routes/modules/-skeleton";
+import ModulePage from "@/routes/modules/-module";
 import { getServerModuleData } from "#/lib/data.functions";
 import { useQuery } from "@tanstack/react-query";
-import { queryClient } from "#/lib/queryClient";
-import { useEffect } from "react";
+import { homeDefaultSearchState } from "..";
 
 export const Route = createFileRoute("/modules/$code")({
 	loader: async ({ params }) => {
@@ -48,7 +47,7 @@ function ModulePageWrapper() {
 
 	if (!isValid) {
 		// return <Navigate to="/404" replace />;
-		return <Navigate to="/" replace />;
+		return <Navigate from={Route.fullPath} to="/" replace search={homeDefaultSearchState}/>;
 	}
 
 	// if (isModulePending || isPapersPending) {
@@ -74,12 +73,12 @@ function ModulePageWrapper() {
 	// Use initialData to seed the cache instantly on the client
 	const { data: module } = useQuery({
 		...getModuleInfoOptions({ prefix, number }, apiFetch),
-		initialData: serverData?.moduleInfo, // Seeds cache synchronously!
+		initialData: serverData.moduleInfo, // Seeds cache synchronously!
 	  });
 	  
 	  const { data: pastPapers } = useQuery({
 		...getPastPapersOptions({ prefix, number }, apiFetch),
-		initialData: serverData?.pastPapers, // Seeds cache synchronously!
+		initialData: serverData.pastPapers, // Seeds cache synchronously!
 	  });
 
 	if (!module || !pastPapers) return <ModulePageSkeleton />;
