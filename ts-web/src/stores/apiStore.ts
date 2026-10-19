@@ -1,12 +1,12 @@
+import { queryOptions, useQuery } from "@tanstack/react-query";
 import { create } from "zustand";
-import { useQuery, queryOptions } from "@tanstack/react-query";
-import type { GradfastModules, Module, PastPaper } from "@/lib/types";
 import {
 	getModuleFaculty,
 	getRandomModule,
 	getServerModulesList,
 } from "#/lib/data.functions";
 import { queryClient } from "#/lib/queryClient";
+import type { GradfastModules, Module, PastPaper } from "@/lib/types";
 
 // biome-ignore lint/suspicious/noExplicitAny: FetchType is a generic fetch function that returns any type of data
 type FetchType = (url: string, options?: RequestInit) => Promise<any>;
@@ -179,17 +179,18 @@ export const useApiStore = create<ApiState>((set, get) => ({
 	},
 }));
 
-export const getStaticModulesOptions = () => queryOptions({
-	queryKey: ['staticModules'],
-	queryFn: async () => {
-	  return await getServerModulesList();
-	},
-	staleTime: 1000 * 60 * 60 * 24, // Static data rarely changes
-	gcTime: 1000 * 60 * 60 * 24,
-	refetchOnMount: false,
-	refetchOnWindowFocus: false,
-	refetchOnReconnect: false,
-});
+export const getStaticModulesOptions = () =>
+	queryOptions({
+		queryKey: ["staticModules"],
+		queryFn: async () => {
+			return await getServerModulesList();
+		},
+		staleTime: 1000 * 60 * 60 * 24, // Static data rarely changes
+		gcTime: 1000 * 60 * 60 * 24,
+		refetchOnMount: false,
+		refetchOnWindowFocus: false,
+		refetchOnReconnect: false,
+	});
 
 export const getModuleInfoOptions = (
 	moduleCode: {
@@ -222,9 +223,13 @@ export const getModuleInfoOptions = (
 		staleTime: 1000 * 60 * 55, // 55 minutes
 		gcTime: 1000 * 60 * 60 * 24, // 24 hours
 		initialData: () => {
-			const modules = queryClient.getQueryData(['staticModules']) as Module[] | undefined;
+			const modules = queryClient.getQueryData(["staticModules"]) as
+				| Module[]
+				| undefined;
 			return modules?.find(
-				(m) => m.code.prefix === moduleCode.prefix && m.code.number === moduleCode.number
+				(m) =>
+					m.code.prefix === moduleCode.prefix &&
+					m.code.number === moduleCode.number,
 			);
 		},
 
@@ -265,7 +270,6 @@ export const getPastPapersOptions = (
 		// ensure cookies will be refreshed
 		refetchOnWindowFocus: true,
 		refetchOnReconnect: true,
-		
 	});
 };
 
@@ -307,8 +311,7 @@ export const getPaperAvailabilityOptions = (
 		refetchOnMount: false,
 		refetchOnWindowFocus: false,
 		refetchOnReconnect: true,
-
-});
+	});
 
 export function useModuleInfo(
 	moduleCode: { prefix: string; number: number },

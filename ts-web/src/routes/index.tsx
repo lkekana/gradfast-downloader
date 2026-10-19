@@ -1,3 +1,8 @@
+import {
+	createFileRoute,
+	stripSearchParams,
+	useNavigate,
+} from "@tanstack/react-router";
 import DownloadBar from "@/components/DownloadBar";
 import { DownloadError } from "@/components/DownloadError";
 import DownloadPaused from "@/components/DownloadPaused";
@@ -15,10 +20,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { periods } from "@/lib/data";
-import { useModuleSelection } from "@/stores/selectionStore";
-import { useFilterStore, useModuleFilters } from "@/stores/filterStore";
 import useDownload from "@/stores/downloadStore";
-import { createFileRoute, stripSearchParams, useNavigate } from "@tanstack/react-router";
+import { useFilterStore, useModuleFilters } from "@/stores/filterStore";
+import { useModuleSelection } from "@/stores/selectionStore";
 
 type ModuleSearch = {
 	q: string;
@@ -34,9 +38,15 @@ export const homeDefaultSearchState: ModuleSearch = {
 	prefixes: [],
 };
 
-export const Route = createFileRoute("/")({ component: ModulesPage,
-	loaderDeps: ({ search: { q, periods, faculties, prefixes } }) => ({ q, periods, faculties, prefixes }),
-	loader: ({ deps: { q, periods, faculties, prefixes },  }) => {
+export const Route = createFileRoute("/")({
+	component: ModulesPage,
+	loaderDeps: ({ search: { q, periods, faculties, prefixes } }) => ({
+		q,
+		periods,
+		faculties,
+		prefixes,
+	}),
+	loader: ({ deps: { q, periods, faculties, prefixes } }) => {
 		useFilterStore.setState({
 			searchQuery: q,
 			periodFilter: periods,
@@ -49,16 +59,18 @@ export const Route = createFileRoute("/")({ component: ModulesPage,
 		return {
 			q: (search?.q as string) || "",
 			periods: Array.isArray(search?.periods) ? search.periods.map(String) : [],
-			faculties: Array.isArray(search?.faculties) ? search.faculties.map(String) : [],
-			prefixes: Array.isArray(search?.prefixes) ? search.prefixes.map(String) : [],
-		}
+			faculties: Array.isArray(search?.faculties)
+				? search.faculties.map(String)
+				: [],
+			prefixes: Array.isArray(search?.prefixes)
+				? search.prefixes.map(String)
+				: [],
+		};
 	},
 	search: {
-		middlewares: [
-			stripSearchParams(homeDefaultSearchState),
-		],
-	}
- });
+		middlewares: [stripSearchParams(homeDefaultSearchState)],
+	},
+});
 
 function ModulesPage() {
 	const navigate = useNavigate({ from: Route.fullPath });
@@ -151,7 +163,10 @@ function ModulesPage() {
 							navigate({
 								search: (prev) => ({
 									...prev,
-									periods: typeof newPeriods === "function" ? newPeriods(filters.periodFilter) : newPeriods,
+									periods:
+										typeof newPeriods === "function"
+											? newPeriods(filters.periodFilter)
+											: newPeriods,
 								}),
 							});
 						}}
@@ -171,7 +186,10 @@ function ModulesPage() {
 							navigate({
 								search: (prev) => ({
 									...prev,
-									faculties: typeof newFaculties === "function" ? newFaculties(filters.facultyFilter) : newFaculties,
+									faculties:
+										typeof newFaculties === "function"
+											? newFaculties(filters.facultyFilter)
+											: newFaculties,
 								}),
 							});
 						}}
@@ -191,7 +209,10 @@ function ModulesPage() {
 							navigate({
 								search: (prev) => ({
 									...prev,
-									prefixes: typeof newPrefixes === "function" ? newPrefixes(filters.prefixFilter) : newPrefixes,
+									prefixes:
+										typeof newPrefixes === "function"
+											? newPrefixes(filters.prefixFilter)
+											: newPrefixes,
 								}),
 							});
 						}}

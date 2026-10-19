@@ -1,8 +1,8 @@
 import { AlertCircle, CircleStop } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { DownloadContainer } from "@/components/DownloadContainer";
-import useDownload from "@/stores/downloadStore";
+import { Button } from "@/components/ui/button";
 import { useConnectionStore } from "@/stores/connectionStore";
+import useDownload from "@/stores/downloadStore";
 
 interface DownloadErrorProps {
 	className?: string;

@@ -1,21 +1,24 @@
+import { TooltipProvider } from "@radix-ui/react-tooltip";
+import { TanStackDevtools } from "@tanstack/react-devtools";
+import {
+	dehydrate,
+	HydrationBoundary,
+	QueryClientProvider,
+} from "@tanstack/react-query";
 import {
 	ClientOnly,
+	createRootRoute,
 	HeadContent,
 	Scripts,
-	createRootRoute,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
-import { TanStackDevtools } from "@tanstack/react-devtools";
-
-import appCss from "../styles.css?url";
+import { useEffect } from "react";
+import { Toaster } from "sonner";
 import { ConnectionManager } from "#/components/ConnectionManager";
 import { queryClient } from "#/lib/queryClient";
-import { TooltipProvider } from "@radix-ui/react-tooltip";
-import { dehydrate, HydrationBoundary, QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "sonner";
-import { syncThemeOnClient } from "#/stores/themeStore";
-import { useEffect } from "react";
 import { getStaticModulesOptions } from "#/stores/apiStore";
+import { syncThemeOnClient } from "#/stores/themeStore";
+import appCss from "../styles.css?url";
 
 export const Route = createRootRoute({
 	head: () => ({
@@ -50,7 +53,7 @@ export const Route = createRootRoute({
 
 function RootDocument({ children }: { children: React.ReactNode }) {
 	const { dehydratedState } = Route.useLoaderData();
-	
+
 	useEffect(() => {
 		syncThemeOnClient();
 	}, []);
@@ -59,8 +62,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 		<html lang="en">
 			<head>
 				<HeadContent />
-				{/** biome-ignore lint/security/noDangerouslySetInnerHtml: This is necessary to set the theme before the page renders to avoid a flash of unstyled content. */}
-				<script dangerouslySetInnerHTML={{ __html: `
+				<script
+					// biome-ignore lint/security/noDangerouslySetInnerHtml: This is necessary to set the theme before the page renders to avoid a flash of unstyled content.
+					dangerouslySetInnerHTML={{
+						__html: `
 					(function() {
 					try {
 						const theme = localStorage.getItem('theme');
@@ -68,19 +73,21 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 						if (isDark) document.documentElement.classList.add('dark');
 					} catch (e) {}
 					})();
-				`}} />
+				`,
+					}}
+				/>
 			</head>
 			<body>
 				<QueryClientProvider client={queryClient}>
-				<HydrationBoundary state={dehydratedState}>
-					<TooltipProvider>
-						<ClientOnly>
-							<ConnectionManager />
-						</ClientOnly>
-						<Toaster />
-						{children}
-					</TooltipProvider>
-				</HydrationBoundary>
+					<HydrationBoundary state={dehydratedState}>
+						<TooltipProvider>
+							<ClientOnly>
+								<ConnectionManager />
+							</ClientOnly>
+							<Toaster />
+							{children}
+						</TooltipProvider>
+					</HydrationBoundary>
 				</QueryClientProvider>
 				<TanStackDevtools
 					config={{

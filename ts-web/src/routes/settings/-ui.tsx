@@ -1,3 +1,4 @@
+import { ClientOnly, Link, useRouter } from "@tanstack/react-router";
 import {
 	ArrowLeft,
 	BookOpen,
@@ -20,7 +21,11 @@ import {
 	WifiOff,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
+import ConnectionDot from "#/components/ConnectionDot";
+import { Skeleton } from "#/components/ui/skeleton";
 import { Combobox, ComboboxItem } from "@/components/Combobox";
+import MiniDownloadCard from "@/components/MiniDownloadCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -48,21 +53,15 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { homeDefaultSearchState } from "@/routes/index";
+import { useConnection } from "@/stores/connectionStore";
+import { useTheme } from "@/stores/themeStore";
 import {
 	type ModuleRole,
 	type NamingPattern,
 	type PaperType,
 	useSettingsStore,
 } from "@/stores/useSettingsStore";
-import { useConnection } from "@/stores/connectionStore";
-import { useTheme } from "@/stores/themeStore";
-import MiniDownloadCard from "@/components/MiniDownloadCard";
-import { toast } from "sonner";
-
-import { ClientOnly, Link, useRouter } from "@tanstack/react-router";
-import ConnectionDot from "#/components/ConnectionDot";
-import { homeDefaultSearchState } from "@/routes/index";
-import { Skeleton } from "#/components/ui/skeleton";
 
 const programmes = [
 	{
@@ -198,7 +197,11 @@ const moduleRoles: { id: ModuleRole; label: string; description: string }[] = [
 
 type SettingsTab = "general" | "download" | "papers";
 
-export default function SettingsPage({ activeTab }: { activeTab: SettingsTab }) {
+export default function SettingsPage({
+	activeTab,
+}: {
+	activeTab: SettingsTab;
+}) {
 	const { themeSetting, setThemeSetting } = useTheme();
 	const [programmeSearchQuery, setProgrammeSearchQuery] = useState("");
 	const [isSaving, setIsSaving] = useState<boolean>(false);
@@ -330,12 +333,11 @@ export default function SettingsPage({ activeTab }: { activeTab: SettingsTab }) 
 	const router = useRouter();
 
 	const handleBack = () => {
-        if (router.history.canGoBack()) {
-		    router.history.back(); // Go back to the previous page
-        }
-        else {
-            router.navigate({ to: "/", search: homeDefaultSearchState,});
-        }
+		if (router.history.canGoBack()) {
+			router.history.back(); // Go back to the previous page
+		} else {
+			router.navigate({ to: "/", search: homeDefaultSearchState });
+		}
 	};
 
 	return (
@@ -367,28 +369,38 @@ export default function SettingsPage({ activeTab }: { activeTab: SettingsTab }) 
 			</header>
 			<div className="max-w-4xl mx-auto p-4 md:p-6 space-y-6">
 				{/* Settings Tabs */}
-				<Tabs
-					value={activeTab}
-					className="space-y-4"
-				>
+				<Tabs value={activeTab} className="space-y-4">
 					<TabsList className="grid w-full grid-cols-3">
-						<TabsTrigger value="general"><Link to="/settings/general" replace={true}>
-                            General</Link></TabsTrigger>
-						{/* <TabsTrigger value="programme" disabled><Link to="/settings/programme" replace={true}>
-                            Programme</Link></TabsTrigger> */}
-						<TabsTrigger value="download"><Link to="/settings/download" replace={true}>
-                            Download
-                        </Link>
-                        </TabsTrigger>
-						{/* <TabsTrigger value="filters"><Link to="/settings/filters" replace={true}>
-                            Filters</Link></TabsTrigger> */}
-						<TabsTrigger value="papers"><Link to="/settings/papers" replace={true}>
-                            Papers
-                        </Link>
-                            </TabsTrigger>
-						{/* <TabsTrigger value="advanced"><Link to="/settings/advanced" replace={true}>
-                            Advanced
-                            </Link></TabsTrigger> */}
+						<TabsTrigger value="general">
+							<Link to="/settings/general" replace={true}>
+								General
+							</Link>
+						</TabsTrigger>
+						{/* <TabsTrigger value="programme" disabled>
+							<Link to="/settings/programme" replace={true}>
+								Programme
+							</Link>
+						</TabsTrigger> */}
+						<TabsTrigger value="download">
+							<Link to="/settings/download" replace={true}>
+								Download
+							</Link>
+						</TabsTrigger>
+						{/* <TabsTrigger value="filters">
+							<Link to="/settings/filters" replace={true}>
+								Filters
+							</Link>
+						</TabsTrigger> */}
+						<TabsTrigger value="papers">
+							<Link to="/settings/papers" replace={true}>
+								Papers
+							</Link>
+						</TabsTrigger>
+						{/* <TabsTrigger value="advanced">
+							<Link to="/settings/advanced" replace={true}>
+								Advanced
+							</Link>
+						</TabsTrigger> */}
 					</TabsList>
 
 					{/* General Tab */}
@@ -1298,10 +1310,16 @@ function SettingsConnectionStatus() {
 								isConnected ? "Connected to server" : "Click to reconnect"
 							}
 						>
-														<ConnectionDot
-							  state={isConnected ? "online" : isReconnecting ? "connecting" : "offline"}
+							<ConnectionDot
+								state={
+									isConnected
+										? "online"
+										: isReconnecting
+											? "connecting"
+											: "offline"
+								}
 							/>
-							
+
 							<span className="text-xs font-medium whitespace-nowrap">
 								{isReconnecting
 									? "Connecting…"

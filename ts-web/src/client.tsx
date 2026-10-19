@@ -14,7 +14,7 @@ let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
 const handleOnline = () => {
 	const state = useConnectionStore.getState();
 	state.setIsOnline(true);
-	if (!state.isConnected){
+	if (!state.isConnected) {
 		if (reconnectTimeout) {
 			clearTimeout(reconnectTimeout);
 		}

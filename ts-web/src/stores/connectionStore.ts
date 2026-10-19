@@ -1,7 +1,7 @@
-import { create } from "zustand";
-import { getGFModulesOptions, useApiStore } from "@/stores/apiStore";
-import { queryClient } from "@/lib/queryClient";
 import { toast } from "sonner";
+import { create } from "zustand";
+import { queryClient } from "@/lib/queryClient";
+import { getGFModulesOptions, useApiStore } from "@/stores/apiStore";
 
 interface ConnectionState {
 	isOnline: boolean;

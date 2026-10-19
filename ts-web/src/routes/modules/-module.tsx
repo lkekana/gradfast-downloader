@@ -1,3 +1,5 @@
+import { useQueries } from "@tanstack/react-query";
+import { useRouter } from "@tanstack/react-router";
 import {
 	ArrowLeft,
 	BookOpen,
@@ -13,6 +15,7 @@ import {
 	LoaderCircle,
 } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
+import MiniDownloadCard from "@/components/MiniDownloadCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,13 +25,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-	facultyAbbreviation,
-	periodAbbreviation,
-	getPastPaperCounts,
-} from "@/lib/data";
-import type { Module, ModuleInfo, PastPaper } from "@/lib/types";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
 	Dialog,
 	DialogContent,
@@ -37,6 +34,8 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
 	Table,
 	TableBody,
@@ -46,25 +45,16 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-	Field,
-	FieldContent,
-	FieldDescription,
-	FieldGroup,
-	FieldLabel,
-	FieldTitle,
-} from "@/components/ui/field";
-import {
-	getPaperAvailabilityOptions,
-	useApiStore,
-} from "@/stores/apiStore";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+	facultyAbbreviation,
+	getPastPaperCounts,
+	periodAbbreviation,
+} from "@/lib/data";
+import type { Module, ModuleInfo, PastPaper } from "@/lib/types";
+import { homeDefaultSearchState } from "@/routes/index";
+import { getPaperAvailabilityOptions, useApiStore } from "@/stores/apiStore";
 import useDownload from "@/stores/downloadStore";
-import MiniDownloadCard from "@/components/MiniDownloadCard";
-import { useQueries } from "@tanstack/react-query";
-import { useRouter } from "@tanstack/react-router";
 
 interface ModulePageProps {
 	module: Module;
@@ -96,9 +86,8 @@ export default function ModulePage({
 		} else {
 			if (router.history.canGoBack()) {
 				router.history.back(); // Go back to the previous page
-			}
-			else {
-				router.navigate({ to: "/" });
+			} else {
+				router.navigate({ to: "/", search: homeDefaultSearchState });
 			}
 		}
 	};
@@ -692,7 +681,7 @@ function DetailRow({
 				{icon}
 				<span>{label}</span>
 			</div>
-			<span className="text-sm font-medium text-right max-w-[60%] break-words">
+			<span className="text-sm font-medium text-right max-w-[60%] wrap-break-word">
 				{value}
 			</span>
 		</div>

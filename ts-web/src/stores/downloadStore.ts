@@ -1,19 +1,22 @@
+import { type ZipDirectoryEntry, ZipFS } from "@zip.js/zip.js";
+import { supported as fsAPISupported } from "browser-fs-access";
+import mime from "mime";
+import pLimit from "p-limit";
+import { toast } from "sonner";
 import { create } from "zustand";
-import { useConnection, useConnectionStore } from "@/stores/connectionStore";
-import { useSelectionStore } from "@/stores/selectionStore";
-import { type NamingPattern, useSettingsStore } from "@/stores/useSettingsStore";
+import { queryClient } from "@/lib/queryClient";
 import type { Module, PastPaper } from "@/lib/types";
 import {
 	getPaperAvailabilityOptions,
 	getPastPapersOptions,
 	useApiStore,
 } from "@/stores/apiStore";
-import pLimit from "p-limit";
-import mime from "mime";
-import { queryClient } from "@/lib/queryClient";
-import { toast } from "sonner";
-import { type ZipDirectoryEntry, ZipFS } from "@zip.js/zip.js";
-import { supported as fsAPISupported } from "browser-fs-access";
+import { useConnection, useConnectionStore } from "@/stores/connectionStore";
+import { useSelectionStore } from "@/stores/selectionStore";
+import {
+	type NamingPattern,
+	useSettingsStore,
+} from "@/stores/useSettingsStore";
 
 type DownloadStateStatus = "idle" | "downloading" | "paused" | "error";
 export type ModuleStatus =
@@ -316,7 +319,7 @@ export const useDownloadStore = create<DownloadState>((set, get) => ({
 
 				const zipFs = new ZipFS();
 				let destinationHandle = current.dirHandle;
-				let subFolder: ZipDirectoryEntry | undefined = undefined;
+				let subFolder: ZipDirectoryEntry | undefined;
 				const { moduleSubfolders, namingPattern } = useSettingsStore.getState();
 
 				// ensure the names are cleaned for filesystem compatibility (alphanumeric and spaces only)
@@ -651,7 +654,7 @@ export const useDownloadStore = create<DownloadState>((set, get) => ({
 		}
 
 		// startSimulation();
-		let dirHandle: FileSystemDirectoryHandle | undefined = undefined;
+		let dirHandle: FileSystemDirectoryHandle | undefined;
 		if (fsAPISupported) {
 			try {
 				dirHandle = await window.showDirectoryPicker({ mode: "readwrite" });
@@ -667,7 +670,7 @@ export const useDownloadStore = create<DownloadState>((set, get) => ({
 	},
 
 	downloadModule: async (module, papers) => {
-		let dirHandle: FileSystemDirectoryHandle | undefined = undefined;
+		let dirHandle: FileSystemDirectoryHandle | undefined;
 		if (fsAPISupported) {
 			try {
 				dirHandle = await window.showDirectoryPicker({ mode: "readwrite" });

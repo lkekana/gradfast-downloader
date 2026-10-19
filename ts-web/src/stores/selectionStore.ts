@@ -1,8 +1,8 @@
+import { useQuery } from "@tanstack/react-query";
 import { create } from "zustand";
 import type { Module } from "@/lib/types";
-import { useDownloadStore } from "@/stores/downloadStore";
 import { getStaticModulesOptions } from "@/stores/apiStore";
-import { useQuery } from "@tanstack/react-query";
+import { useDownloadStore } from "@/stores/downloadStore";
 
 interface SelectionState {
 	selectedModules: Set<Module>;

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import { useConnection } from "@/stores/connectionStore";
 import { useModules } from "@/stores/apiStore";
+import { useConnection } from "@/stores/connectionStore";
 
 export function ConnectionManager() {
 	const { error: apiError } = useModules();

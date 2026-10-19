@@ -1,9 +1,9 @@
 import { Pause, X } from "lucide-react";
+import { DownloadContainer } from "@/components/DownloadContainer";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { DownloadContainer } from "@/components/DownloadContainer";
-import { useModuleSelection } from "@/stores/selectionStore";
 import useDownload from "@/stores/downloadStore";
+import { useModuleSelection } from "@/stores/selectionStore";
 
 interface DownloadProgressBarProps {
 	className?: string;

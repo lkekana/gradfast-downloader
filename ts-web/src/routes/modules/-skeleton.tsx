@@ -1,18 +1,12 @@
 // ModulePageSkeleton.tsx
 /** biome-ignore-all lint/suspicious/noArrayIndexKey: This is a skeleton component, so using index as key is acceptable. */
 
+import { useRouter } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useRouter } from "@tanstack/react-router";
 
 interface ModulePageSkeletonProps {
 	onBack?: () => void;

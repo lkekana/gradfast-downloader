@@ -5,7 +5,7 @@ export type ThemeSetting = Theme | "system";
 
 export const COLOR_SCHEME_QUERY = "(prefers-color-scheme: dark)";
 export const LOCAL_STORAGE_KEY = "theme";
-const DEFAULT_THEME: Theme = "light"; 
+const DEFAULT_THEME: Theme = "light";
 
 const getSystemTheme = (): Theme => {
 	if (typeof window === "undefined") return "light"; // Default fallback
@@ -70,14 +70,14 @@ export const syncThemeOnClient = () => {
 		if (item === "light" || item === "dark" || item === "system") {
 			validSetting = item;
 		}
-		
+
 		const resolved = resolveTheme(validSetting);
-		
+
 		// Update DOM
 		const root = window.document.documentElement;
 		root.classList.remove("light", "dark");
 		root.classList.add(resolved);
-		
+
 		// Update store
 		useThemeStore.setState({
 			themeSetting: validSetting,

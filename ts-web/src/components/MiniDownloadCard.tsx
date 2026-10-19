@@ -1,29 +1,29 @@
 /** biome-ignore-all lint/suspicious/noArrayIndexKey: Using index as key is acceptable here since the moduleProgress array is stable and not reordered. */
 import {
-	LoaderCircle,
-	Pause,
 	AlertCircle,
 	CheckCircle2,
-	XCircle,
 	CircleArrowDown,
 	CloudDownload,
+	LoaderCircle,
+	Pause,
+	XCircle,
 } from "lucide-react";
 import type React from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-	HoverCard,
-	HoverCardTrigger,
-	HoverCardContent,
-} from "@/components/ui/hover-card";
-import { Progress } from "@/components/ui/progress";
-import useDownload, { type ModuleProgressState } from "@/stores/downloadStore";
 import { CircularProgress } from "@/components/ui/circular-progress";
 import {
 	Collapsible,
 	CollapsibleContent,
 	CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { useState } from "react";
+import {
+	HoverCard,
+	HoverCardContent,
+	HoverCardTrigger,
+} from "@/components/ui/hover-card";
+import { Progress } from "@/components/ui/progress";
+import useDownload, { type ModuleProgressState } from "@/stores/downloadStore";
 
 const IconClasses = "w-8 h-8 text-muted-foreground !size-6";
 

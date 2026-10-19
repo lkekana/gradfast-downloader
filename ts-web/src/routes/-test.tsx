@@ -13,12 +13,6 @@ export interface Cookie {
 	httpOnly?: boolean;
 }
 
-const getCookieHeader = (cookies: Cookie[]): string => {
-	return cookies
-		.map((cookie: Cookie) => `${cookie.name}=${cookie.value}`)
-		.join("; ");
-};
-
 const fileProxyURL = import.meta.env.VITE_CDN_PROXY;
 const apiProxyURL = import.meta.env.VITE_API_PROXY;
 const authProxyURL = import.meta.env.VITE_AUTH_PROXY;
@@ -27,7 +21,7 @@ const authProxyURL = import.meta.env.VITE_AUTH_PROXY;
 
 // export const Route = createFileRoute("/test")({ component: Test });
 
-function Test() {
+export default function Test() {
 	const [cookies, setCookies] = React.useState<string | null>(null);
 	const getCookies = async () => {
 		const req = await fetch(`${authProxyURL}/auth`, {
@@ -57,7 +51,7 @@ function Test() {
 		const url =
 			"https://cdn.gradfast.com/COS216/COS216%20-%202016%20-%20Class%20Test%201.pdf";
 		if (cookies === null) {
-			alert("No cookies available. Please get cookies first.");
+			alert(`No cookies available. Please get cookies first.`);
 			return;
 		}
 		const resp = await fetch(
@@ -137,7 +131,7 @@ function Test() {
 			resp.headers.get("x-cookies") || resp.headers.get("X-Cookies");
 		if (cookieHeader) {
 			setCookies(cookieHeader);
-			alert("Updated cookies from response: " + cookieHeader);
+			alert(`Updated cookies from response: ${cookieHeader}`);
 		}
 	};
 

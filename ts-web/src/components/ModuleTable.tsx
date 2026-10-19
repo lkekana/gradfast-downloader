@@ -1,4 +1,8 @@
+import type { CheckedState } from "@radix-ui/react-checkbox";
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { Info } from "lucide-react";
+import { useCallback, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -17,14 +21,10 @@ import {
 } from "@/components/ui/table";
 import { facultyAbbreviation, getPastPaperCounts } from "@/lib/data";
 import type { Module } from "@/lib/types";
-import useDownload from "@/stores/downloadStore";
-import { useModuleSelection } from "@/stores/selectionStore";
 import { getPastPapersOptions, useApiStore } from "@/stores/apiStore";
+import useDownload from "@/stores/downloadStore";
 import { useModuleFilters } from "@/stores/filterStore";
-import { useCallback, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
-import type { CheckedState } from "@radix-ui/react-checkbox";
+import { useModuleSelection } from "@/stores/selectionStore";
 
 const checkboxClass = "w-4 h-4 rounded";
 
@@ -55,15 +55,13 @@ function ModuleRow({
 
 	// const pastPaperCounts = getPastPaperCounts(pastPapers || []);
 	const pastPaperCounts = useMemo(() => {
-		if (!pastPapers){
+		if (!pastPapers) {
 			if (mod.cachedPastPaperCounts) {
 				return mod.cachedPastPaperCounts;
-			}
-			else {
+			} else {
 				return getPastPaperCounts([]);
 			}
-		}
-		else {
+		} else {
 			return getPastPaperCounts(pastPapers);
 		}
 	}, [pastPapers, mod.cachedPastPaperCounts]);

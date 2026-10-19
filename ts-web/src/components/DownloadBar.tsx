@@ -1,4 +1,5 @@
 import { Download } from "lucide-react";
+import { DownloadContainer } from "@/components/DownloadContainer";
 // import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -6,7 +7,6 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { DownloadContainer } from "@/components/DownloadContainer";
 import { useConnection } from "@/stores/connectionStore";
 import useDownload from "@/stores/downloadStore";
 import { useModuleSelection } from "@/stores/selectionStore";

@@ -1,6 +1,6 @@
+import titleCase from "voca/title_case";
 import catalog from "@/assets/catalog.json";
 import moduleInfo from "@/assets/module_info.json";
-import titleCase from "voca/title_case";
 
 const retiredModules: ModuleInfo[] = [
 	{
@@ -73,8 +73,8 @@ const retiredModules: ModuleInfo[] = [
 	},
 ];
 
-import type { Module, ModuleInfo, PastPaper } from "@/lib/types";
 import { getPastPaperCounts } from "@/lib/data";
+import type { Module, ModuleInfo, PastPaper } from "@/lib/types";
 
 export const cachedPastPapers = catalog as unknown as Record<
 	string,
@@ -91,7 +91,7 @@ export const cachedModuleInfo: ModuleInfo[] = [
 
 export const cachedModules: Module[] = cachedModuleInfo.map((module) => {
 	const fullCode = `${module.code.prefix}${module.code.number}`;
-  	const papers = cachedPastPapers[fullCode] || [];
+	const papers = cachedPastPapers[fullCode] || [];
 
 	return {
 		code: module.code,

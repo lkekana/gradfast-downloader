@@ -1,10 +1,14 @@
-import { Wifi, WifiOff } from "lucide-react";
-import SettingsDropdown from "@/components/SettingsDropdown";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { useConnection } from "@/stores/connectionStore";
-import MiniDownloadCard from "@/components/MiniDownloadCard";
 import { ClientOnly } from "@tanstack/react-router";
+import { Wifi, WifiOff } from "lucide-react";
 import ConnectionDot from "@/components/ConnectionDot";
+import MiniDownloadCard from "@/components/MiniDownloadCard";
+import SettingsDropdown from "@/components/SettingsDropdown";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useConnection } from "@/stores/connectionStore";
 import { Skeleton } from "./ui/skeleton";
 
 export function ModulesToolbar() {

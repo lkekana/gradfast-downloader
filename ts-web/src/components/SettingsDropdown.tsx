@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { Settings } from "lucide-react";
 import type React from "react";
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,6 @@ import {
 	// DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Link } from "@tanstack/react-router";
 
 const IconClasses = "w-8 h-8 text-muted-foreground !size-6";
 

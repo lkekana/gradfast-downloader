@@ -142,7 +142,7 @@ export function Combobox({
 					<Command
 						value={searchValue}
 						onValueChange={onSearchChange}
-						filter={(value, search) => (disableInternalFilter ? 1 : 0)}
+						filter={(_value, _search) => (disableInternalFilter ? 1 : 0)}
 					>
 						<CommandInput placeholder={placeholder} className="h-9" />
 						<CommandList>{children}</CommandList>

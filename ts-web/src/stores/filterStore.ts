@@ -1,12 +1,9 @@
-import { create } from "zustand";
+import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
-import {
-	facultyAbbreviation,
-	periodAbbreviation,
-} from "@/lib/data";
+import { create } from "zustand";
+import { facultyAbbreviation, periodAbbreviation } from "@/lib/data";
 import type { Module } from "@/lib/types";
 import { getStaticModulesOptions } from "@/stores/apiStore";
-import { useQuery } from "@tanstack/react-query";
 
 interface FilterState {
 	searchQuery: string;
