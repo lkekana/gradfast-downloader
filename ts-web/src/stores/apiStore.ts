@@ -186,6 +186,9 @@ export const getStaticModulesOptions = () => queryOptions({
 	},
 	staleTime: 1000 * 60 * 60 * 24, // Static data rarely changes
 	gcTime: 1000 * 60 * 60 * 24,
+	refetchOnMount: false,
+	refetchOnWindowFocus: false,
+	refetchOnReconnect: false,
 });
 
 export const getModuleInfoOptions = (
@@ -224,6 +227,10 @@ export const getModuleInfoOptions = (
 				(m) => m.code.prefix === moduleCode.prefix && m.code.number === moduleCode.number
 			);
 		},
+
+		// ensure cookies will be refreshed
+		refetchOnWindowFocus: true,
+		refetchOnReconnect: true,
 	});
 };
 
@@ -250,10 +257,15 @@ export const getPastPapersOptions = (
 			})) as PastPaper[];
 		},
 		staleTime: 1000 * 60 * 55, // 55 minutes
-		gcTime: 1000 * 60 * 60 * 24, // 24 hours
+		gcTime: 1000 * 60 * 55, // 55 minutes
 		// initialData: () => {
 		// 	return cachedPastPapers[fullCode];
 		// },
+
+		// ensure cookies will be refreshed
+		refetchOnWindowFocus: true,
+		refetchOnReconnect: true,
+		
 	});
 };
 
@@ -267,6 +279,10 @@ export const getGFModulesOptions = (apiFetch: FetchType) => {
 		},
 		staleTime: 1000 * 60 * 60, // 1 hour
 		initialData: [],
+
+		refetchOnMount: false,
+		refetchOnWindowFocus: false,
+		refetchOnReconnect: true,
 	});
 };
 
@@ -285,10 +301,14 @@ export const getPaperAvailabilityOptions = (
 				return false;
 			}
 		},
-		staleTime: 1000 * 60 * 60 * 24 * 365, // 1 year
-		gcTime: 1000 * 60 * 60 * 24 * 365, // 1 year
+		staleTime: 1000 * 60 * 55, // 55 minutes
+		gcTime: 1000 * 60 * 55, // 55 minutes
 		retry: 1,
-	});
+		refetchOnMount: false,
+		refetchOnWindowFocus: false,
+		refetchOnReconnect: true,
+
+});
 
 export function useModuleInfo(
 	moduleCode: { prefix: string; number: number },
