@@ -16,13 +16,52 @@ import {
 import { Input } from "@/components/ui/input";
 import { periods } from "@/lib/data";
 import { useModuleSelection } from "@/stores/selectionStore";
-import { useModuleFilters } from "@/stores/filterStore";
+import { useFilterStore, useModuleFilters } from "@/stores/filterStore";
 import useDownload from "@/stores/downloadStore";
-import { ClientOnly, createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, stripSearchParams, useNavigate } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/")({ component: ModulesPage });
+type ModuleSearch = {
+	q: string;
+	periods: string[];
+	faculties: string[];
+	prefixes: string[];
+};
+
+export const homeDefaultSearchState: ModuleSearch = {
+	q: "",
+	periods: [],
+	faculties: [],
+	prefixes: [],
+};
+
+export const Route = createFileRoute("/")({ component: ModulesPage,
+	loaderDeps: ({ search: { q, periods, faculties, prefixes } }) => ({ q, periods, faculties, prefixes }),
+	loader: ({ deps: { q, periods, faculties, prefixes },  }) => {
+		useFilterStore.setState({
+			searchQuery: q,
+			periodFilter: periods,
+			facultyFilter: faculties,
+			prefixFilter: prefixes,
+		});
+	},
+	validateSearch: (search: Record<string, unknown>): ModuleSearch => {
+		// validate and parse the search params into a typed state
+		return {
+			q: (search?.q as string) || "",
+			periods: Array.isArray(search?.periods) ? search.periods.map(String) : [],
+			faculties: Array.isArray(search?.faculties) ? search.faculties.map(String) : [],
+			prefixes: Array.isArray(search?.prefixes) ? search.prefixes.map(String) : [],
+		}
+	},
+	search: {
+		middlewares: [
+			stripSearchParams(homeDefaultSearchState),
+		],
+	}
+ });
 
 function ModulesPage() {
+	const navigate = useNavigate({ from: Route.fullPath });
 	const filters = useModuleFilters();
 	const {
 		filteredModules,
@@ -88,7 +127,16 @@ function ModulesPage() {
 						placeholder="Search modules..."
 						className="w-64"
 						value={filters.searchQuery}
-						onChange={(e) => filters.setSearchQuery(e.target.value)}
+						// onChange={(e) => filters.setSearchQuery(e.target.value)}
+						onChange={(e) => {
+							filters.setSearchQuery(e.target.value);
+							navigate({
+								search: (prev) => ({
+									...prev,
+									q: e.target.value,
+								}),
+							});
+						}}
 						disabled={isDownloadActive}
 					/>
 
@@ -97,7 +145,16 @@ function ModulesPage() {
 						pluralLabel="periods"
 						items={periods}
 						filteredItems={filters.periodFilter}
-						setFilteredItems={filters.setPeriodFilter}
+						// setFilteredItems={filters.setPeriodFilter}
+						setFilteredItems={(newPeriods) => {
+							filters.setPeriodFilter(newPeriods);
+							navigate({
+								search: (prev) => ({
+									...prev,
+									periods: typeof newPeriods === "function" ? newPeriods(filters.periodFilter) : newPeriods,
+								}),
+							});
+						}}
 						isDownloading={isDownloadActive}
 						isFilterActive={isFilterActive}
 						getFilterLabel={getFilterLabel}
@@ -108,7 +165,16 @@ function ModulesPage() {
 						pluralLabel="faculties"
 						items={uniqueFaculties}
 						filteredItems={filters.facultyFilter}
-						setFilteredItems={filters.setFacultyFilter}
+						// setFilteredItems={filters.setFacultyFilter}
+						setFilteredItems={(newFaculties) => {
+							filters.setFacultyFilter(newFaculties);
+							navigate({
+								search: (prev) => ({
+									...prev,
+									faculties: typeof newFaculties === "function" ? newFaculties(filters.facultyFilter) : newFaculties,
+								}),
+							});
+						}}
 						isDownloading={isDownloadActive}
 						isFilterActive={isFilterActive}
 						getFilterLabel={getFilterLabel}
@@ -119,7 +185,16 @@ function ModulesPage() {
 						pluralLabel="prefixes"
 						items={uniquePrefixes}
 						filteredItems={filters.prefixFilter}
-						setFilteredItems={filters.setPrefixFilter}
+						// setFilteredItems={filters.setPrefixFilter}
+						setFilteredItems={(newPrefixes) => {
+							filters.setPrefixFilter(newPrefixes);
+							navigate({
+								search: (prev) => ({
+									...prev,
+									prefixes: typeof newPrefixes === "function" ? newPrefixes(filters.prefixFilter) : newPrefixes,
+								}),
+							});
+						}}
 						isDownloading={isDownloadActive}
 						isFilterActive={isFilterActive}
 						getFilterLabel={getFilterLabel}
@@ -131,7 +206,13 @@ function ModulesPage() {
 						<Button
 							variant="ghost"
 							size="sm"
-							onClick={filters.clearAllFilters}
+							// onClick={filters.clearAllFilters}
+							onClick={() => {
+								filters.clearAllFilters();
+								navigate({
+									search: () => homeDefaultSearchState,
+								});
+							}}
 							disabled={isDownloadActive}
 							className="text-muted-foreground hover:text-foreground"
 						>
@@ -196,28 +277,24 @@ function ModulesPage() {
 				)}
 
 				{/* Module Table */}
-				<ClientOnly>
-					<ModulesTable />
-				</ClientOnly>
+				<ModulesTable />
 
 				{/* Sticky Download UI - Dynamic State */}
-				<ClientOnly>
-					{selectedCount > 0 && (
-						<>
-							{downloadState === "downloading" && <DownloadProgressBar />}
+				{selectedCount > 0 && (
+					<>
+						{downloadState === "downloading" && <DownloadProgressBar />}
 
-							{downloadState === "paused" && <DownloadPaused />}
+						{downloadState === "paused" && <DownloadPaused />}
 
-							{downloadState === "error" && <DownloadError />}
+						{downloadState === "error" && <DownloadError />}
 
-							{downloadState === "idle" && (
-								<DownloadBar
-								// activeFilterCount={activeFilterCount}
-								/>
-							)}
-						</>
-					)}
-				</ClientOnly>
+						{downloadState === "idle" && (
+							<DownloadBar
+							// activeFilterCount={activeFilterCount}
+							/>
+						)}
+					</>
+				)}
 			</main>
 		</div>
 	);
