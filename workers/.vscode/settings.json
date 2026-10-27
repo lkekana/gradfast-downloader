@@ -1,0 +1,8 @@
+{
+	"files.associations": {
+		"wrangler.json": "jsonc"
+	},
+	"editor.codeActionsOnSave": {
+		"source.organizeImports.biome": "explicit"
+	}
+}

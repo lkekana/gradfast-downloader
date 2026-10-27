@@ -69,7 +69,7 @@ wheels = [
 ]
 
 [[package]]
-name = "gradfast-dl"
+name = "gradfast-downloader"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
@@ -95,6 +95,12 @@ sdist = { url = "https://files.pythonhosted.org/packages/6f/6d/0703ccc57f3a72335
 wheels = [
     { url = "https://files.pythonhosted.org/packages/0e/61/66938bbb5fc52dbdf84594873d5b51fb1f7c7794e9c0f5bd885f30bc507b/idna-3.11-py3-none-any.whl", hash = "sha256:771a87f49d9defaf64091e6e6fe9c18d4833f140bd19464795bc32d966ca37ea", size = 71008, upload-time = "2025-10-12T14:55:18.883Z" },
 ]
+
+[[package]]
+name = "progressbar"
+version = "2.5"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/a3/a6/b8e451f6cff1c99b4747a2f7235aa904d2d49e8e1464e0b798272aa84358/progressbar-2.5.tar.gz", hash = "sha256:5d81cb529da2e223b53962afd6c8ca0f05c6670e40309a7219eacc36af9b6c63", size = 10046, upload-time = "2018-06-29T02:32:00.222Z" }
 
 [[package]]
 name = "progressbar2"

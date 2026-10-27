@@ -1,0 +1,21 @@
+node_modules
+.DS_Store
+dist
+dist-ssr
+*.local
+.env
+.nitro
+.tanstack
+.wrangler
+.output
+.vinxi
+__unconfig*
+todos.json
+
+# my static JSON files
+src/assets/*.json
+
+# test page
+src/pages/test.*
+# Local Netlify folder
+.netlify
